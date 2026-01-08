@@ -727,3 +727,30 @@ Turns table already tracked: each turn, placement, steal attempts (from prior wo
 Files changed:
 - src/trpc/routers/game.ts (import gameHistory/PlayerStanding, add storeGameHistory helper, call at 4 locations)
 - plans/prd.json (marked statistics #34 as passes: true)
+
+## 2026-01-08: Implemented host dashboard with game history
+
+PRD items: statistics #35 (Host dashboard shows game history)
+
+Changes:
+- Added getHostGameHistory tRPC procedure: fetches all game history for authenticated host
+- Created /dashboard page with game history table and aggregate stats
+- Added shadcn Table component for game list display
+- Added "View Game History" link to UserMenu for authenticated users
+- Dashboard shows: past games list (date, players, winner, turns, rounds) + stat cards (total games, total turns, avg accuracy)
+- Redirect to home if not authenticated
+
+Implementation details:
+- getHostGameHistory returns games array with finalStandings + gameData, plus computed aggregate stats
+- Dashboard skeleton loader for async content
+- Table shows player avatars with tooltip, winner name, turn/round counts
+- 3 stat cards: Total Games, Total Turns, Avg Accuracy %
+
+Note: "Click to view detailed game stats" and "visual charts/graphs" not implemented - these are future enhancements. Core dashboard functionality complete.
+
+Files changed:
+- src/trpc/routers/game.ts (added getHostGameHistory procedure)
+- src/app/dashboard/page.tsx (new - dashboard page)
+- src/components/ui/table.tsx (new - shadcn table component)
+- src/components/user-menu.tsx (added dashboard link)
+- plans/prd.json (marked statistics #35 as passes: true)

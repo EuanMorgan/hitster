@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, eq, ne } from "drizzle-orm";
+import { and, desc, eq, ne } from "drizzle-orm";
 import { z } from "zod/v4";
 import {
   type ActiveStealAttempt,
@@ -780,6 +780,73 @@ export const gameRouter = createTRPCRouter({
       sessionId: gameSession.id,
       pin: gameSession.pin,
       playerId: hostPlayer.id,
+    };
+  }),
+
+  getHostGameHistory: protectedProcedure.query(async ({ ctx }) => {
+    const userId = ctx.user.id;
+
+    const history = await ctx.db.query.gameHistory.findMany({
+      where: eq(gameHistory.hostId, userId),
+      orderBy: [desc(gameHistory.completedAt)],
+    });
+
+    // Get winner names for each game
+    const gamesWithWinners = await Promise.all(
+      history.map(async (game) => {
+        let winnerName: string | null = null;
+        if (game.winnerId) {
+          const winner = await ctx.db.query.players.findFirst({
+            where: eq(players.id, game.winnerId),
+          });
+          winnerName = winner?.name ?? null;
+        }
+
+        // Get session PIN if still available
+        const session = await ctx.db.query.gameSessions.findFirst({
+          where: eq(gameSessions.id, game.sessionId),
+        });
+
+        return {
+          id: game.id,
+          sessionId: game.sessionId,
+          pin: session?.pin ?? null,
+          completedAt: game.completedAt.toISOString(),
+          winnerName,
+          finalStandings: game.finalStandings,
+          gameData: game.gameData as {
+            songsToWin?: number;
+            totalTurns?: number;
+            totalRounds?: number;
+          } | null,
+          playerCount: game.finalStandings?.length ?? 0,
+        };
+      }),
+    );
+
+    // Compute aggregate stats
+    const totalGames = history.length;
+
+    let totalCorrectPlacements = 0;
+    let totalPlacements = 0;
+    for (const game of history) {
+      for (const standing of game.finalStandings ?? []) {
+        totalCorrectPlacements += standing.correctPlacements;
+        totalPlacements += standing.totalPlacements;
+      }
+    }
+
+    return {
+      games: gamesWithWinners,
+      stats: {
+        totalGames,
+        averageAccuracy:
+          totalPlacements > 0
+            ? Math.round((totalCorrectPlacements / totalPlacements) * 100)
+            : 0,
+        totalPlacements,
+        totalCorrectPlacements,
+      },
     };
   }),
 

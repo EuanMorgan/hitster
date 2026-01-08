@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { signOut, useSession } from "@/lib/auth-client";
@@ -28,21 +29,31 @@ export function UserMenu() {
   };
 
   return (
-    <div className="flex items-center justify-between gap-3">
-      <div className="flex items-center gap-2 overflow-hidden">
-        {session.user.image && (
-          <img
-            src={session.user.image}
-            alt=""
-            className="h-8 w-8 rounded-full"
-          />
-        )}
-        <span className="truncate text-sm font-medium">
-          {session.user.name || session.user.email}
-        </span>
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 overflow-hidden">
+          {session.user.image && (
+            <img
+              src={session.user.image}
+              alt=""
+              className="h-8 w-8 rounded-full"
+            />
+          )}
+          <span className="truncate font-medium text-sm">
+            {session.user.name || session.user.email}
+          </span>
+        </div>
+        <Button variant="outline" size="sm" onClick={handleLogout}>
+          Logout
+        </Button>
       </div>
-      <Button variant="outline" size="sm" onClick={handleLogout}>
-        Logout
+      <Button
+        variant="ghost"
+        size="sm"
+        className="w-full justify-start"
+        asChild
+      >
+        <Link href="/dashboard">View Game History</Link>
       </Button>
     </div>
   );
