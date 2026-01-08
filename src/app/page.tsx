@@ -3,11 +3,13 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Greeting } from "@/components/greeting";
+import { UserMenu } from "@/components/user-menu";
 import { trpc, HydrateClient } from "@/trpc/server";
 
 export default async function Home() {
@@ -30,6 +32,11 @@ export default async function Home() {
               <Button variant="secondary">Create Game</Button>
             </div>
           </CardContent>
+          <CardFooter className="border-t pt-4">
+            <div className="w-full">
+              <UserMenu />
+            </div>
+          </CardFooter>
         </Card>
       </div>
     </HydrateClient>

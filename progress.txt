@@ -235,3 +235,30 @@ Configure Better Auth with Spotify provider (PRD item #9)
 
 ### Next priority:
 Configure test mocking infrastructure (PRD item #4) OR implement Host login with Spotify OAuth (PRD item #10)
+
+---
+
+## 2026-01-08: Spotify OAuth Login/Logout UI Complete
+
+### What was done:
+- Created SpotifyLoginButton component with loading state
+- Created UserMenu component showing session state and logout
+- Updated home page to include UserMenu in CardFooter
+- Login button triggers Spotify OAuth flow via Better Auth
+- Logout button destroys session via Better Auth
+- Session display shows user name/email and profile image
+
+### Files created/modified:
+- src/components/spotify-login-button.tsx (new)
+- src/components/user-menu.tsx (new)
+- src/app/page.tsx (added CardFooter with UserMenu)
+- plans/prd.json (marked auth login/logout as passing)
+
+### Notes:
+- Uses `signIn.social({ provider: "spotify", callbackURL: "/" })` for login
+- Uses `signOut()` for logout
+- useSession() hook provides isPending state for loading skeleton
+- Session shows user image if available from Spotify profile
+
+### Next priority:
+Configure test mocking infrastructure (PRD item #4) OR implement non-host player join flow (PRD item #12)

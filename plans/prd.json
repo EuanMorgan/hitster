@@ -129,7 +129,7 @@
       "Verify host account created/updated in database",
       "Verify Spotify access token stored securely"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "authentication",
@@ -140,7 +140,7 @@
       "Redirect to home page",
       "Verify protected routes inaccessible"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "authentication",
