@@ -96,3 +96,43 @@ Key files:
 
 Files changed:
 - plans/prd.json (marked lobby #1 as passes: true)
+
+## 2026-01-08: Verified all remaining lobby features
+
+PRD items: lobby #2-6 (all lobby tasks verified complete)
+
+All features already implemented - no code changes needed:
+
+#2 Host can configure game settings:
+- GameSettings component: collapsible panel with all 6 settings
+- Settings: songsToWin(5-20), songPlayDuration(15-60s), turnDuration(30-90s), stealWindowDuration(5-20s), maxPlayers(1-20), playlistUrl
+- updateSettings tRPC mutation with validation + host-only auth
+- Settings synced to players via 2s polling on getSession
+
+#3 Players can join via PIN:
+- /join page: 2-step flow (PIN → name/avatar)
+- validatePin checks: exists, not in progress, not full
+- joinGame: name uniqueness check, reconnection support
+
+#4 Lobby shows players in real-time:
+- Player list with avatars, names, host badge
+- Player count display (N/maxPlayers)
+- 2s polling via refetchInterval
+
+#5 Host can start game:
+- Start button visible only to host
+- startGame: shuffles turn order, assigns 1 song to each player
+- State → "playing", all players redirect to /game/{pin}
+
+#6 Players cannot join during active game:
+- validatePin returns "Game in progress" if state === "playing"
+- joinGame throws error if state !== "lobby"
+
+Key files:
+- src/components/game-settings.tsx
+- src/app/lobby/[pin]/page.tsx
+- src/app/join/page.tsx
+- src/trpc/routers/game.ts: updateSettings (L555), startGame (L668)
+
+Files changed:
+- plans/prd.json (marked lobby #2-6 as passes: true)
