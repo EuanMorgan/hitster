@@ -278,7 +278,7 @@
       "Fuzzy matching for validation (handles & vs 'and', minor typos)",
       "Correct guess awards 1 bonus token"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "gameplay",
@@ -289,7 +289,7 @@
       "When timer reaches 0, current position is locked",
       "Turn automatically submitted with current state"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "gameplay",
@@ -299,7 +299,7 @@
       "Click confirm to lock in position and optional guess",
       "Turn ends, steal phase begins"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "gameplay",
@@ -311,7 +311,7 @@
       "Success animation plays",
       "Song permanently added to timeline"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "gameplay",
@@ -324,7 +324,7 @@
       "Failure animation plays",
       "Song discarded (not added to timeline)"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "stealing",
@@ -336,7 +336,7 @@
       "Active player sees their submission, can reflect on choice",
       "Other players can attempt to steal"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "stealing",
@@ -348,7 +348,7 @@
       "Submit steal attempt",
       "Token deducted immediately"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "stealing",
@@ -359,7 +359,7 @@
       "Visual indicator shows occupied positions",
       "Multiple players can steal at different positions"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "stealing",
@@ -370,7 +370,7 @@
       "Original player gets nothing",
       "Success animation for stealer"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "stealing",
@@ -381,7 +381,7 @@
       "No other penalty",
       "Song discarded if original player also wrong"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "tokens",
@@ -391,7 +391,7 @@
       "Token count displayed on player's UI",
       "Token count visible to all players"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "tokens",
@@ -404,7 +404,7 @@
       "New random song drawn and played",
       "Turn timer resets"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "tokens",
@@ -417,7 +417,7 @@
       "Random song added to timeline at correct position automatically",
       "Turn continues normally with original song"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "tokens",
@@ -428,7 +428,7 @@
       "If both correct, award 1 token",
       "Visual feedback for successful guess"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "turns",
@@ -439,7 +439,7 @@
       "Shuffle animation shown on all screens",
       "New order displayed before first turn of round"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "turns",
@@ -450,7 +450,7 @@
       "Other players' phones show who is playing",
       "Host display shows active player's timeline large"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "turns",
@@ -462,7 +462,7 @@
       "Advance to next player in order",
       "New song drawn and plays"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "winning",
@@ -474,7 +474,7 @@
       "Winner announcement with celebration animation",
       "Transition to results screen"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "winning",

@@ -219,3 +219,40 @@ Key files:
 
 Files changed:
 - plans/prd.json (marked gameplay #3 as passes: true)
+
+## 2026-01-08: Fixed steal phase playback + verified gameplay/stealing/tokens/turns
+
+PRD items: gameplay #4-8, stealing #9-13, tokens #14-17, turns #18-20, winning #21
+
+Code fix:
+- SpotifyPlayer: removed !isStealPhase condition so song continues during steal phase
+- Previously song stopped when steal phase started, breaking PRD #9 requirement
+
+All features verified as already implemented:
+
+gameplay #4 (optional guess): input fields + fuzzy matching + token award
+gameplay #5 (auto-submit timer): TurnTimer counts down, triggers onTimeUp at 0
+gameplay #6 (manual confirm): confirm button calls onConfirm with placement
+gameplay #7 (correct placement): resolveStealPhase validates, adds song to timeline
+gameplay #8 (incorrect placement): song discarded when validation fails
+
+stealing #9 (steal phase begins): timer starts, song continues, countdown visible
+stealing #10 (spend token to steal): drag-drop interface, token deducted
+stealing #11 (first-come-first-serve): position locking + visual occupied indicators
+stealing #12 (successful steal): song transfers to stealer's timeline
+stealing #13 (failed steal): token lost, no other penalty
+
+tokens #14 (start with 2): schema default + explicit set in createGame/joinGame
+tokens #15 (skip for 1): skipSong procedure deducts token, draws new song
+tokens #16 (free song for 3): getFreeSong adds random song to timeline
+tokens #17 (guess bonus): fuzzy match awards +1 token in resolveStealPhase
+
+turns #18 (shuffle each round): shuffleArray on new round in resolveStealPhase
+turns #19 (current player indicator): green badge, "Your Turn" card, host display
+turns #20 (turn progression): advance turn index, draw next song, show results
+
+winning #21 (target songs): timeline.length >= songsToWin triggers game end
+
+Files changed:
+- src/app/game/[pin]/page.tsx (removed !isStealPhase from shouldPlay)
+- plans/prd.json (marked 17 items as passes: true)

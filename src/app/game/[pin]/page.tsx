@@ -804,13 +804,12 @@ export default function GamePage() {
           </CardContent>
         </Card>
 
-        {/* Spotify Player - Host Only */}
+        {/* Spotify Player - Host Only (continues during steal phase) */}
         {isHost && session?.state === "playing" && (
           <SpotifyPlayer
             isHost={isHost}
             trackUri={session?.currentSong?.uri ?? null}
             shouldPlay={
-              !isStealPhase &&
               !showShuffleAnimation &&
               !showRoundShuffleAnimation &&
               !!session?.currentSong
