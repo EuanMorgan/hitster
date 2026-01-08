@@ -611,7 +611,7 @@
       "All interactive elements min 44x44px touch target",
       "Clear token and timer display"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "display",

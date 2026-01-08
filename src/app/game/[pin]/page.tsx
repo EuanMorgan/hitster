@@ -43,18 +43,20 @@ function TimelineDisplay({ timeline }: { timeline: TimelineSong[] }) {
   const sortedTimeline = [...timeline].sort((a, b) => a.year - b.year);
 
   return (
-    <div className="flex flex-wrap gap-2">
-      {sortedTimeline.map((song) => (
-        <div
-          key={song.songId}
-          className="bg-primary/10 border border-primary/20 rounded-lg px-3 py-2 text-center min-w-[80px]"
-        >
-          <div className="font-bold text-lg">{song.year}</div>
-          <div className="text-xs text-muted-foreground truncate max-w-[100px]">
-            {song.name}
+    <div className="overflow-x-auto -mx-2 px-2">
+      <div className="flex gap-1.5 sm:gap-2 min-w-min pb-2">
+        {sortedTimeline.map((song) => (
+          <div
+            key={song.songId}
+            className="bg-primary/10 border border-primary/20 rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-center min-w-[65px] sm:min-w-[80px] shrink-0"
+          >
+            <div className="font-bold text-base sm:text-lg">{song.year}</div>
+            <div className="text-[10px] sm:text-xs text-muted-foreground truncate max-w-[60px] sm:max-w-[100px]">
+              {song.name}
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }
@@ -77,37 +79,39 @@ function PlayerCard({
 }) {
   return (
     <div
-      className={`rounded-lg p-4 transition-all ${
+      className={`rounded-lg p-3 sm:p-4 transition-all ${
         isCurrentTurn
           ? "bg-primary/20 border-2 border-primary ring-2 ring-primary/30"
           : "bg-muted"
       }`}
     >
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-3">
-          <span className="text-3xl">{player.avatar}</span>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-semibold">{player.name}</span>
+      <div className="flex items-center justify-between mb-2 sm:mb-3">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <span className="text-2xl sm:text-3xl shrink-0">{player.avatar}</span>
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+              <span className="font-semibold text-sm sm:text-base truncate">
+                {player.name}
+              </span>
               {player.isHost && (
-                <span className="text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded">
+                <span className="text-[10px] sm:text-xs bg-primary text-primary-foreground px-1.5 sm:px-2 py-0.5 rounded shrink-0">
                   Host
                 </span>
               )}
               {isCurrentTurn && (
-                <span className="text-xs bg-green-500 text-white px-2 py-0.5 rounded animate-pulse">
+                <span className="text-[10px] sm:text-xs bg-green-500 text-white px-1.5 sm:px-2 py-0.5 rounded animate-pulse shrink-0">
                   Playing
                 </span>
               )}
             </div>
-            <div className="text-sm text-muted-foreground">
+            <div className="text-xs sm:text-sm text-muted-foreground">
               Turn #{turnNumber}
             </div>
           </div>
         </div>
-        <div className="text-right">
+        <div className="text-right shrink-0 ml-2">
           <TokenDisplay count={player.tokens} />
-          <div className="text-sm text-muted-foreground mt-1">
+          <div className="text-xs sm:text-sm text-muted-foreground mt-1">
             {player.timeline?.length ?? 0} song
             {(player.timeline?.length ?? 0) !== 1 ? "s" : ""}
           </div>
@@ -877,28 +881,28 @@ export default function GamePage() {
         />
       )}
 
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Game Header */}
+      <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
+        {/* Game Header - compact on mobile */}
         <Card>
-          <CardHeader className="text-center pb-2">
-            <CardTitle className="text-2xl">Hitster</CardTitle>
-            <CardDescription>
-              PIN: {session?.pin} | Round {session?.roundNumber}
+          <CardHeader className="text-center pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
+            <CardTitle className="text-xl sm:text-2xl">Hitster</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">
+              PIN: {session?.pin} • Round {session?.roundNumber}
               {isStealPhase && (
-                <span className="ml-2 text-amber-500 font-medium">
-                  🎯 STEAL PHASE
+                <span className="ml-1 sm:ml-2 text-amber-500 font-medium">
+                  🎯 STEAL
                 </span>
               )}
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="flex justify-center gap-8 text-sm">
+          <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+            <div className="flex justify-center gap-4 sm:gap-8 text-xs sm:text-sm">
               <div>
                 <span className="text-muted-foreground">Goal:</span>{" "}
-                <span className="font-medium">{session?.songsToWin} songs</span>
+                <span className="font-medium">{session?.songsToWin}</span>
               </div>
               <div>
-                <span className="text-muted-foreground">Turn time:</span>{" "}
+                <span className="text-muted-foreground">Time:</span>{" "}
                 <span className="font-medium">{session?.turnDuration}s</span>
               </div>
             </div>
@@ -1009,13 +1013,15 @@ export default function GamePage() {
           session?.currentSong &&
           myPlayer && (
             <Card className="border-2 border-primary">
-              <CardHeader className="text-center">
-                <CardTitle className="text-green-500">Your Turn!</CardTitle>
-                <CardDescription>
+              <CardHeader className="text-center py-3 sm:py-4 px-3 sm:px-6">
+                <CardTitle className="text-green-500 text-lg sm:text-xl">
+                  Your Turn!
+                </CardTitle>
+                <CardDescription className="text-xs sm:text-sm">
                   Place the mystery song in your timeline
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="px-2 sm:px-6 pb-4">
                 <TimelineDropZone
                   timeline={myPlayer.timeline ?? []}
                   currentSong={session.currentSong}
@@ -1041,20 +1047,22 @@ export default function GamePage() {
           !isMyTurn &&
           currentPlayer && (
             <Card className="bg-muted/50">
-              <CardContent className="py-6">
-                <div className="flex items-center justify-center gap-3">
-                  <span className="text-3xl">{currentPlayer.avatar}</span>
+              <CardContent className="py-4 sm:py-6 px-3 sm:px-6">
+                <div className="flex items-center justify-center gap-2 sm:gap-3">
+                  <span className="text-2xl sm:text-3xl">
+                    {currentPlayer.avatar}
+                  </span>
                   <div className="text-center">
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-xs sm:text-sm text-muted-foreground">
                       Current Turn
                     </div>
-                    <div className="text-xl font-bold">
+                    <div className="text-lg sm:text-xl font-bold">
                       {currentPlayer.name}
                     </div>
                   </div>
                 </div>
-                <div className="text-center mt-4 text-sm text-muted-foreground">
-                  Waiting for {currentPlayer.name} to place their song...
+                <div className="text-center mt-3 sm:mt-4 text-xs sm:text-sm text-muted-foreground">
+                  Waiting for {currentPlayer.name} to place...
                 </div>
               </CardContent>
             </Card>
@@ -1067,12 +1075,14 @@ export default function GamePage() {
           !isMyTurn &&
           myPlayer && (
             <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Your Timeline</CardTitle>
+              <CardHeader className="py-3 sm:py-4 px-3 sm:px-6">
+                <CardTitle className="text-base sm:text-lg">
+                  Your Timeline
+                </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
                 <TimelineDisplay timeline={myPlayer.timeline ?? []} />
-                <div className="mt-2 text-sm text-muted-foreground">
+                <div className="mt-2 text-xs sm:text-sm text-muted-foreground">
                   {myPlayer.timeline?.length ?? 0} / {session?.songsToWin} songs
                 </div>
               </CardContent>

@@ -58,8 +58,8 @@ function StealDropZone({
 
   if (isOccupied) {
     return (
-      <div className="flex flex-col items-center justify-center min-w-[60px] h-[100px] border-2 border-red-400 bg-red-100 dark:bg-red-900/30 rounded-lg">
-        <span className="text-xs text-red-600 dark:text-red-400 font-medium">
+      <div className="flex flex-col items-center justify-center min-w-[48px] sm:min-w-[60px] min-h-[80px] sm:h-[100px] border-2 border-red-400 bg-red-100 dark:bg-red-900/30 rounded-lg">
+        <span className="text-[10px] sm:text-xs text-red-600 dark:text-red-400 font-medium text-center px-1">
           🔒 {occupiedBy}
         </span>
       </div>
@@ -69,7 +69,7 @@ function StealDropZone({
   return (
     <div
       ref={setNodeRef}
-      className={`flex flex-col items-center justify-center min-w-[60px] h-[100px] border-2 border-dashed rounded-lg transition-all ${
+      className={`flex flex-col items-center justify-center min-w-[48px] sm:min-w-[60px] min-h-[80px] sm:h-[100px] border-2 border-dashed rounded-lg transition-all ${
         isOver
           ? "border-amber-500 bg-amber-500/20 scale-105"
           : isActive
@@ -104,14 +104,14 @@ function StealSongCard({ isPlaced }: { isPlaced: boolean }) {
       style={style}
       {...attributes}
       {...listeners}
-      className={`bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-lg p-4 cursor-grab active:cursor-grabbing shadow-lg transition-all touch-none ${
+      className={`bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-lg p-4 min-w-[100px] min-h-[80px] cursor-grab active:cursor-grabbing shadow-lg transition-all touch-none ${
         isDragging ? "opacity-50 scale-105" : ""
       }`}
     >
       <div className="text-center">
         <div className="text-2xl mb-1">🎯</div>
         <div className="text-sm font-medium">Steal!</div>
-        <div className="text-xs opacity-75">Costs 1 token</div>
+        <div className="text-xs opacity-75">Costs 1 🪙</div>
       </div>
     </div>
   );
@@ -119,7 +119,7 @@ function StealSongCard({ isPlaced }: { isPlaced: boolean }) {
 
 function PlacedStealCard() {
   return (
-    <div className="bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-lg p-3 shadow-lg min-w-[80px] animate-pulse">
+    <div className="bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-lg p-3 shadow-lg min-w-[70px] sm:min-w-[80px] min-h-[60px] animate-pulse">
       <div className="text-center">
         <div className="text-xl mb-1">🎯</div>
         <div className="text-xs font-medium">Stealing!</div>
@@ -130,10 +130,12 @@ function PlacedStealCard() {
 
 function TimelineSongCard({ song }: { song: TimelineSong }) {
   return (
-    <div className="bg-card border border-border rounded-lg p-3 min-w-[80px] shadow-sm">
+    <div className="bg-card border border-border rounded-lg p-2 sm:p-3 min-w-[70px] sm:min-w-[80px] min-h-[60px] shadow-sm">
       <div className="text-center">
-        <div className="font-bold text-lg text-primary">{song.year}</div>
-        <div className="text-xs text-muted-foreground truncate max-w-[80px]">
+        <div className="font-bold text-base sm:text-lg text-primary">
+          {song.year}
+        </div>
+        <div className="text-[10px] sm:text-xs text-muted-foreground truncate max-w-[65px] sm:max-w-[80px]">
           {song.name}
         </div>
       </div>
@@ -172,12 +174,12 @@ function StealTimer({
   const isLow = timeLeft <= 3;
 
   return (
-    <div className="flex flex-col items-center gap-2">
-      <div className="text-sm font-medium text-amber-600 dark:text-amber-400">
+    <div className="flex flex-col items-center gap-1.5 sm:gap-2">
+      <div className="text-xs sm:text-sm font-medium text-amber-600 dark:text-amber-400">
         🎯 STEAL PHASE
       </div>
       <div
-        className={`text-3xl font-mono font-bold ${
+        className={`text-2xl sm:text-3xl font-mono font-bold ${
           isLow ? "text-red-500 animate-pulse" : "text-amber-500"
         }`}
       >
@@ -331,20 +333,21 @@ export function StealPhase({
               </div>
 
               {placementIndex !== null && (
-                <div className="flex justify-center gap-4">
+                <div className="flex justify-center gap-3 sm:gap-4 px-2">
                   <Button
                     variant="outline"
                     onClick={handleReset}
                     disabled={isSubmitting}
+                    className="min-h-[44px] min-w-[80px]"
                   >
                     Reset
                   </Button>
                   <Button
                     onClick={handleConfirmSteal}
                     disabled={isSubmitting}
-                    className="bg-amber-500 hover:bg-amber-600"
+                    className="bg-amber-500 hover:bg-amber-600 min-h-[44px] min-w-[100px] sm:min-w-[140px]"
                   >
-                    {isSubmitting ? "Stealing..." : "Confirm Steal (1 🪙)"}
+                    {isSubmitting ? "Stealing..." : "Confirm (1 🪙)"}
                   </Button>
                 </div>
               )}

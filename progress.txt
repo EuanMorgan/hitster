@@ -347,3 +347,33 @@ All 5 PRD steps verified:
 Files changed:
 - src/app/game/[pin]/page.tsx (ActivePlayerTimeline enhancements, PlayerProgressBar component)
 - plans/prd.json (marked display #1 as passes: true)
+
+## 2026-01-08: Implemented mobile phone view optimization
+
+PRD items: display #32 (Player phone view optimized for mobile)
+
+Changes:
+- TimelineDropZone: responsive widths (min-w-[48px] sm:min-w-[60px]), min-h for touch targets
+- DraggableSongCard: min-w-[100px] min-h-[80px] for better touch interaction
+- TimelineSongCard: responsive padding/text (p-2/p-3, text-base/text-lg)
+- Token buttons: min-h-[44px] for touch targets, responsive text hiding on narrow screens
+- Inputs: min-h-[44px] text-base for better mobile typing
+- Confirm/Reset buttons: min-h-[44px] min-w for consistent touch targets
+- StealPhase: same responsive patterns as TimelineDropZone
+- Game page cards: responsive padding (px-3/px-6, py-3/py-4)
+- PlayerCard: responsive text sizing, proper truncation with min-w-0
+- TimelineDisplay: horizontal scroll with overflow-x-auto
+- Game header: compact on mobile, responsive gap/padding
+
+All 5 PRD steps verified:
+1. ✅ Layout 320-428px - responsive widths, no overflow outside horizontal timeline scroll
+2. ✅ Touch-friendly drag-drop - @dnd-kit TouchSensor, larger card sizes
+3. ✅ Timeline horizontally scrollable - overflow-x-auto on timeline containers
+4. ✅ All elements min 44x44px - buttons, inputs have min-h-[44px]
+5. ✅ Clear token/timer display - responsive text sizes (text-3xl/4xl for timer)
+
+Files changed:
+- src/components/timeline-drop-zone.tsx (responsive sizing, touch targets)
+- src/components/steal-phase.tsx (responsive sizing, touch targets)
+- src/app/game/[pin]/page.tsx (responsive cards, headers, player list)
+- plans/prd.json (marked display #32 as passes: true)

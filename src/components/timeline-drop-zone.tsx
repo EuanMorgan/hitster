@@ -52,7 +52,7 @@ function DropZone({
   return (
     <div
       ref={setNodeRef}
-      className={`flex flex-col items-center justify-center min-w-[60px] h-[100px] border-2 border-dashed rounded-lg transition-all ${
+      className={`flex flex-col items-center justify-center min-w-[48px] sm:min-w-[60px] min-h-[80px] sm:h-[100px] border-2 border-dashed rounded-lg transition-all ${
         isOver
           ? "border-primary bg-primary/20 scale-105"
           : isActive
@@ -93,7 +93,7 @@ function DraggableSongCard({
       style={style}
       {...attributes}
       {...listeners}
-      className={`bg-gradient-to-br from-primary to-primary/80 text-primary-foreground rounded-lg p-4 cursor-grab active:cursor-grabbing shadow-lg transition-all touch-none ${
+      className={`bg-gradient-to-br from-primary to-primary/80 text-primary-foreground rounded-lg p-4 min-w-[100px] min-h-[80px] cursor-grab active:cursor-grabbing shadow-lg transition-all touch-none ${
         isDragging ? "opacity-50 scale-105" : ""
       }`}
     >
@@ -108,7 +108,7 @@ function DraggableSongCard({
 
 function PlacedSongCard({ song }: { song: CurrentTurnSong }) {
   return (
-    <div className="bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-lg p-3 shadow-lg min-w-[80px] animate-pulse">
+    <div className="bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-lg p-3 shadow-lg min-w-[70px] sm:min-w-[80px] min-h-[60px] animate-pulse">
       <div className="text-center">
         <div className="text-xl mb-1">🎵</div>
         <div className="text-xs font-medium">Placed!</div>
@@ -120,10 +120,12 @@ function PlacedSongCard({ song }: { song: CurrentTurnSong }) {
 
 function TimelineSongCard({ song }: { song: TimelineSong }) {
   return (
-    <div className="bg-card border border-border rounded-lg p-3 min-w-[80px] shadow-sm">
+    <div className="bg-card border border-border rounded-lg p-2 sm:p-3 min-w-[70px] sm:min-w-[80px] min-h-[60px] shadow-sm">
       <div className="text-center">
-        <div className="font-bold text-lg text-primary">{song.year}</div>
-        <div className="text-xs text-muted-foreground truncate max-w-[80px]">
+        <div className="font-bold text-base sm:text-lg text-primary">
+          {song.year}
+        </div>
+        <div className="text-[10px] sm:text-xs text-muted-foreground truncate max-w-[65px] sm:max-w-[80px]">
           {song.name}
         </div>
       </div>
@@ -179,18 +181,18 @@ function TurnTimer({
   return (
     <div className="flex flex-col items-center gap-2">
       <div
-        className={`text-4xl font-mono font-bold ${
+        className={`text-3xl sm:text-4xl font-mono font-bold ${
           isLow ? "text-red-500 animate-pulse" : "text-foreground"
         }`}
       >
         {timeLeft}s
       </div>
       {isLow && timeLeft > 0 && (
-        <div className="text-sm text-red-500 font-medium animate-bounce">
+        <div className="text-xs sm:text-sm text-red-500 font-medium animate-bounce">
           ⚠️ Time running out!
         </div>
       )}
-      <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+      <div className="w-full max-w-xs h-2 bg-muted rounded-full overflow-hidden">
         <div
           className={`h-full transition-all duration-1000 ${
             isLow ? "bg-red-500" : "bg-primary"
@@ -335,9 +337,9 @@ export function TimelineDropZone({
 
         {/* Token action buttons - visible before song is placed */}
         {placementIndex === null && (
-          <div className="flex flex-col items-center gap-3">
-            <div className="flex justify-center gap-3 flex-wrap">
-              {/* Skip button */}
+          <div className="flex flex-col items-center gap-3 px-2">
+            <div className="flex justify-center gap-2 sm:gap-3 flex-wrap">
+              {/* Skip button - min 44px touch target */}
               {onSkip && (
                 <Button
                   variant="outline"
@@ -348,19 +350,21 @@ export function TimelineDropZone({
                     isSubmitting ||
                     isGettingFreeSong
                   }
-                  className="gap-2"
+                  className="gap-1.5 sm:gap-2 min-h-[44px] px-3 sm:px-4 text-sm"
                 >
                   {isSkipping ? (
                     "Skipping..."
                   ) : (
                     <>
                       <span>🪙</span>
-                      Skip Song (1 token)
+                      <span className="hidden xs:inline">Skip Song</span>
+                      <span className="xs:hidden">Skip</span>
+                      <span className="text-xs opacity-75">(1)</span>
                     </>
                   )}
                 </Button>
               )}
-              {/* Free song button */}
+              {/* Free song button - min 44px touch target */}
               {onGetFreeSong && (
                 <Button
                   variant="outline"
@@ -371,21 +375,23 @@ export function TimelineDropZone({
                     isSubmitting ||
                     isSkipping
                   }
-                  className="gap-2"
+                  className="gap-1.5 sm:gap-2 min-h-[44px] px-3 sm:px-4 text-sm"
                 >
                   {isGettingFreeSong ? (
-                    "Getting song..."
+                    "Getting..."
                   ) : (
                     <>
-                      <span>🪙🪙🪙</span>
-                      Free Song (3 tokens)
+                      <span>🪙</span>
+                      <span className="hidden xs:inline">Free Song</span>
+                      <span className="xs:hidden">Free</span>
+                      <span className="text-xs opacity-75">(3)</span>
                     </>
                   )}
                 </Button>
               )}
             </div>
             {tokens < 1 && (
-              <span className="text-sm text-muted-foreground">
+              <span className="text-xs sm:text-sm text-muted-foreground">
                 No tokens available
               </span>
             )}
@@ -393,42 +399,49 @@ export function TimelineDropZone({
         )}
 
         {placementIndex !== null && (
-          <div className="space-y-4">
+          <div className="space-y-4 px-2">
             {/* Optional guess inputs */}
-            <div className="bg-muted/50 rounded-lg p-4 space-y-3">
-              <div className="text-sm text-center text-muted-foreground">
-                🎯 Bonus: Guess the song for +1 token! (optional)
+            <div className="bg-muted/50 rounded-lg p-3 sm:p-4 space-y-3">
+              <div className="text-xs sm:text-sm text-center text-muted-foreground">
+                🎯 Guess the song for +1 token! (optional)
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-md mx-auto">
+              <div className="grid grid-cols-1 gap-2 sm:gap-3 max-w-md mx-auto">
                 <Input
                   placeholder="Song name..."
                   value={guessedName}
                   onChange={(e) => setGuessedName(e.target.value)}
                   disabled={isSubmitting}
+                  className="min-h-[44px] text-base"
                 />
                 <Input
                   placeholder="Artist..."
                   value={guessedArtist}
                   onChange={(e) => setGuessedArtist(e.target.value)}
                   disabled={isSubmitting}
+                  className="min-h-[44px] text-base"
                 />
               </div>
               {guessedName && guessedArtist && (
                 <div className="text-xs text-center text-green-600">
-                  ✓ Both fields filled - guess will be submitted
+                  ✓ Guess will be submitted
                 </div>
               )}
             </div>
-            <div className="flex justify-center gap-4">
+            <div className="flex justify-center gap-3 sm:gap-4">
               <Button
                 variant="outline"
                 onClick={handleReset}
                 disabled={isSubmitting}
+                className="min-h-[44px] min-w-[80px]"
               >
                 Reset
               </Button>
-              <Button onClick={handleConfirm} disabled={isSubmitting}>
-                {isSubmitting ? "Confirming..." : "Confirm Placement"}
+              <Button
+                onClick={handleConfirm}
+                disabled={isSubmitting}
+                className="min-h-[44px] min-w-[120px]"
+              >
+                {isSubmitting ? "Confirming..." : "Confirm"}
               </Button>
             </div>
           </div>
