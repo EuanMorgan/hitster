@@ -916,6 +916,8 @@ export const gameRouter = createTRPCRouter({
         recipientId,
         gameEnded: false,
         nextPlayerId: newTurnOrder![nextTurnIndex],
+        isNewRound,
+        newRoundNumber,
       };
     }),
 });

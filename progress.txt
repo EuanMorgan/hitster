@@ -602,3 +602,32 @@ Active player can position song in their timeline (PRD gameplay item)
 - Token spending features (skip song for 1 token, free song for 3 tokens)
 - Song name/artist guessing (PRD item 21)
 - Spotify Web Playback SDK (PRD gameplay item)
+
+---
+
+## 2026-01-08: Turn Order Shuffles Each Round Complete
+
+### What was done:
+- Added `isNewRound` and `newRoundNumber` to resolveStealPhase mutation response
+- Added round shuffle animation state (`showRoundShuffleAnimation`) to game page
+- When steal phase resolves and it's a new round, animation shows for 2.5 seconds
+- Animation displays spinning 🔀 emoji, "New Round!" text, and round number
+- All game UI hidden during shuffle animation (same as initial shuffle)
+- Turn result overlay now captures and passes isNewRound/newRoundNumber from mutation
+
+### Files modified:
+- src/trpc/routers/game.ts (added isNewRound, newRoundNumber to resolve response)
+- src/app/game/[pin]/page.tsx (added round shuffle animation state and UI)
+- plans/prd.json (marked "Turn order shuffles each round" as passing)
+
+### Notes:
+- Turn order was already being shuffled on new rounds (backend implemented)
+- This change adds the visual feedback that was missing
+- Animation uses amber/orange styling to differentiate from initial green shuffle
+- The new turn order is displayed in Players List after animation ends
+
+### Next priority:
+- Current player indicator improvements (PRD turns item)
+- Turn progression after steal phase (may already work, needs verification)
+- Token spending features (skip song, free song)
+- Spotify Web Playback SDK

@@ -185,7 +185,10 @@ export default function GamePage() {
     recipientId?: string | null;
     gameEnded?: boolean;
     winnerId?: string;
+    isNewRound?: boolean;
+    newRoundNumber?: number;
   } | null>(null);
+  const [showRoundShuffleAnimation, setShowRoundShuffleAnimation] = useState(false);
 
   const trpc = useTRPC();
 
@@ -219,6 +222,8 @@ export default function GamePage() {
         recipientId: data.recipientId,
         gameEnded: data.gameEnded,
         winnerId: "winnerId" in data ? data.winnerId : undefined,
+        isNewRound: "isNewRound" in data ? data.isNewRound : undefined,
+        newRoundNumber: "newRoundNumber" in data ? data.newRoundNumber : undefined,
       });
       queryClient.invalidateQueries({ queryKey: trpc.game.getSession.queryKey({ pin }) });
     },
@@ -238,6 +243,14 @@ export default function GamePage() {
       return () => clearTimeout(timer);
     }
   }, [showShuffleAnimation]);
+
+  // Hide round shuffle animation after 2.5 seconds
+  useEffect(() => {
+    if (showRoundShuffleAnimation) {
+      const timer = setTimeout(() => setShowRoundShuffleAnimation(false), 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [showRoundShuffleAnimation]);
 
   // Redirect back to lobby if game is not playing
   useEffect(() => {
@@ -276,8 +289,12 @@ export default function GamePage() {
   }, [resolveStealPhaseMutation, pin]);
 
   const handleCloseResult = useCallback(() => {
+    // Check if new round started - show shuffle animation
+    if (turnResult?.isNewRound && !turnResult?.gameEnded) {
+      setShowRoundShuffleAnimation(true);
+    }
     setTurnResult(null);
-  }, []);
+  }, [turnResult?.isNewRound, turnResult?.gameEnded]);
 
   const handleTimeUp = useCallback(() => {
     // Called when timer expires - turn already auto-submitted via TimelineDropZone
@@ -392,7 +409,7 @@ export default function GamePage() {
           </CardContent>
         </Card>
 
-        {/* Shuffle Animation Overlay */}
+        {/* Initial Shuffle Animation Overlay */}
         {showShuffleAnimation && (
           <Card className="border-2 border-dashed border-primary/50 bg-primary/5">
             <CardContent className="py-8 text-center">
@@ -405,8 +422,25 @@ export default function GamePage() {
           </Card>
         )}
 
+        {/* New Round Shuffle Animation */}
+        {showRoundShuffleAnimation && !showShuffleAnimation && (
+          <Card className="border-2 border-dashed border-amber-500/50 bg-amber-500/5">
+            <CardContent className="py-8 text-center">
+              <div className="text-4xl mb-4 animate-spin">🔀</div>
+              <div className="text-lg font-medium">New Round!</div>
+              <div className="text-xl font-bold text-amber-500 mt-2">
+                Round {session?.roundNumber}
+              </div>
+              <div className="text-sm text-muted-foreground mt-2">
+                Shuffling turn order...
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Steal Phase */}
         {!showShuffleAnimation &&
+          !showRoundShuffleAnimation &&
           isStealPhase &&
           session?.currentSong &&
           session?.stealPhaseEndAt &&
@@ -430,6 +464,7 @@ export default function GamePage() {
 
         {/* My Turn - Active Player View (only when NOT in steal phase) */}
         {!showShuffleAnimation &&
+          !showRoundShuffleAnimation &&
           !isStealPhase &&
           isMyTurn &&
           session?.currentSong &&
@@ -456,7 +491,7 @@ export default function GamePage() {
           )}
 
         {/* Waiting View - Not My Turn (only when NOT in steal phase) */}
-        {!showShuffleAnimation && !isStealPhase && !isMyTurn && currentPlayer && (
+        {!showShuffleAnimation && !showRoundShuffleAnimation && !isStealPhase && !isMyTurn && currentPlayer && (
           <Card className="bg-muted/50">
             <CardContent className="py-6">
               <div className="flex items-center justify-center gap-3">
@@ -476,7 +511,7 @@ export default function GamePage() {
         )}
 
         {/* My Timeline (when not my turn and not in steal phase) */}
-        {!showShuffleAnimation && !isStealPhase && !isMyTurn && myPlayer && (
+        {!showShuffleAnimation && !showRoundShuffleAnimation && !isStealPhase && !isMyTurn && myPlayer && (
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Your Timeline</CardTitle>
@@ -491,7 +526,7 @@ export default function GamePage() {
         )}
 
         {/* Players List */}
-        {!showShuffleAnimation && (
+        {!showShuffleAnimation && !showRoundShuffleAnimation && (
           <div className="space-y-4">
             <h2 className="text-lg font-semibold">Players</h2>
             <div className="grid gap-4">

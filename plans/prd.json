@@ -439,7 +439,7 @@
       "Shuffle animation shown on all screens",
       "New order displayed before first turn of round"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "turns",
