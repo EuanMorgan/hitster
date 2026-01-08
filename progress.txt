@@ -307,3 +307,35 @@ Configure test mocking infrastructure (PRD item #4) OR implement non-host player
 
 ### Next priority:
 Implement non-host players join without authentication (PRD item #12)
+
+---
+
+## 2026-01-08: Non-Host Player Join Flow Complete
+
+### What was done:
+- Created /join page with 2-step flow: PIN entry → name/avatar selection
+- Created game tRPC router with procedures: validatePin, checkNameAvailable, joinGame, getSession
+- Created AvatarSelector component with 20 emoji presets
+- Created placeholder /lobby/[pin] page showing connected players
+- Updated home page to link to /join page
+- Fixed tRPC context typing to properly expose db in procedures
+- Supports reconnection: disconnected players can rejoin with same name
+
+### Files created/modified:
+- src/trpc/routers/game.ts (new - game procedures)
+- src/trpc/routers/_app.ts (added game router)
+- src/trpc/init.ts (fixed context typing)
+- src/components/avatar-selector.tsx (new)
+- src/app/join/page.tsx (new - join flow)
+- src/app/lobby/[pin]/page.tsx (new - lobby placeholder)
+- src/app/page.tsx (updated Join Game link)
+
+### Notes:
+- PIN validation: checks game exists, not in progress, not full
+- Name validation: must be unique among connected players
+- Player data stored in localStorage (hitster_player_id, hitster_session_id)
+- Guest players have userId: null in database
+- Reconnection handled: if same name exists but disconnected, reconnects that player
+
+### Next priority:
+Host can create a new game session (PRD item #13)

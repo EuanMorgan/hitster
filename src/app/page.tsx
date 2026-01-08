@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -7,7 +8,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Greeting } from "@/components/greeting";
 import { UserMenu } from "@/components/user-menu";
 import { trpc, HydrateClient } from "@/trpc/server";
@@ -26,10 +26,13 @@ export default async function Home() {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
-            <Input placeholder="Enter game PIN" />
             <div className="flex gap-2">
-              <Button variant="default">Join Game</Button>
-              <Button variant="secondary">Create Game</Button>
+              <Button asChild variant="default" className="flex-1">
+                <Link href="/join">Join Game</Link>
+              </Button>
+              <Button variant="secondary" className="flex-1">
+                Create Game
+              </Button>
             </div>
           </CardContent>
           <CardFooter className="border-t pt-4">

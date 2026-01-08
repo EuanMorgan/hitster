@@ -6,7 +6,9 @@ export const createTRPCContext = cache(async () => {
   return { db };
 });
 
-const t = initTRPC.create();
+export type TRPCContext = Awaited<ReturnType<typeof createTRPCContext>>;
+
+const t = initTRPC.context<TRPCContext>().create();
 
 export const createTRPCRouter = t.router;
 export const createCallerFactory = t.createCallerFactory;

@@ -152,7 +152,7 @@
       "Select avatar from presets",
       "Join game room without Spotify login"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "lobby",
