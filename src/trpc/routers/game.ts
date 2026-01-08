@@ -13,6 +13,7 @@ import {
   turns,
 } from "@/db/schema";
 import { env } from "@/env";
+import { emitSessionUpdate, gameEvents } from "@/lib/game-events";
 import { baseProcedure, createTRPCRouter, protectedProcedure } from "../init";
 
 function shuffleArray<T>(array: T[]): T[] {
@@ -464,6 +465,7 @@ export const gameRouter = createTRPCRouter({
           .set({ isConnected: true, avatar, lastSeenAt: new Date() })
           .where(eq(players.id, existingPlayer.id));
 
+        emitSessionUpdate(pin);
         return { playerId: existingPlayer.id, sessionId: session.id };
       }
 
@@ -480,6 +482,7 @@ export const gameRouter = createTRPCRouter({
         })
         .returning();
 
+      emitSessionUpdate(pin);
       return { playerId: newPlayer.id, sessionId: session.id };
     }),
 
@@ -659,6 +662,7 @@ export const gameRouter = createTRPCRouter({
         .set({ ...filteredUpdates, updatedAt: new Date() })
         .where(eq(gameSessions.id, session.id));
 
+      emitSessionUpdate(pin);
       return { success: true };
     }),
 
@@ -896,6 +900,8 @@ export const gameRouter = createTRPCRouter({
         })
         .where(eq(gameSessions.id, session.id));
 
+      emitSessionUpdate(pin);
+
       return {
         success: true,
         turnOrder,
@@ -995,6 +1001,8 @@ export const gameRouter = createTRPCRouter({
           updatedAt: new Date(),
         })
         .where(eq(gameSessions.id, session.id));
+
+      emitSessionUpdate(pin);
 
       return {
         stealPhaseStarted: true,
@@ -1111,6 +1119,8 @@ export const gameRouter = createTRPCRouter({
         })
         .where(eq(gameSessions.id, session.id));
 
+      emitSessionUpdate(pin);
+
       return { success: true, tokenDeducted: true };
     }),
 
@@ -1222,6 +1232,8 @@ export const gameRouter = createTRPCRouter({
           })
           .where(eq(gameSessions.id, session.id));
 
+        emitSessionUpdate(pin);
+
         return {
           success: false,
           reason: "No more songs available",
@@ -1248,6 +1260,8 @@ export const gameRouter = createTRPCRouter({
           updatedAt: new Date(),
         })
         .where(eq(gameSessions.id, session.id));
+
+      emitSessionUpdate(pin);
 
       return {
         success: true,
@@ -1395,6 +1409,8 @@ export const gameRouter = createTRPCRouter({
           })
           .where(eq(gameSessions.id, session.id));
 
+        emitSessionUpdate(pin);
+
         return {
           success: true,
           freeSong: {
@@ -1409,6 +1425,8 @@ export const gameRouter = createTRPCRouter({
           winnerId: input.playerId,
         };
       }
+
+      emitSessionUpdate(pin);
 
       return {
         success: true,
@@ -1643,6 +1661,8 @@ export const gameRouter = createTRPCRouter({
               })
               .where(eq(gameSessions.id, session.id));
 
+            emitSessionUpdate(pin);
+
             return {
               activePlayerCorrect,
               song: session.currentSong,
@@ -1713,6 +1733,8 @@ export const gameRouter = createTRPCRouter({
           })
           .where(eq(gameSessions.id, session.id));
 
+        emitSessionUpdate(pin);
+
         return {
           activePlayerCorrect,
           song: session.currentSong,
@@ -1762,6 +1784,8 @@ export const gameRouter = createTRPCRouter({
           updatedAt: new Date(),
         })
         .where(eq(gameSessions.id, session.id));
+
+      emitSessionUpdate(pin);
 
       return {
         activePlayerCorrect,
@@ -1841,6 +1865,67 @@ export const gameRouter = createTRPCRouter({
         })
         .where(eq(gameSessions.id, session.id));
 
+      emitSessionUpdate(session.pin);
+
       return { success: true, pin: session.pin };
+    }),
+
+  // SSE subscription for real-time game state updates
+  onSessionUpdate: baseProcedure
+    .input(z.object({ pin: z.string().length(4) }))
+    .subscription(async function* ({ input, signal }) {
+      const pin = input.pin.toUpperCase();
+      const channel = `session:${pin}`;
+
+      // Create a queue to store events
+      const eventQueue: Array<{ timestamp: number }> = [];
+      let resolveWait: (() => void) | null = null;
+
+      const handleEvent = () => {
+        eventQueue.push({ timestamp: Date.now() });
+        if (resolveWait) {
+          resolveWait();
+          resolveWait = null;
+        }
+      };
+
+      gameEvents.on(channel, handleEvent);
+
+      // Cleanup when subscription is aborted
+      signal?.addEventListener("abort", () => {
+        gameEvents.off(channel, handleEvent);
+      });
+
+      try {
+        // Yield initial event so client knows subscription is active
+        yield { timestamp: Date.now(), type: "connected" as const };
+
+        // Keep the subscription open and yield events as they come
+        while (!signal?.aborted) {
+          if (eventQueue.length > 0) {
+            const event = eventQueue.shift()!;
+            yield { timestamp: event.timestamp, type: "update" as const };
+          } else {
+            // Wait for the next event or timeout after 30s (for keep-alive)
+            await Promise.race([
+              new Promise<void>((resolve) => {
+                resolveWait = resolve;
+              }),
+              new Promise<void>((resolve) =>
+                setTimeout(() => {
+                  resolve();
+                }, 30000),
+              ),
+            ]);
+
+            // If we timed out (no events), yield a ping to keep connection alive
+            if (eventQueue.length === 0 && !signal?.aborted) {
+              yield { timestamp: Date.now(), type: "ping" as const };
+            }
+          }
+        }
+      } finally {
+        gameEvents.off(channel, handleEvent);
+      }
     }),
 });

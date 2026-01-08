@@ -745,7 +745,7 @@
       "Subscription for turn/steal events",
       "If WebSocket connection fails, show connection error toast with retry button"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "spotify",

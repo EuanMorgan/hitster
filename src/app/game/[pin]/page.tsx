@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { SpotifyPlayer } from "@/components/spotify-player";
@@ -16,6 +16,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import type { SafeCurrentTurnSong, TimelineSong } from "@/db/schema";
+import { useGameSession } from "@/hooks/use-game-session";
 import { useSession } from "@/lib/auth-client";
 import { useTRPC } from "@/trpc/client";
 
@@ -475,10 +476,7 @@ export default function GamePage() {
 
   const trpc = useTRPC();
 
-  const sessionQuery = useQuery({
-    ...trpc.game.getSession.queryOptions({ pin }),
-    refetchInterval: 1000, // Faster polling during steal phase
-  });
+  const sessionQuery = useGameSession({ pin });
 
   const confirmTurnMutation = useMutation({
     ...trpc.game.confirmTurn.mutationOptions(),

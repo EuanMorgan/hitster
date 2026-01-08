@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
 import { useEffect, useState } from "react";
@@ -15,6 +15,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { env } from "@/env";
+import { useGameSession } from "@/hooks/use-game-session";
 import { useSession } from "@/lib/auth-client";
 import { useTRPC } from "@/trpc/client";
 
@@ -26,10 +27,7 @@ export default function LobbyPage() {
   const trpc = useTRPC();
   const { data: authSession } = useSession();
 
-  const sessionQuery = useQuery({
-    ...trpc.game.getSession.queryOptions({ pin }),
-    refetchInterval: 2000,
-  });
+  const sessionQuery = useGameSession({ pin });
 
   const startGame = useMutation({
     ...trpc.game.startGame.mutationOptions(),

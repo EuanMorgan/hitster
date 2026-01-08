@@ -615,3 +615,44 @@ Files changed:
 - src/components/steal-phase.tsx (use SafeCurrentTurnSong)
 - src/app/game/[pin]/page.tsx (use SafeCurrentTurnSong)
 - plans/prd.json (marked spotify #41, #42 as passes: true)
+
+## 2026-01-08: Implemented tRPC subscriptions for real-time updates
+
+PRD items: api #38 (tRPC subscriptions for real-time)
+
+Replaced 1-2s polling with SSE-based subscriptions for instant game state updates.
+
+Architecture:
+- EventEmitter-based pub/sub system (src/lib/game-events.ts)
+- Subscription procedure using async generators (game.ts:onSessionUpdate)
+- Client uses splitLink: httpSubscriptionLink for subscriptions, httpBatchLink for queries/mutations
+- useGameSession hook combines subscription + query with automatic fallback to polling
+
+Implementation details:
+1. SSE transport chosen over WebSocket for Next.js App Router compatibility
+2. Server yields "connected", "update", and "ping" (keep-alive) events
+3. All state-changing mutations emit session update events
+4. Client hook invalidates query cache on "update" events
+5. Automatic fallback to 2s polling if SSE connection fails
+6. Toast notification with retry button on connection error
+
+All 5 PRD steps verified:
+1. ✅ Configure SSE transport - httpSubscriptionLink in client
+2. ✅ Subscription for lobby updates - useGameSession in lobby page
+3. ✅ Subscription for game state changes - useGameSession in game page
+4. ✅ Subscription for turn/steal events - emitSessionUpdate in mutations
+5. ✅ Connection error toast with retry - toast.error + subscription.reset()
+
+Key decisions:
+- SSE over WebSocket: Better compatibility with serverless/edge
+- Event notification pattern: Subscription notifies, query fetches (simpler than streaming full state)
+- Graceful degradation: Falls back to polling if SSE fails
+
+Files changed:
+- src/lib/game-events.ts (new - EventEmitter pub/sub)
+- src/trpc/routers/game.ts (added onSessionUpdate subscription + emitSessionUpdate calls)
+- src/trpc/client.tsx (splitLink with httpSubscriptionLink)
+- src/hooks/use-game-session.ts (new - subscription + query combo hook)
+- src/app/lobby/[pin]/page.tsx (use useGameSession)
+- src/app/game/[pin]/page.tsx (use useGameSession)
+- plans/prd.json (marked api #38 as passes: true)
