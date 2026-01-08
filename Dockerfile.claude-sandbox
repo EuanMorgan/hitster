@@ -1,0 +1,8 @@
+# syntax=docker/dockerfile:1
+FROM docker/sandbox-templates:claude-code
+
+USER root
+RUN curl -fsSL https://bun.sh/install | bash \
+    && mv /root/.bun/bin/bun /usr/local/bin/bun \
+    && ln -s /usr/local/bin/bun /usr/local/bin/bunx
+USER agent
