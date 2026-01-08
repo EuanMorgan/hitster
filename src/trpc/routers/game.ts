@@ -788,6 +788,151 @@ export const gameRouter = createTRPCRouter({
       };
     }),
 
+  getFreeSong: baseProcedure
+    .input(
+      z.object({
+        pin: z.string().length(4),
+        playerId: z.string().uuid(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const pin = input.pin.toUpperCase();
+
+      const session = await ctx.db.query.gameSessions.findFirst({
+        where: eq(gameSessions.pin, pin),
+        with: {
+          players: {
+            where: eq(players.isConnected, true),
+          },
+        },
+      });
+
+      if (!session) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Game not found" });
+      }
+
+      if (session.state !== "playing") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Game is not in progress",
+        });
+      }
+
+      if (session.isStealPhase) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Cannot get free song during steal phase",
+        });
+      }
+
+      const currentPlayerId =
+        session.turnOrder && session.currentTurnIndex !== null
+          ? session.turnOrder[session.currentTurnIndex]
+          : null;
+
+      if (input.playerId !== currentPlayerId) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "It's not your turn",
+        });
+      }
+
+      const player = session.players.find((p) => p.id === input.playerId);
+      if (!player) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Player not found" });
+      }
+
+      if (player.tokens < 3) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Not enough tokens (need 3)",
+        });
+      }
+
+      // Draw a random unused song
+      const usedSongIds = new Set(session.usedSongIds ?? []);
+      const availableSongs = PLACEHOLDER_SONGS.filter(
+        (s) => !usedSongIds.has(s.songId)
+      );
+
+      if (availableSongs.length === 0) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "No more songs available",
+        });
+      }
+
+      const freeSong = availableSongs[Math.floor(Math.random() * availableSongs.length)];
+
+      // Add song to player's timeline
+      const newTimelineSong: TimelineSong = {
+        songId: freeSong.songId,
+        name: freeSong.name,
+        artist: freeSong.artist,
+        year: freeSong.year,
+        addedAt: new Date().toISOString(),
+      };
+      const newTimeline = [...(player.timeline ?? []), newTimelineSong];
+
+      // Deduct 3 tokens and update timeline
+      await ctx.db
+        .update(players)
+        .set({
+          tokens: player.tokens - 3,
+          timeline: newTimeline,
+        })
+        .where(eq(players.id, input.playerId));
+
+      // Mark song as used
+      const newUsedSongIds = [...(session.usedSongIds ?? []), freeSong.songId];
+      await ctx.db
+        .update(gameSessions)
+        .set({
+          usedSongIds: newUsedSongIds,
+          updatedAt: new Date(),
+        })
+        .where(eq(gameSessions.id, session.id));
+
+      // Check win condition
+      if (newTimeline.length >= session.songsToWin) {
+        await ctx.db
+          .update(gameSessions)
+          .set({
+            state: "finished",
+            currentSong: null,
+            updatedAt: new Date(),
+          })
+          .where(eq(gameSessions.id, session.id));
+
+        return {
+          success: true,
+          freeSong: {
+            songId: freeSong.songId,
+            name: freeSong.name,
+            artist: freeSong.artist,
+            year: freeSong.year,
+          },
+          tokensRemaining: player.tokens - 3,
+          newTimelineCount: newTimeline.length,
+          gameEnded: true,
+          winnerId: input.playerId,
+        };
+      }
+
+      return {
+        success: true,
+        freeSong: {
+          songId: freeSong.songId,
+          name: freeSong.name,
+          artist: freeSong.artist,
+          year: freeSong.year,
+        },
+        tokensRemaining: player.tokens - 3,
+        newTimelineCount: newTimeline.length,
+        gameEnded: false,
+      };
+    }),
+
   resolveStealPhase: baseProcedure
     .input(z.object({ pin: z.string().length(4) }))
     .mutation(async ({ ctx, input }) => {

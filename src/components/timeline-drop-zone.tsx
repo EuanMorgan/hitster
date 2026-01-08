@@ -23,8 +23,10 @@ interface TimelineDropZoneProps {
   onConfirm: (placementIndex: number) => void;
   onTimeUp: () => void;
   onSkip?: () => void;
+  onGetFreeSong?: () => void;
   isSubmitting: boolean;
   isSkipping?: boolean;
+  isGettingFreeSong?: boolean;
   turnDuration: number;
   turnStartedAt: string | null;
   tokens: number;
@@ -200,8 +202,10 @@ export function TimelineDropZone({
   onConfirm,
   onTimeUp,
   onSkip,
+  onGetFreeSong,
   isSubmitting,
   isSkipping,
+  isGettingFreeSong,
   turnDuration,
   turnStartedAt,
   tokens,
@@ -299,27 +303,50 @@ export function TimelineDropZone({
           </div>
         )}
 
-        {/* Skip button - always visible but disabled when no tokens */}
-        {onSkip && placementIndex === null && (
-          <div className="flex justify-center">
-            <Button
-              variant="outline"
-              onClick={onSkip}
-              disabled={tokens < 1 || isSkipping || isSubmitting}
-              className="gap-2"
-            >
-              {isSkipping ? (
-                "Skipping..."
-              ) : (
-                <>
-                  <span>🪙</span>
-                  Skip Song (1 token)
-                </>
+        {/* Token action buttons - visible before song is placed */}
+        {placementIndex === null && (
+          <div className="flex flex-col items-center gap-3">
+            <div className="flex justify-center gap-3 flex-wrap">
+              {/* Skip button */}
+              {onSkip && (
+                <Button
+                  variant="outline"
+                  onClick={onSkip}
+                  disabled={tokens < 1 || isSkipping || isSubmitting || isGettingFreeSong}
+                  className="gap-2"
+                >
+                  {isSkipping ? (
+                    "Skipping..."
+                  ) : (
+                    <>
+                      <span>🪙</span>
+                      Skip Song (1 token)
+                    </>
+                  )}
+                </Button>
               )}
-            </Button>
+              {/* Free song button */}
+              {onGetFreeSong && (
+                <Button
+                  variant="outline"
+                  onClick={onGetFreeSong}
+                  disabled={tokens < 3 || isGettingFreeSong || isSubmitting || isSkipping}
+                  className="gap-2"
+                >
+                  {isGettingFreeSong ? (
+                    "Getting song..."
+                  ) : (
+                    <>
+                      <span>🪙🪙🪙</span>
+                      Free Song (3 tokens)
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
             {tokens < 1 && (
-              <span className="ml-2 text-sm text-muted-foreground self-center">
-                No tokens
+              <span className="text-sm text-muted-foreground">
+                No tokens available
               </span>
             )}
           </div>

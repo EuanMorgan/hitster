@@ -258,6 +258,21 @@ export default function GamePage() {
     },
   });
 
+  const getFreeSongMutation = useMutation({
+    ...trpc.game.getFreeSong.mutationOptions(),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: trpc.game.getSession.queryKey({ pin }) });
+      if (data.gameEnded && "winnerId" in data) {
+        setTurnResult({
+          activePlayerCorrect: true,
+          song: data.freeSong,
+          gameEnded: true,
+          winnerId: data.winnerId,
+        });
+      }
+    },
+  });
+
   // Get current player ID from localStorage
   const [currentPlayerId, setCurrentPlayerId] = useState<string | null>(null);
   useEffect(() => {
@@ -336,6 +351,14 @@ export default function GamePage() {
       playerId: currentPlayerId,
     });
   }, [skipSongMutation, pin, currentPlayerId]);
+
+  const handleGetFreeSong = useCallback(() => {
+    if (!currentPlayerId || getFreeSongMutation.isPending) return;
+    getFreeSongMutation.mutate({
+      pin,
+      playerId: currentPlayerId,
+    });
+  }, [getFreeSongMutation, pin, currentPlayerId]);
 
   if (sessionQuery.isLoading) {
     return (
@@ -559,8 +582,10 @@ export default function GamePage() {
                   onConfirm={handleConfirmTurn}
                   onTimeUp={handleTimeUp}
                   onSkip={handleSkipSong}
+                  onGetFreeSong={handleGetFreeSong}
                   isSubmitting={confirmTurnMutation.isPending}
                   isSkipping={skipSongMutation.isPending}
+                  isGettingFreeSong={getFreeSongMutation.isPending}
                   turnDuration={session.turnDuration}
                   turnStartedAt={session.turnStartedAt}
                   tokens={myPlayer.tokens}

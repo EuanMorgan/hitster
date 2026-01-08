@@ -417,7 +417,7 @@
       "Random song added to timeline at correct position automatically",
       "Turn continues normally with original song"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "tokens",

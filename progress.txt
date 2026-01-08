@@ -701,3 +701,35 @@ Active player can position song in their timeline (PRD gameplay item)
 - Song/artist guessing for bonus token
 - Current player indicator enhancements (host timeline view)
 - Spotify Web Playback SDK integration
+
+---
+
+## 2026-01-08: Free Song Feature (3 Tokens) Complete
+
+### What was done:
+- Added `getFreeSong` tRPC mutation to game router
+- Validates: player's turn, has at least 3 tokens, game in progress, not in steal phase
+- Deducts 3 tokens from player
+- Draws random unused song and adds to player's timeline automatically
+- Checks win condition after adding song
+- Added Free Song button to TimelineDropZone component (alongside Skip button)
+- Button shows "🪙🪙🪙 Free Song (3 tokens)" and is disabled when player has <3 tokens
+- Wired up mutation in game page with proper loading state and win handling
+
+### Files modified:
+- src/trpc/routers/game.ts (added getFreeSong mutation)
+- src/components/timeline-drop-zone.tsx (added Free Song button, onGetFreeSong/isGettingFreeSong props)
+- src/app/game/[pin]/page.tsx (added getFreeSongMutation, handleGetFreeSong callback)
+- plans/prd.json (marked PRD item #29 as passing)
+
+### Notes:
+- No confirmation dialog implemented (direct action for better UX, same as Skip)
+- Song is added to timeline at end, display sorted by year automatically
+- If free song causes win, game ends with celebration modal
+- Both Skip and Free Song buttons disabled during each other's pending state
+- Typecheck and all tests pass
+
+### Next priority:
+- Song/artist guessing for bonus token (PRD item #30)
+- Current player indicator enhancements (PRD item #31)
+- Spotify Web Playback SDK integration (PRD item #20)
