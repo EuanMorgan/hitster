@@ -339,3 +339,32 @@ Implement non-host players join without authentication (PRD item #12)
 
 ### Next priority:
 Host can create a new game session (PRD item #13)
+
+---
+
+## 2026-01-08: Host Can Create Game Session Complete
+
+### What was done:
+- CreateGameButton component already existed (wired to tRPC mutation)
+- createGame tRPC procedure already existed (generates unique PIN, creates session + host player)
+- Added qrcode.react library for QR code generation
+- Updated lobby page to display QR code with join URL
+- QR code links to /join?pin=XXXX for easy mobile scanning
+- Verified PIN and QR code display correctly in lobby
+
+### Files created/modified:
+- src/app/lobby/[pin]/page.tsx (added QR code display)
+- package.json (added qrcode.react dependency)
+
+### Dependencies added:
+- qrcode.react
+
+### Notes:
+- QR code encodes URL: {APP_URL}/join?pin={PIN}
+- Join page already supports ?pin query param to prefill PIN
+- PIN is 4-char alphanumeric (excludes confusing chars like 0/O, 1/I/L)
+- Host redirected to lobby after creating game
+- Lobby shows PIN prominently + QR code + player list
+
+### Next priority:
+Host can configure game settings before starting (PRD item #14)

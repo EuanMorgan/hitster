@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Greeting } from "@/components/greeting";
 import { UserMenu } from "@/components/user-menu";
+import { CreateGameButton } from "@/components/create-game-button";
 import { trpc, HydrateClient } from "@/trpc/server";
 
 export default async function Home() {
@@ -30,9 +31,7 @@ export default async function Home() {
               <Button asChild variant="default" className="flex-1">
                 <Link href="/join">Join Game</Link>
               </Button>
-              <Button variant="secondary" className="flex-1">
-                Create Game
-              </Button>
+              <CreateGameButton />
             </div>
           </CardContent>
           <CardFooter className="border-t pt-4">

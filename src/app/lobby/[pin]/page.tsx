@@ -1,6 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
+import { QRCodeSVG } from "qrcode.react";
 import {
   Card,
   CardContent,
@@ -10,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import { useTRPC } from "@/trpc/client";
 import { useQuery } from "@tanstack/react-query";
+import { env } from "@/env";
 
 export default function LobbyPage() {
   const params = useParams();
@@ -45,13 +47,28 @@ export default function LobbyPage() {
   }
 
   const session = sessionQuery.data;
+  const joinUrl = `${env.NEXT_PUBLIC_APP_URL}/join?pin=${session?.pin}`;
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-md">
-        <CardHeader>
+        <CardHeader className="text-center">
           <CardTitle>Game Lobby</CardTitle>
-          <CardDescription>PIN: {session?.pin}</CardDescription>
+          <CardDescription>Share this PIN to invite players</CardDescription>
+          <div className="mt-4 flex flex-col items-center gap-4">
+            <div className="p-4 bg-muted rounded-lg w-full">
+              <p className="text-xs text-muted-foreground mb-1">Game PIN</p>
+              <p className="text-4xl font-mono font-bold tracking-widest">
+                {session?.pin}
+              </p>
+            </div>
+            <div className="p-3 bg-white rounded-lg">
+              <QRCodeSVG value={joinUrl} size={160} />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Scan to join or go to {env.NEXT_PUBLIC_APP_URL}/join
+            </p>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">

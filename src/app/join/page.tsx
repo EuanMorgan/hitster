@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,7 +18,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 
 type Step = "pin" | "details";
 
-export default function JoinPage() {
+function JoinPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialPin = searchParams.get("pin") ?? "";
@@ -192,5 +192,26 @@ export default function JoinPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function JoinPageLoading() {
+  return (
+    <div className="flex min-h-screen items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle>Join Game</CardTitle>
+          <CardDescription>Loading...</CardDescription>
+        </CardHeader>
+      </Card>
+    </div>
+  );
+}
+
+export default function JoinPage() {
+  return (
+    <Suspense fallback={<JoinPageLoading />}>
+      <JoinPageContent />
+    </Suspense>
   );
 }

@@ -164,7 +164,7 @@
       "Host redirected to lobby as first player",
       "PIN code and QR code displayed for sharing"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "lobby",

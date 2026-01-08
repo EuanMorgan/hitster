@@ -1,8 +1,17 @@
-import { createTRPCRouter, baseProcedure } from "../init";
+import { createTRPCRouter, baseProcedure, protectedProcedure } from "../init";
 import { z } from "zod/v4";
 import { gameSessions, players, type Player } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and, ne } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
+
+function generatePin(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let pin = "";
+  for (let i = 0; i < 4; i++) {
+    pin += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return pin;
+}
 
 export const gameRouter = createTRPCRouter({
   validatePin: baseProcedure
@@ -176,4 +185,63 @@ export const gameRouter = createTRPCRouter({
         })),
       };
     }),
+
+  createGame: protectedProcedure.mutation(async ({ ctx }) => {
+    const userId = ctx.user.id;
+    const userName = ctx.user.name;
+
+    // Generate unique PIN
+    let pin: string;
+    let attempts = 0;
+    const maxAttempts = 10;
+
+    do {
+      pin = generatePin();
+      const existing = await ctx.db.query.gameSessions.findFirst({
+        where: and(
+          eq(gameSessions.pin, pin),
+          ne(gameSessions.state, "finished")
+        ),
+      });
+      if (!existing) break;
+      attempts++;
+    } while (attempts < maxAttempts);
+
+    if (attempts >= maxAttempts) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to generate unique PIN",
+      });
+    }
+
+    // Create game session
+    const [gameSession] = await ctx.db
+      .insert(gameSessions)
+      .values({
+        pin,
+        hostId: userId,
+        state: "lobby",
+      })
+      .returning();
+
+    // Create host as first player
+    const [hostPlayer] = await ctx.db
+      .insert(players)
+      .values({
+        sessionId: gameSession.id,
+        userId,
+        name: userName,
+        avatar: "🎵",
+        isHost: true,
+        tokens: 2,
+        timeline: [],
+      })
+      .returning();
+
+    return {
+      sessionId: gameSession.id,
+      pin: gameSession.pin,
+      playerId: hostPlayer.id,
+    };
+  }),
 });
