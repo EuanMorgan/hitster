@@ -599,7 +599,7 @@
       "Timer visible in top corner, min 48px font",
       "Small progress indicators for all players (song counts)"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "display",

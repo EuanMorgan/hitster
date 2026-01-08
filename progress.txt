@@ -325,3 +325,25 @@ All 6 PRD steps verified:
 Files changed:
 - src/trpc/routers/game.ts (validatePin + joinGame state checks)
 - plans/prd.json (marked #24 as passes: true)
+
+## 2026-01-08: Implemented host TV display optimization
+
+PRD items: display #1 (Host main display shows current game state)
+
+Changes:
+- ActivePlayerTimeline: timer moved to absolute top-right, text-5xl/text-6xl (48-60px)
+- ActivePlayerTimeline: year cards now text-3xl/text-4xl (30-36px) for TV readability
+- ActivePlayerTimeline: timer has color-coded progress (green>50%, amber 25-50%, red<25%)
+- Added PlayerProgressBar component: compact player progress indicators with song counts
+- PlayerProgressBar shows sorted leaderboard with progress bars + current turn highlight
+
+All 5 PRD steps verified:
+1. ✅ Large view of active player's timeline - ActivePlayerTimeline component
+2. ✅ Year text min 24px - text-3xl/text-4xl = 30-36px
+3. ✅ Drag position highlighted - mystery song box with amber dashed border
+4. ✅ Timer in top corner min 48px - absolute top-right, text-5xl/text-6xl = 48-60px
+5. ✅ Small progress indicators - PlayerProgressBar with song counts + progress bars
+
+Files changed:
+- src/app/game/[pin]/page.tsx (ActivePlayerTimeline enhancements, PlayerProgressBar component)
+- plans/prd.json (marked display #1 as passes: true)

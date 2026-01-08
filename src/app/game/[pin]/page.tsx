@@ -118,6 +118,63 @@ function PlayerCard({
   );
 }
 
+function PlayerProgressBar({
+  players,
+  currentPlayerId,
+  songsToWin,
+}: {
+  players: {
+    id: string;
+    name: string;
+    avatar: string;
+    timeline: TimelineSong[] | null;
+  }[];
+  currentPlayerId: string | null;
+  songsToWin: number;
+}) {
+  // Sort by timeline length descending
+  const sortedPlayers = [...players].sort(
+    (a, b) => (b.timeline?.length ?? 0) - (a.timeline?.length ?? 0),
+  );
+
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-3 p-3 bg-muted/50 rounded-lg">
+      {sortedPlayers.map((player) => {
+        const songCount = player.timeline?.length ?? 0;
+        const progress = (songCount / songsToWin) * 100;
+        const isPlaying = player.id === currentPlayerId;
+
+        return (
+          <div
+            key={player.id}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all ${
+              isPlaying ? "bg-primary/20 ring-2 ring-primary" : "bg-background"
+            }`}
+          >
+            <span className="text-2xl">{player.avatar}</span>
+            <div className="flex flex-col min-w-[60px]">
+              <span className="text-sm font-medium truncate max-w-[80px]">
+                {player.name}
+              </span>
+              <div className="flex items-center gap-1">
+                <div className="w-12 h-1.5 bg-muted rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-primary transition-all"
+                    style={{ width: `${Math.min(progress, 100)}%` }}
+                  />
+                </div>
+                <span className="text-xs font-bold text-primary">
+                  {songCount}/{songsToWin}
+                </span>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function ActivePlayerTimeline({
   player,
   currentSong,
@@ -161,76 +218,98 @@ function ActivePlayerTimeline({
     return () => clearInterval(interval);
   }, [turnStartedAt, turnDuration]);
 
+  // Timer color based on time remaining
+  const timerPercentage =
+    timeRemaining !== null ? (timeRemaining / turnDuration) * 100 : 100;
+  const timerColorClass =
+    timerPercentage <= 25
+      ? "text-red-500"
+      : timerPercentage <= 50
+        ? "text-amber-500"
+        : "text-green-500";
+
   return (
-    <Card className="border-2 border-primary bg-primary/5">
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-5xl">{player.avatar}</span>
-            <div>
-              <CardTitle className="text-2xl">
-                {player.name}&apos;s Turn
-              </CardTitle>
-              <CardDescription className="flex items-center gap-4">
-                <span>
-                  <TokenDisplay count={player.tokens} />
-                </span>
-                <span>{player.timeline?.length ?? 0} songs in timeline</span>
-              </CardDescription>
-            </div>
+    <Card className="border-2 border-primary bg-primary/5 relative">
+      {/* Timer in top-right corner - min 48px per PRD */}
+      {timeRemaining !== null && (
+        <div className="absolute top-4 right-4 flex flex-col items-center">
+          <div
+            className={`text-5xl md:text-6xl font-mono font-bold ${timerColorClass} ${
+              timerPercentage <= 25 ? "animate-pulse" : ""
+            }`}
+            style={{ minWidth: "80px", textAlign: "center" }}
+          >
+            {timeRemaining}s
           </div>
-          {timeRemaining !== null && (
+          {/* Progress bar */}
+          <div className="w-20 h-2 bg-muted rounded-full mt-2 overflow-hidden">
             <div
-              className={`text-4xl font-mono font-bold ${
-                timeRemaining <= 10
-                  ? "text-red-500 animate-pulse"
-                  : timeRemaining <= 20
-                    ? "text-amber-500"
-                    : "text-primary"
+              className={`h-full transition-all duration-1000 ${
+                timerPercentage <= 25
+                  ? "bg-red-500"
+                  : timerPercentage <= 50
+                    ? "bg-amber-500"
+                    : "bg-green-500"
               }`}
-            >
-              {timeRemaining}s
-            </div>
-          )}
+              style={{ width: `${timerPercentage}%` }}
+            />
+          </div>
+        </div>
+      )}
+      <CardHeader className="pb-2">
+        <div className="flex items-center gap-4 pr-28">
+          <span className="text-6xl">{player.avatar}</span>
+          <div>
+            <CardTitle className="text-3xl md:text-4xl">
+              {player.name}&apos;s Turn
+            </CardTitle>
+            <CardDescription className="flex items-center gap-4 text-base">
+              <span>
+                <TokenDisplay count={player.tokens} />
+              </span>
+              <span>{player.timeline?.length ?? 0} songs in timeline</span>
+            </CardDescription>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
         {/* Current song indicator (placeholder - year hidden) */}
         {currentSong && (
-          <div className="mb-4 p-4 bg-amber-100 dark:bg-amber-900/30 rounded-lg text-center">
-            <div className="text-sm text-muted-foreground mb-1">
+          <div className="mb-6 p-6 bg-amber-100 dark:bg-amber-900/30 rounded-xl text-center border-2 border-dashed border-amber-400">
+            <div className="text-lg text-muted-foreground mb-2">
               Mystery Song Playing
             </div>
-            <div className="text-3xl">🎵❓🎵</div>
-            <div className="text-xs text-muted-foreground mt-1">
+            <div className="text-5xl">🎵❓🎵</div>
+            <div className="text-sm text-muted-foreground mt-2">
               Waiting for placement...
             </div>
           </div>
         )}
 
-        {/* Timeline display - large cards */}
-        <div className="space-y-2">
-          <h4 className="text-sm font-medium text-muted-foreground">
+        {/* Timeline display - large cards optimized for TV viewing */}
+        <div className="space-y-3">
+          <h4 className="text-lg font-medium text-muted-foreground">
             Timeline ({sortedTimeline.length} songs)
           </h4>
           {sortedTimeline.length === 0 ? (
-            <div className="text-muted-foreground italic p-4 text-center border-2 border-dashed rounded-lg">
+            <div className="text-lg text-muted-foreground italic p-6 text-center border-2 border-dashed rounded-xl">
               No songs in timeline yet
             </div>
           ) : (
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-4">
               {sortedTimeline.map((song) => (
                 <div
                   key={song.songId}
-                  className="bg-card border-2 border-primary/30 rounded-xl px-4 py-3 text-center min-w-[120px] shadow-sm"
+                  className="bg-card border-2 border-primary/30 rounded-xl px-5 py-4 text-center min-w-[140px] shadow-md"
                 >
-                  <div className="font-bold text-2xl text-primary">
+                  {/* Year: min 24px for TV readability at 2m */}
+                  <div className="font-bold text-3xl md:text-4xl text-primary">
                     {song.year}
                   </div>
-                  <div className="text-sm font-medium truncate max-w-[150px]">
+                  <div className="text-base font-medium truncate max-w-[160px]">
                     {song.name}
                   </div>
-                  <div className="text-xs text-muted-foreground truncate max-w-[150px]">
+                  <div className="text-sm text-muted-foreground truncate max-w-[160px]">
                     {song.artist}
                   </div>
                 </div>
@@ -878,14 +957,24 @@ export default function GamePage() {
           isHost &&
           currentPlayer &&
           !isMyTurn && (
-            <ActivePlayerTimeline
-              player={currentPlayer}
-              currentSong={isStealPhase ? null : (session?.currentSong ?? null)}
-              turnStartedAt={
-                isStealPhase ? null : (session?.turnStartedAt ?? null)
-              }
-              turnDuration={session?.turnDuration ?? 45}
-            />
+            <>
+              <ActivePlayerTimeline
+                player={currentPlayer}
+                currentSong={
+                  isStealPhase ? null : (session?.currentSong ?? null)
+                }
+                turnStartedAt={
+                  isStealPhase ? null : (session?.turnStartedAt ?? null)
+                }
+                turnDuration={session?.turnDuration ?? 45}
+              />
+              {/* Player progress indicators for host TV display */}
+              <PlayerProgressBar
+                players={session?.players ?? []}
+                currentPlayerId={session?.currentPlayerId ?? null}
+                songsToWin={session?.songsToWin ?? 10}
+              />
+            </>
           )}
 
         {/* Steal Phase */}
