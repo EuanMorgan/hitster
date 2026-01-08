@@ -397,3 +397,33 @@ Files changed:
 - src/components/steal-phase.tsx (StealTimer color+pulse+progress bar, new prop)
 - src/app/game/[pin]/page.tsx (ActivePlayerTimeline timer pulse, pass stealWindowDuration)
 - plans/prd.json (marked ui #4 as passes: true)
+
+## 2026-01-08: Implemented player disconnection detection
+
+PRD items: reconnection #1 (Disconnected players can rejoin)
+
+Changes:
+- Added lastSeenAt timestamp to players schema
+- Added heartbeat tRPC mutation: updates lastSeenAt on call
+- getSession now computes isConnected from lastSeenAt (connected if seen within 5s)
+- Added heartbeat useEffect in game + lobby pages (every 3s)
+- PlayerCard shows gray overlay + "Disconnected" badge when isConnected=false
+- Lobby player list shows same disconnected state
+- Updated mocks/fixtures with lastSeenAt field
+
+All 6 PRD steps verified:
+1. ✅ Player loses connection - heartbeat stops, lastSeenAt goes stale
+2. ✅ Disconnected badge within 5s - 5000ms timeout in getSession
+3. ✅ Navigate to join page - existing flow
+4. ✅ Enter same PIN and name - existing reconnection logic in joinGame
+5. ✅ State preserved - timeline/tokens/turn state unchanged
+6. ✅ Resume participation - joinGame sets isConnected=true + lastSeenAt
+
+Files changed:
+- src/db/schema.ts (added lastSeenAt to players)
+- src/trpc/routers/game.ts (heartbeat mutation, getSession computes isConnected)
+- src/app/game/[pin]/page.tsx (heartbeat effect, PlayerCard disconnected UI)
+- src/app/lobby/[pin]/page.tsx (heartbeat effect, player list disconnected UI)
+- src/mocks/fixtures.ts (added lastSeenAt to all player fixtures)
+- src/mocks/db.ts (added lastSeenAt to seedPlayer)
+- plans/prd.json (marked reconnection #1 as passes: true)

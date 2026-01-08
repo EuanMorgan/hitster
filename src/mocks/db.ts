@@ -107,6 +107,7 @@ export function seedPlayer(playerData: Partial<Player> = {}): Player {
     wins: playerData.wins ?? 0,
     isHost: playerData.isHost ?? false,
     isConnected: playerData.isConnected ?? true,
+    lastSeenAt: playerData.lastSeenAt ?? new Date(),
     createdAt: playerData.createdAt ?? new Date(),
   };
   mockPlayers.push(player);

@@ -156,6 +156,7 @@ export const fixtures = {
       wins: 0,
       isHost: true,
       isConnected: true,
+      lastSeenAt: new Date(),
       createdAt: new Date("2024-01-10"),
     } satisfies Player,
 
@@ -170,6 +171,7 @@ export const fixtures = {
       wins: 0,
       isHost: false,
       isConnected: true,
+      lastSeenAt: new Date(),
       createdAt: new Date("2024-01-10"),
     } satisfies Player,
 
@@ -184,6 +186,7 @@ export const fixtures = {
       wins: 0,
       isHost: false,
       isConnected: true,
+      lastSeenAt: new Date(),
       createdAt: new Date("2024-01-10"),
     } satisfies Player,
 
@@ -198,6 +201,7 @@ export const fixtures = {
       wins: 0,
       isHost: false,
       isConnected: false,
+      lastSeenAt: new Date(Date.now() - 10000),
       createdAt: new Date("2024-01-10"),
     } satisfies Player,
   },

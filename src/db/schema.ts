@@ -193,6 +193,7 @@ export const players = pgTable("players", {
   wins: integer("wins").notNull().default(0),
   isHost: boolean("is_host").notNull().default(false),
   isConnected: boolean("is_connected").notNull().default(true),
+  lastSeenAt: timestamp("last_seen_at").notNull().defaultNow(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

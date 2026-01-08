@@ -73,21 +73,33 @@ function PlayerCard({
     isHost: boolean;
     tokens: number;
     timeline: TimelineSong[] | null;
+    isConnected: boolean;
   };
   isCurrentTurn: boolean;
   turnNumber: number;
 }) {
   return (
     <div
-      className={`rounded-lg p-3 sm:p-4 transition-all ${
+      className={`rounded-lg p-3 sm:p-4 transition-all relative ${
         isCurrentTurn
           ? "bg-primary/20 border-2 border-primary ring-2 ring-primary/30"
           : "bg-muted"
-      }`}
+      } ${!player.isConnected ? "opacity-60" : ""}`}
     >
+      {!player.isConnected && (
+        <div className="absolute inset-0 bg-gray-500/20 rounded-lg flex items-center justify-center">
+          <span className="text-[10px] sm:text-xs bg-gray-600 text-white px-2 py-1 rounded font-medium">
+            Disconnected
+          </span>
+        </div>
+      )}
       <div className="flex items-center justify-between mb-2 sm:mb-3">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <span className="text-2xl sm:text-3xl shrink-0">{player.avatar}</span>
+          <span
+            className={`text-2xl sm:text-3xl shrink-0 ${!player.isConnected ? "grayscale" : ""}`}
+          >
+            {player.avatar}
+          </span>
           <div className="min-w-0">
             <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
               <span className="font-semibold text-sm sm:text-base truncate">
@@ -98,7 +110,7 @@ function PlayerCard({
                   Host
                 </span>
               )}
-              {isCurrentTurn && (
+              {isCurrentTurn && player.isConnected && (
                 <span className="text-[10px] sm:text-xs bg-green-500 text-white px-1.5 sm:px-2 py-0.5 rounded animate-pulse shrink-0">
                   Playing
                 </span>
@@ -548,6 +560,20 @@ export default function GamePage() {
     const storedPlayerId = localStorage.getItem("hitster_player_id");
     setCurrentPlayerId(storedPlayerId);
   }, []);
+
+  // Heartbeat to track player presence
+  const heartbeatMutation = useMutation({
+    ...trpc.game.heartbeat.mutationOptions(),
+  });
+
+  useEffect(() => {
+    if (!currentPlayerId) return;
+    const sendHeartbeat = () =>
+      heartbeatMutation.mutate({ playerId: currentPlayerId });
+    sendHeartbeat();
+    const interval = setInterval(sendHeartbeat, 3000);
+    return () => clearInterval(interval);
+  }, [currentPlayerId, heartbeatMutation]);
 
   // Hide shuffle animation after 2 seconds
   useEffect(() => {

@@ -575,7 +575,7 @@
       "Player sees their timeline, token count, and current turn state exactly as before disconnect",
       "Resume participation"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "reconnection",

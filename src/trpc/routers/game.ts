@@ -461,7 +461,7 @@ export const gameRouter = createTRPCRouter({
         // Reconnect existing player
         await ctx.db
           .update(players)
-          .set({ isConnected: true, avatar })
+          .set({ isConnected: true, avatar, lastSeenAt: new Date() })
           .where(eq(players.id, existingPlayer.id));
 
         return { playerId: existingPlayer.id, sessionId: session.id };
@@ -483,6 +483,16 @@ export const gameRouter = createTRPCRouter({
       return { playerId: newPlayer.id, sessionId: session.id };
     }),
 
+  heartbeat: baseProcedure
+    .input(z.object({ playerId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db
+        .update(players)
+        .set({ lastSeenAt: new Date() })
+        .where(eq(players.id, input.playerId));
+      return { success: true };
+    }),
+
   getSession: baseProcedure
     .input(z.object({ pin: z.string().length(4) }))
     .query(async ({ ctx, input }) => {
@@ -491,9 +501,7 @@ export const gameRouter = createTRPCRouter({
       const session = await ctx.db.query.gameSessions.findFirst({
         where: eq(gameSessions.pin, pin),
         with: {
-          players: {
-            where: eq(players.isConnected, true),
-          },
+          players: true,
         },
       });
 
@@ -501,13 +509,22 @@ export const gameRouter = createTRPCRouter({
         throw new TRPCError({ code: "NOT_FOUND", message: "Game not found" });
       }
 
+      // Compute isConnected based on lastSeenAt (connected if seen within 5s)
+      const now = Date.now();
+      const CONNECTION_TIMEOUT_MS = 5000;
+      const playersWithConnectionStatus = session.players.map((p: Player) => {
+        const lastSeen = p.lastSeenAt?.getTime() ?? 0;
+        const isConnected = now - lastSeen < CONNECTION_TIMEOUT_MS;
+        return { ...p, isConnected };
+      });
+
       // For playing state, order players by turn order
-      let orderedPlayers = session.players;
+      let orderedPlayers = playersWithConnectionStatus;
       if (session.state === "playing" && session.turnOrder) {
         const turnOrderMap = new Map(
           session.turnOrder.map((id, index) => [id, index]),
         );
-        orderedPlayers = [...session.players].sort((a, b) => {
+        orderedPlayers = [...playersWithConnectionStatus].sort((a, b) => {
           const aIndex = turnOrderMap.get(a.id) ?? 999;
           const bIndex = turnOrderMap.get(b.id) ?? 999;
           return aIndex - bIndex;
@@ -564,7 +581,7 @@ export const gameRouter = createTRPCRouter({
         stealAttempts: session.stealAttempts ?? [],
         playerStats: session.state === "finished" ? playerStats : null,
         gamesPlayed: session.gamesPlayed ?? 0,
-        players: orderedPlayers.map((p: Player) => ({
+        players: orderedPlayers.map((p) => ({
           id: p.id,
           name: p.name,
           avatar: p.avatar,
@@ -572,6 +589,7 @@ export const gameRouter = createTRPCRouter({
           tokens: p.tokens,
           timeline: p.timeline,
           wins: p.wins,
+          isConnected: p.isConnected,
         })),
       };
     }),

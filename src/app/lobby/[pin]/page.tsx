@@ -3,7 +3,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { GameSettings } from "@/components/game-settings";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,6 +36,27 @@ export default function LobbyPage() {
       router.push(`/game/${pin}`);
     },
   });
+
+  // Get current player ID from localStorage for heartbeat
+  const [currentPlayerId, setCurrentPlayerId] = useState<string | null>(null);
+  useEffect(() => {
+    const storedPlayerId = localStorage.getItem("hitster_player_id");
+    setCurrentPlayerId(storedPlayerId);
+  }, []);
+
+  // Heartbeat to track player presence
+  const heartbeatMutation = useMutation({
+    ...trpc.game.heartbeat.mutationOptions(),
+  });
+
+  useEffect(() => {
+    if (!currentPlayerId) return;
+    const sendHeartbeat = () =>
+      heartbeatMutation.mutate({ playerId: currentPlayerId });
+    sendHeartbeat();
+    const interval = setInterval(sendHeartbeat, 3000);
+    return () => clearInterval(interval);
+  }, [currentPlayerId, heartbeatMutation]);
 
   // Redirect to game page when state changes to playing
   useEffect(() => {
@@ -104,11 +125,22 @@ export default function LobbyPage() {
                 {session?.players.map((player) => (
                   <div
                     key={player.id}
-                    className="flex items-center gap-2 p-2 rounded-lg bg-muted"
+                    className={`flex items-center gap-2 p-2 rounded-lg bg-muted relative ${
+                      !player.isConnected ? "opacity-60" : ""
+                    }`}
                   >
-                    <span className="text-2xl">{player.avatar}</span>
+                    <span
+                      className={`text-2xl ${!player.isConnected ? "grayscale" : ""}`}
+                    >
+                      {player.avatar}
+                    </span>
                     <span className="font-medium">{player.name}</span>
-                    {player.isHost && (
+                    {!player.isConnected && (
+                      <span className="ml-auto text-xs bg-gray-600 text-white px-2 py-1 rounded">
+                        Disconnected
+                      </span>
+                    )}
+                    {player.isHost && player.isConnected && (
                       <span className="ml-auto text-xs bg-primary text-primary-foreground px-2 py-1 rounded">
                         Host
                       </span>
