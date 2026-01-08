@@ -76,6 +76,10 @@ export function seedGameSession(
     currentSong: sessionData.currentSong ?? null,
     turnStartedAt: sessionData.turnStartedAt ?? null,
     roundNumber: sessionData.roundNumber ?? 1,
+    isStealPhase: sessionData.isStealPhase ?? false,
+    stealPhaseEndAt: sessionData.stealPhaseEndAt ?? null,
+    activePlayerPlacement: sessionData.activePlayerPlacement ?? null,
+    stealAttempts: sessionData.stealAttempts ?? [],
     createdAt: sessionData.createdAt ?? new Date(),
     updatedAt: sessionData.updatedAt ?? new Date(),
   };

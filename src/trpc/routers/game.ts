@@ -7,6 +7,7 @@ import {
   type Player,
   type TimelineSong,
   type CurrentTurnSong,
+  type ActiveStealAttempt,
 } from "@/db/schema";
 import { eq, and, ne } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
@@ -245,6 +246,10 @@ export const gameRouter = createTRPCRouter({
         currentSong: session.currentSong,
         turnStartedAt: session.turnStartedAt?.toISOString() ?? null,
         roundNumber: session.roundNumber ?? 1,
+        isStealPhase: session.isStealPhase ?? false,
+        stealPhaseEndAt: session.stealPhaseEndAt?.toISOString() ?? null,
+        activePlayerPlacement: session.activePlayerPlacement ?? null,
+        stealAttempts: session.stealAttempts ?? [],
         players: orderedPlayers.map((p: Player) => ({
           id: p.id,
           name: p.name,
@@ -501,6 +506,13 @@ export const gameRouter = createTRPCRouter({
         });
       }
 
+      if (session.isStealPhase) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Cannot confirm turn during steal phase",
+        });
+      }
+
       const currentPlayerId =
         session.turnOrder && session.currentTurnIndex !== null
           ? session.turnOrder[session.currentTurnIndex]
@@ -520,76 +532,312 @@ export const gameRouter = createTRPCRouter({
         });
       }
 
+      // Start steal phase instead of immediately resolving
+      const stealPhaseEndAt = new Date(
+        Date.now() + session.stealWindowDuration * 1000
+      );
+
+      await ctx.db
+        .update(gameSessions)
+        .set({
+          isStealPhase: true,
+          stealPhaseEndAt,
+          activePlayerPlacement: input.placementIndex,
+          stealAttempts: [],
+          updatedAt: new Date(),
+        })
+        .where(eq(gameSessions.id, session.id));
+
+      return {
+        stealPhaseStarted: true,
+        stealPhaseEndAt: stealPhaseEndAt.toISOString(),
+      };
+    }),
+
+  submitSteal: baseProcedure
+    .input(
+      z.object({
+        pin: z.string().length(4),
+        playerId: z.string().uuid(),
+        placementIndex: z.number().int().min(0),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const pin = input.pin.toUpperCase();
+
+      const session = await ctx.db.query.gameSessions.findFirst({
+        where: eq(gameSessions.pin, pin),
+        with: {
+          players: {
+            where: eq(players.isConnected, true),
+          },
+        },
+      });
+
+      if (!session) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Game not found" });
+      }
+
+      if (session.state !== "playing" || !session.isStealPhase) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Not in steal phase",
+        });
+      }
+
+      // Check if steal phase has expired
+      if (session.stealPhaseEndAt && new Date() > session.stealPhaseEndAt) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Steal phase has ended",
+        });
+      }
+
+      const currentPlayerId =
+        session.turnOrder && session.currentTurnIndex !== null
+          ? session.turnOrder[session.currentTurnIndex]
+          : null;
+
+      // Active player cannot steal
+      if (input.playerId === currentPlayerId) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Active player cannot steal",
+        });
+      }
+
       const player = session.players.find((p) => p.id === input.playerId);
       if (!player) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Player not found" });
       }
 
-      const timeline = player.timeline ?? [];
-      const sortedTimeline = [...timeline].sort((a, b) => a.year - b.year);
-      const songYear = session.currentSong.year;
+      // Check if player has tokens
+      if (player.tokens < 1) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Not enough tokens",
+        });
+      }
 
-      // Validate placement
-      let isCorrect = false;
+      // Check if player already submitted a steal
+      const existingAttempts = session.stealAttempts ?? [];
+      if (existingAttempts.some((a) => a.playerId === input.playerId)) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "You already submitted a steal attempt",
+        });
+      }
+
+      // Check if position is already taken
+      if (existingAttempts.some((a) => a.placementIndex === input.placementIndex)) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "This position is already taken by another steal attempt",
+        });
+      }
+
+      // Deduct token
+      await ctx.db
+        .update(players)
+        .set({ tokens: player.tokens - 1 })
+        .where(eq(players.id, input.playerId));
+
+      // Add steal attempt
+      const newAttempt: ActiveStealAttempt = {
+        playerId: input.playerId,
+        playerName: player.name,
+        placementIndex: input.placementIndex,
+        timestamp: new Date().toISOString(),
+      };
+
+      await ctx.db
+        .update(gameSessions)
+        .set({
+          stealAttempts: [...existingAttempts, newAttempt],
+          updatedAt: new Date(),
+        })
+        .where(eq(gameSessions.id, session.id));
+
+      return { success: true, tokenDeducted: true };
+    }),
+
+  resolveStealPhase: baseProcedure
+    .input(z.object({ pin: z.string().length(4) }))
+    .mutation(async ({ ctx, input }) => {
+      const pin = input.pin.toUpperCase();
+
+      const session = await ctx.db.query.gameSessions.findFirst({
+        where: eq(gameSessions.pin, pin),
+        with: {
+          players: {
+            where: eq(players.isConnected, true),
+          },
+        },
+      });
+
+      if (!session) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Game not found" });
+      }
+
+      if (session.state !== "playing" || !session.isStealPhase) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Not in steal phase",
+        });
+      }
+
+      if (!session.currentSong) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "No song for current turn",
+        });
+      }
+
+      const currentPlayerId =
+        session.turnOrder && session.currentTurnIndex !== null
+          ? session.turnOrder[session.currentTurnIndex]
+          : null;
+
+      const activePlayer = session.players.find((p) => p.id === currentPlayerId);
+      if (!activePlayer) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Active player not found",
+        });
+      }
+
+      const activeTimeline = activePlayer.timeline ?? [];
+      const sortedTimeline = [...activeTimeline].sort((a, b) => a.year - b.year);
+      const songYear = session.currentSong.year;
+      const activePlayerPlacement = session.activePlayerPlacement ?? 0;
+
+      // Validate active player's placement
+      let activePlayerCorrect = false;
       if (sortedTimeline.length === 0) {
-        isCorrect = true;
-      } else if (input.placementIndex === 0) {
-        isCorrect = songYear <= sortedTimeline[0].year;
-      } else if (input.placementIndex >= sortedTimeline.length) {
-        isCorrect = songYear >= sortedTimeline[sortedTimeline.length - 1].year;
+        activePlayerCorrect = true;
+      } else if (activePlayerPlacement === 0) {
+        activePlayerCorrect = songYear <= sortedTimeline[0].year;
+      } else if (activePlayerPlacement >= sortedTimeline.length) {
+        activePlayerCorrect = songYear >= sortedTimeline[sortedTimeline.length - 1].year;
       } else {
-        const before = sortedTimeline[input.placementIndex - 1];
-        const after = sortedTimeline[input.placementIndex];
-        isCorrect = songYear >= before.year && songYear <= after.year;
+        const before = sortedTimeline[activePlayerPlacement - 1];
+        const after = sortedTimeline[activePlayerPlacement];
+        activePlayerCorrect = songYear >= before.year && songYear <= after.year;
+      }
+
+      // Check steal attempts
+      const stealAttempts = session.stealAttempts ?? [];
+      let winningStealer: { playerId: string; playerName: string } | null = null;
+
+      // Only process steals if active player was wrong
+      if (!activePlayerCorrect && stealAttempts.length > 0) {
+        // Sort by timestamp (first come first serve)
+        const sortedAttempts = [...stealAttempts].sort(
+          (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+        );
+
+        for (const attempt of sortedAttempts) {
+          const stealer = session.players.find((p) => p.id === attempt.playerId);
+          if (!stealer) continue;
+
+          const stealerTimeline = stealer.timeline ?? [];
+          const sortedStealerTimeline = [...stealerTimeline].sort((a, b) => a.year - b.year);
+
+          // Validate stealer's placement against THEIR timeline
+          let stealerCorrect = false;
+          if (sortedStealerTimeline.length === 0) {
+            stealerCorrect = true;
+          } else if (attempt.placementIndex === 0) {
+            stealerCorrect = songYear <= sortedStealerTimeline[0].year;
+          } else if (attempt.placementIndex >= sortedStealerTimeline.length) {
+            stealerCorrect = songYear >= sortedStealerTimeline[sortedStealerTimeline.length - 1].year;
+          } else {
+            const before = sortedStealerTimeline[attempt.placementIndex - 1];
+            const after = sortedStealerTimeline[attempt.placementIndex];
+            stealerCorrect = songYear >= before.year && songYear <= after.year;
+          }
+
+          if (stealerCorrect) {
+            winningStealer = { playerId: attempt.playerId, playerName: attempt.playerName };
+            break; // First correct stealer wins
+          }
+        }
       }
 
       // Record the turn
       await ctx.db.insert(turns).values({
         sessionId: session.id,
-        playerId: input.playerId,
+        playerId: currentPlayerId!,
         roundNumber: session.roundNumber ?? 1,
         songId: session.currentSong.songId,
         songName: session.currentSong.name,
         songArtist: session.currentSong.artist,
         songYear: session.currentSong.year,
-        placementIndex: input.placementIndex,
-        wasCorrect: isCorrect,
+        placementIndex: activePlayerPlacement,
+        wasCorrect: activePlayerCorrect,
+        stealAttempts: stealAttempts.map((a) => ({
+          playerId: a.playerId,
+          placementIndex: a.placementIndex,
+          wasCorrect: a.playerId === winningStealer?.playerId,
+          timestamp: a.timestamp,
+        })),
         completedAt: new Date(),
       });
 
-      // If correct, add song to timeline
-      if (isCorrect) {
-        const newSong: TimelineSong = {
-          songId: session.currentSong.songId,
-          name: session.currentSong.name,
-          artist: session.currentSong.artist,
-          year: session.currentSong.year,
-          addedAt: new Date().toISOString(),
-        };
-        const newTimeline = [...timeline, newSong];
+      // Determine who gets the song
+      let recipientId: string | null = null;
+      if (activePlayerCorrect) {
+        recipientId = currentPlayerId;
+      } else if (winningStealer) {
+        recipientId = winningStealer.playerId;
+      }
 
-        await ctx.db
-          .update(players)
-          .set({ timeline: newTimeline })
-          .where(eq(players.id, input.playerId));
-
-        // Check win condition
-        if (newTimeline.length >= session.songsToWin) {
-          await ctx.db
-            .update(gameSessions)
-            .set({
-              state: "finished",
-              currentSong: null,
-              updatedAt: new Date(),
-            })
-            .where(eq(gameSessions.id, session.id));
-
-          return {
-            wasCorrect: true,
-            song: session.currentSong,
-            gameEnded: true,
-            winnerId: input.playerId,
+      // Add song to recipient's timeline
+      let gameEnded = false;
+      let winnerId: string | undefined;
+      if (recipientId) {
+        const recipient = session.players.find((p) => p.id === recipientId);
+        if (recipient) {
+          const newSong: TimelineSong = {
+            songId: session.currentSong.songId,
+            name: session.currentSong.name,
+            artist: session.currentSong.artist,
+            year: session.currentSong.year,
+            addedAt: new Date().toISOString(),
           };
+          const newTimeline = [...(recipient.timeline ?? []), newSong];
+
+          await ctx.db
+            .update(players)
+            .set({ timeline: newTimeline })
+            .where(eq(players.id, recipientId));
+
+          // Check win condition
+          if (newTimeline.length >= session.songsToWin) {
+            gameEnded = true;
+            winnerId = recipientId;
+            await ctx.db
+              .update(gameSessions)
+              .set({
+                state: "finished",
+                currentSong: null,
+                isStealPhase: false,
+                stealPhaseEndAt: null,
+                activePlayerPlacement: null,
+                stealAttempts: [],
+                updatedAt: new Date(),
+              })
+              .where(eq(gameSessions.id, session.id));
+
+            return {
+              activePlayerCorrect,
+              song: session.currentSong,
+              stolenBy: winningStealer,
+              recipientId,
+              gameEnded: true,
+              winnerId,
+            };
+          }
         }
       }
 
@@ -608,19 +856,24 @@ export const gameRouter = createTRPCRouter({
       );
 
       if (availableSongs.length === 0) {
-        // No more songs - end game
         await ctx.db
           .update(gameSessions)
           .set({
             state: "finished",
             currentSong: null,
+            isStealPhase: false,
+            stealPhaseEndAt: null,
+            activePlayerPlacement: null,
+            stealAttempts: [],
             updatedAt: new Date(),
           })
           .where(eq(gameSessions.id, session.id));
 
         return {
-          wasCorrect: isCorrect,
+          activePlayerCorrect,
           song: session.currentSong,
+          stolenBy: winningStealer,
+          recipientId,
           gameEnded: true,
           reason: "No more songs available",
         };
@@ -629,7 +882,6 @@ export const gameRouter = createTRPCRouter({
       const nextSong = availableSongs[Math.floor(Math.random() * availableSongs.length)];
       const newUsedSongIds = [...(session.usedSongIds ?? []), nextSong.songId];
 
-      // If new round, reshuffle turn order
       let newTurnOrder = session.turnOrder;
       if (isNewRound) {
         newTurnOrder = shuffleArray(session.turnOrder!);
@@ -649,13 +901,19 @@ export const gameRouter = createTRPCRouter({
           },
           usedSongIds: newUsedSongIds,
           turnStartedAt: new Date(),
+          isStealPhase: false,
+          stealPhaseEndAt: null,
+          activePlayerPlacement: null,
+          stealAttempts: [],
           updatedAt: new Date(),
         })
         .where(eq(gameSessions.id, session.id));
 
       return {
-        wasCorrect: isCorrect,
+        activePlayerCorrect,
         song: session.currentSong,
+        stolenBy: winningStealer,
+        recipientId,
         gameEnded: false,
         nextPlayerId: newTurnOrder![nextTurnIndex],
       };

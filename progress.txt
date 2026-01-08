@@ -554,3 +554,51 @@ Active player can position song in their timeline (PRD gameplay item)
 - Steal phase implementation (PRD stealing items)
 - OR Song name/artist guessing (PRD item 21)
 - OR Spotify Web Playback SDK (PRD gameplay item)
+
+---
+
+## 2026-01-08: Steal Phase Implementation Complete
+
+### What was done:
+- Added steal phase tracking fields to game session schema (isStealPhase, stealPhaseEndAt, activePlayerPlacement, stealAttempts)
+- Created ActiveStealAttempt type for tracking in-flight steal attempts
+- Modified confirmTurn mutation to start steal phase instead of immediately resolving
+- Created submitSteal mutation: validates tokens, position uniqueness, deducts tokens, records attempt
+- Created resolveStealPhase mutation: validates placements, determines winner, advances turn
+- Created StealPhase component with drag-and-drop UI for placing steal attempts
+- Updated game page to show steal phase view with timer, steal buttons, and position locking
+- Steal positions are first-come-first-serve (visual lock indicator shows occupied positions)
+- Turn result overlay updated to show stolen-by message when applicable
+- Updated mock fixtures and db.ts for new schema fields
+
+### Files created:
+- src/components/steal-phase.tsx (steal phase UI with DnD)
+
+### Files modified:
+- src/db/schema.ts (added steal phase fields, ActiveStealAttempt type)
+- src/trpc/routers/game.ts (confirmTurn triggers steal, submitSteal, resolveStealPhase)
+- src/app/game/[pin]/page.tsx (steal phase handling, result overlay updates)
+- src/mocks/fixtures.ts (added steal phase fields to fixtures)
+- src/mocks/db.ts (updated seedGameSession)
+- plans/prd.json (marked all 5 stealing items as passing)
+
+### Steal phase flow:
+1. Active player confirms placement → steal phase starts (10s default)
+2. Other players can drag song to their timeline and spend 1 token to steal
+3. Positions are locked when claimed (first-come-first-serve)
+4. When timer ends → resolveStealPhase is called
+5. If active player was wrong AND a stealer was correct → song goes to first correct stealer
+6. If active player was correct → they get the song
+7. If everyone was wrong → song discarded
+8. Turn advances to next player
+
+### Notes:
+- Polling increased to 1s during steal phase for responsiveness
+- Token deducted immediately on steal submission (no refunds)
+- Song continues playing note in PRD but actual Spotify playback not yet implemented
+- Success animation for stealer shown in result overlay
+
+### Next priority:
+- Token spending features (skip song for 1 token, free song for 3 tokens)
+- Song name/artist guessing (PRD item 21)
+- Spotify Web Playback SDK (PRD gameplay item)

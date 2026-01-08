@@ -13,6 +13,7 @@ import { useTRPC } from "@/trpc/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { TimelineSong } from "@/db/schema";
 import { TimelineDropZone } from "@/components/timeline-drop-zone";
+import { StealPhase } from "@/components/steal-phase";
 
 function TokenDisplay({ count }: { count: number }) {
   return (
@@ -119,28 +120,42 @@ function TurnResultOverlay({
   onClose,
 }: {
   result: {
-    wasCorrect: boolean;
+    activePlayerCorrect: boolean;
     song: { name: string; artist: string; year: number };
+    stolenBy?: { playerId: string; playerName: string } | null;
+    recipientId?: string | null;
     gameEnded?: boolean;
     winnerId?: string;
   };
   onClose: () => void;
 }) {
   useEffect(() => {
-    const timer = setTimeout(onClose, 3000);
+    const timer = setTimeout(onClose, 4000);
     return () => clearTimeout(timer);
   }, [onClose]);
+
+  const wasStolen = !!result.stolenBy;
+  const songLost = !result.activePlayerCorrect && !wasStolen;
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <Card className="w-full max-w-md mx-4 animate-in zoom-in-95">
         <CardContent className="py-8 text-center">
           <div className="text-6xl mb-4">
-            {result.wasCorrect ? "✅" : "❌"}
+            {result.activePlayerCorrect ? "✅" : wasStolen ? "🎯" : "❌"}
           </div>
           <div className="text-2xl font-bold mb-2">
-            {result.wasCorrect ? "Correct!" : "Incorrect!"}
+            {result.activePlayerCorrect
+              ? "Correct!"
+              : wasStolen
+                ? `Stolen by ${result.stolenBy?.playerName}!`
+                : "Incorrect!"}
           </div>
+          {songLost && (
+            <div className="text-sm text-muted-foreground mb-2">
+              Song discarded - no one got it right
+            </div>
+          )}
           <div className="text-lg font-medium">{result.song.name}</div>
           <div className="text-muted-foreground">{result.song.artist}</div>
           <div className="text-2xl font-bold text-primary mt-2">
@@ -164,8 +179,10 @@ export default function GamePage() {
   const queryClient = useQueryClient();
   const [showShuffleAnimation, setShowShuffleAnimation] = useState(true);
   const [turnResult, setTurnResult] = useState<{
-    wasCorrect: boolean;
+    activePlayerCorrect: boolean;
     song: { name: string; artist: string; year: number };
+    stolenBy?: { playerId: string; playerName: string } | null;
+    recipientId?: string | null;
     gameEnded?: boolean;
     winnerId?: string;
   } | null>(null);
@@ -174,15 +191,32 @@ export default function GamePage() {
 
   const sessionQuery = useQuery({
     ...trpc.game.getSession.queryOptions({ pin }),
-    refetchInterval: 2000,
+    refetchInterval: 1000, // Faster polling during steal phase
   });
 
   const confirmTurnMutation = useMutation({
     ...trpc.game.confirmTurn.mutationOptions(),
+    onSuccess: () => {
+      // Steal phase started - just invalidate query
+      queryClient.invalidateQueries({ queryKey: trpc.game.getSession.queryKey({ pin }) });
+    },
+  });
+
+  const submitStealMutation = useMutation({
+    ...trpc.game.submitSteal.mutationOptions(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: trpc.game.getSession.queryKey({ pin }) });
+    },
+  });
+
+  const resolveStealPhaseMutation = useMutation({
+    ...trpc.game.resolveStealPhase.mutationOptions(),
     onSuccess: (data) => {
       setTurnResult({
-        wasCorrect: data.wasCorrect,
+        activePlayerCorrect: data.activePlayerCorrect,
         song: data.song,
+        stolenBy: data.stolenBy,
+        recipientId: data.recipientId,
         gameEnded: data.gameEnded,
         winnerId: "winnerId" in data ? data.winnerId : undefined,
       });
@@ -223,6 +257,23 @@ export default function GamePage() {
     },
     [confirmTurnMutation, pin, currentPlayerId]
   );
+
+  const handleSubmitSteal = useCallback(
+    (placementIndex: number) => {
+      if (!currentPlayerId) return;
+      submitStealMutation.mutate({
+        pin,
+        playerId: currentPlayerId,
+        placementIndex,
+      });
+    },
+    [submitStealMutation, pin, currentPlayerId]
+  );
+
+  const handleResolveStealPhase = useCallback(() => {
+    if (resolveStealPhaseMutation.isPending) return;
+    resolveStealPhaseMutation.mutate({ pin });
+  }, [resolveStealPhaseMutation, pin]);
 
   const handleCloseResult = useCallback(() => {
     setTurnResult(null);
@@ -302,6 +353,10 @@ export default function GamePage() {
     (p) => p.id === session.currentPlayerId
   );
   const myPlayer = session?.players.find((p) => p.id === currentPlayerId);
+  const isStealPhase = session?.isStealPhase ?? false;
+  const hasAlreadyStolen = (session?.stealAttempts ?? []).some(
+    (a) => a.playerId === currentPlayerId
+  );
 
   return (
     <div className="min-h-screen p-4">
@@ -316,6 +371,11 @@ export default function GamePage() {
             <CardTitle className="text-2xl">Hitster</CardTitle>
             <CardDescription>
               PIN: {session?.pin} | Round {session?.roundNumber}
+              {isStealPhase && (
+                <span className="ml-2 text-amber-500 font-medium">
+                  🎯 STEAL PHASE
+                </span>
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -345,31 +405,58 @@ export default function GamePage() {
           </Card>
         )}
 
-        {/* My Turn - Active Player View */}
-        {!showShuffleAnimation && isMyTurn && session?.currentSong && myPlayer && (
-          <Card className="border-2 border-primary">
-            <CardHeader className="text-center">
-              <CardTitle className="text-green-500">Your Turn!</CardTitle>
-              <CardDescription>
-                Place the mystery song in your timeline
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <TimelineDropZone
-                timeline={myPlayer.timeline ?? []}
-                currentSong={session.currentSong}
-                onConfirm={handleConfirmTurn}
-                onTimeUp={handleTimeUp}
-                isSubmitting={confirmTurnMutation.isPending}
-                turnDuration={session.turnDuration}
-                turnStartedAt={session.turnStartedAt}
-              />
-            </CardContent>
-          </Card>
-        )}
+        {/* Steal Phase */}
+        {!showShuffleAnimation &&
+          isStealPhase &&
+          session?.currentSong &&
+          session?.stealPhaseEndAt &&
+          currentPlayer &&
+          myPlayer && (
+            <StealPhase
+              currentSong={session.currentSong}
+              myTimeline={myPlayer.timeline ?? []}
+              activePlayerName={currentPlayer.name}
+              activePlayerPlacement={session.activePlayerPlacement ?? 0}
+              stealAttempts={session.stealAttempts ?? []}
+              stealPhaseEndAt={session.stealPhaseEndAt}
+              myTokens={myPlayer.tokens}
+              isActivePlayer={isMyTurn}
+              hasAlreadyStolen={hasAlreadyStolen}
+              onSubmitSteal={handleSubmitSteal}
+              onResolve={handleResolveStealPhase}
+              isSubmitting={submitStealMutation.isPending}
+            />
+          )}
 
-        {/* Waiting View - Not My Turn */}
-        {!showShuffleAnimation && !isMyTurn && currentPlayer && (
+        {/* My Turn - Active Player View (only when NOT in steal phase) */}
+        {!showShuffleAnimation &&
+          !isStealPhase &&
+          isMyTurn &&
+          session?.currentSong &&
+          myPlayer && (
+            <Card className="border-2 border-primary">
+              <CardHeader className="text-center">
+                <CardTitle className="text-green-500">Your Turn!</CardTitle>
+                <CardDescription>
+                  Place the mystery song in your timeline
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <TimelineDropZone
+                  timeline={myPlayer.timeline ?? []}
+                  currentSong={session.currentSong}
+                  onConfirm={handleConfirmTurn}
+                  onTimeUp={handleTimeUp}
+                  isSubmitting={confirmTurnMutation.isPending}
+                  turnDuration={session.turnDuration}
+                  turnStartedAt={session.turnStartedAt}
+                />
+              </CardContent>
+            </Card>
+          )}
+
+        {/* Waiting View - Not My Turn (only when NOT in steal phase) */}
+        {!showShuffleAnimation && !isStealPhase && !isMyTurn && currentPlayer && (
           <Card className="bg-muted/50">
             <CardContent className="py-6">
               <div className="flex items-center justify-center gap-3">
@@ -388,8 +475,8 @@ export default function GamePage() {
           </Card>
         )}
 
-        {/* My Timeline (when not my turn) */}
-        {!showShuffleAnimation && !isMyTurn && myPlayer && (
+        {/* My Timeline (when not my turn and not in steal phase) */}
+        {!showShuffleAnimation && !isStealPhase && !isMyTurn && myPlayer && (
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Your Timeline</CardTitle>

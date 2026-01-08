@@ -123,6 +123,13 @@ export type CurrentTurnSong = {
   year: number;
 };
 
+export type ActiveStealAttempt = {
+  playerId: string;
+  playerName: string;
+  placementIndex: number;
+  timestamp: string;
+};
+
 export const gameSessions = pgTable("game_sessions", {
   id: uuid("id").primaryKey().defaultRandom(),
   pin: varchar("pin", { length: 4 }).notNull().unique(),
@@ -142,6 +149,11 @@ export const gameSessions = pgTable("game_sessions", {
   currentSong: jsonb("current_song").$type<CurrentTurnSong | null>(),
   turnStartedAt: timestamp("turn_started_at"),
   roundNumber: integer("round_number").default(1),
+  // Steal phase tracking
+  isStealPhase: boolean("is_steal_phase").default(false),
+  stealPhaseEndAt: timestamp("steal_phase_end_at"),
+  activePlayerPlacement: integer("active_player_placement"),
+  stealAttempts: jsonb("steal_attempts").$type<ActiveStealAttempt[]>().default([]),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

@@ -336,7 +336,7 @@
       "Active player sees their submission, can reflect on choice",
       "Other players can attempt to steal"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "stealing",
@@ -348,7 +348,7 @@
       "Submit steal attempt",
       "Token deducted immediately"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "stealing",
@@ -359,7 +359,7 @@
       "Visual indicator shows occupied positions",
       "Multiple players can steal at different positions"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "stealing",
@@ -370,7 +370,7 @@
       "Original player gets nothing",
       "Success animation for stealer"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "stealing",
@@ -381,7 +381,7 @@
       "No other penalty",
       "Song discarded if original player also wrong"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "tokens",
