@@ -54,3 +54,24 @@ Protected routes verified:
 Files changed:
 - src/components/user-menu.tsx (added useRouter, redirect on logout success)
 - plans/prd.json (marked authentication #2 as passes: true)
+
+## 2026-01-08: Verified non-host player join flow
+
+PRD items: authentication #3 (Non-host players join without authentication)
+
+Already implemented - no code changes needed:
+- /join page: 2-step flow (PIN validation → name/avatar)
+- tRPC validatePin + joinGame use baseProcedure (no auth required)
+- 20 emoji avatar presets in AvatarSelector component
+- Player created with optional userId (allows anonymous players)
+- localStorage stores playerId/sessionId for stateless identity
+- Reconnection support: disconnected players can rejoin with same name
+
+Key files:
+- src/app/join/page.tsx: join flow UI
+- src/components/avatar-selector.tsx: 20 emoji presets
+- src/trpc/routers/game.ts: validatePin (L343), joinGame (L408)
+- src/db/schema.ts: players table with optional userId
+
+Files changed:
+- plans/prd.json (marked authentication #3 as passes: true)
