@@ -38,3 +38,19 @@ No code changes needed - feature was already implemented:
 
 Files changed:
 - plans/prd.json (marked authentication #1 as passes: true)
+
+## 2026-01-08: Implemented logout with redirect
+
+PRD items: authentication #2 (Host can log out)
+
+Changes:
+- Added redirect to home page after signOut in UserMenu component
+- Uses Better Auth's signOut fetchOptions.onSuccess callback
+
+Protected routes verified:
+- tRPC protectedProcedure guards: createGame, startGame, updateSettings, startRematch
+- Session destroyed via Better Auth signOut()
+
+Files changed:
+- src/components/user-menu.tsx (added useRouter, redirect on logout success)
+- plans/prd.json (marked authentication #2 as passes: true)

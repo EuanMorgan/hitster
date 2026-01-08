@@ -140,7 +140,7 @@
       "Redirect to home page",
       "Verify protected routes inaccessible"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "authentication",

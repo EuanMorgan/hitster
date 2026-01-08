@@ -1,11 +1,13 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { signOut, useSession } from "@/lib/auth-client";
 import { SpotifyLoginButton } from "./spotify-login-button";
 
 export function UserMenu() {
   const { data: session, isPending } = useSession();
+  const router = useRouter();
 
   if (isPending) {
     return <div className="h-10 w-full animate-pulse rounded-md bg-muted" />;
@@ -16,7 +18,13 @@ export function UserMenu() {
   }
 
   const handleLogout = async () => {
-    await signOut();
+    await signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          router.push("/");
+        },
+      },
+    });
   };
 
   return (
