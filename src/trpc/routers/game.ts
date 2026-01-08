@@ -516,6 +516,30 @@ export const gameRouter = createTRPCRouter({
         });
       }
 
+      // Calculate accuracy stats for finished games
+      const playerStats: Record<
+        string,
+        { correctPlacements: number; totalPlacements: number }
+      > = {};
+      if (session.state === "finished") {
+        const gameTurns = await ctx.db.query.turns.findMany({
+          where: eq(turns.sessionId, session.id),
+        });
+
+        for (const turn of gameTurns) {
+          if (!playerStats[turn.playerId]) {
+            playerStats[turn.playerId] = {
+              correctPlacements: 0,
+              totalPlacements: 0,
+            };
+          }
+          playerStats[turn.playerId].totalPlacements++;
+          if (turn.wasCorrect) {
+            playerStats[turn.playerId].correctPlacements++;
+          }
+        }
+      }
+
       return {
         id: session.id,
         pin: session.pin,
@@ -540,6 +564,7 @@ export const gameRouter = createTRPCRouter({
         stealPhaseEndAt: session.stealPhaseEndAt?.toISOString() ?? null,
         activePlayerPlacement: session.activePlayerPlacement ?? null,
         stealAttempts: session.stealAttempts ?? [],
+        playerStats: session.state === "finished" ? playerStats : null,
         players: orderedPlayers.map((p: Player) => ({
           id: p.id,
           name: p.name,

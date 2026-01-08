@@ -634,45 +634,70 @@ export default function GamePage() {
                 Final Standings
               </h3>
               <div className="space-y-3">
-                {sortedPlayers.map((player, idx) => (
-                  <div
-                    key={player.id}
-                    className={`flex items-center gap-3 p-3 rounded-lg transition-all ${
-                      idx === 0
-                        ? "bg-yellow-100 dark:bg-yellow-900/30 border-2 border-yellow-400"
-                        : idx === 1
-                          ? "bg-gray-100 dark:bg-gray-800/50 border border-gray-300"
-                          : idx === 2
-                            ? "bg-amber-50 dark:bg-amber-900/20 border border-amber-300"
-                            : "bg-muted"
-                    }`}
-                  >
-                    <span className="text-2xl min-w-[32px] text-center">
-                      {idx === 0
-                        ? "🥇"
-                        : idx === 1
-                          ? "🥈"
-                          : idx === 2
-                            ? "🥉"
-                            : `#${idx + 1}`}
-                    </span>
-                    <span className="text-2xl">{player.avatar}</span>
-                    <div className="flex-1">
-                      <span className="font-medium">{player.name}</span>
-                      {player.isHost && (
-                        <span className="ml-2 text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded">
-                          Host
-                        </span>
-                      )}
-                    </div>
-                    <div className="text-right">
-                      <div className="font-bold">
-                        {player.timeline?.length ?? 0}
+                {sortedPlayers.map((player, idx) => {
+                  const stats = session.playerStats?.[player.id];
+                  const accuracy =
+                    stats && stats.totalPlacements > 0
+                      ? Math.round(
+                          (stats.correctPlacements / stats.totalPlacements) *
+                            100,
+                        )
+                      : null;
+                  return (
+                    <div
+                      key={player.id}
+                      className={`flex items-center gap-3 p-3 rounded-lg transition-all ${
+                        idx === 0
+                          ? "bg-yellow-100 dark:bg-yellow-900/30 border-2 border-yellow-400"
+                          : idx === 1
+                            ? "bg-gray-100 dark:bg-gray-800/50 border border-gray-300"
+                            : idx === 2
+                              ? "bg-amber-50 dark:bg-amber-900/20 border border-amber-300"
+                              : "bg-muted"
+                      }`}
+                    >
+                      <span className="text-2xl min-w-[32px] text-center">
+                        {idx === 0
+                          ? "🥇"
+                          : idx === 1
+                            ? "🥈"
+                            : idx === 2
+                              ? "🥉"
+                              : `#${idx + 1}`}
+                      </span>
+                      <span className="text-2xl">{player.avatar}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium truncate">
+                            {player.name}
+                          </span>
+                          {player.isHost && (
+                            <span className="text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded shrink-0">
+                              Host
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                          <span>🪙 {player.tokens}</span>
+                          {accuracy !== null && (
+                            <span>
+                              • {stats!.correctPlacements}/
+                              {stats!.totalPlacements} ({accuracy}%)
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <div className="text-xs text-muted-foreground">songs</div>
+                      <div className="text-right shrink-0">
+                        <div className="font-bold">
+                          {player.timeline?.length ?? 0}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          songs
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 

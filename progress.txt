@@ -256,3 +256,24 @@ winning #21 (target songs): timeline.length >= songsToWin triggers game end
 Files changed:
 - src/app/game/[pin]/page.tsx (removed !isStealPhase from shouldPlay)
 - plans/prd.json (marked 17 items as passes: true)
+
+## 2026-01-08: Implemented results screen accuracy stats
+
+PRD items: winning #22 (Results screen shows game leaderboard)
+
+Changes:
+- Added playerStats calculation in getSession for finished games
+- Queries turns table to count correctPlacements/totalPlacements per player
+- Updated results screen to show tokens + accuracy (e.g. "🪙 2 • 5/8 (63%)")
+
+All 5 PRD steps verified:
+1. Display players ranked by timeline size - already implemented
+2. Show winner prominently - already implemented
+3. Display songs in timeline - shows count (songs themselves in timeline)
+4. Show token counts - NOW SHOWN in results
+5. Show accuracy stats - NOW SHOWN as correct/total (percentage)
+
+Files changed:
+- src/trpc/routers/game.ts (added playerStats to getSession)
+- src/app/game/[pin]/page.tsx (updated results UI)
+- plans/prd.json (marked winning #22 as passes: true)

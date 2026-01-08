@@ -486,7 +486,7 @@
       "Show token counts",
       "Show accuracy stats (correct placements vs total)"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "winning",
