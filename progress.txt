@@ -123,3 +123,38 @@ Configure test mocking infrastructure (PRD item #4)
 
 ### Next priority:
 Configure test mocking infrastructure (PRD item #4)
+
+---
+
+## 2026-01-08: PostgreSQL with Docker and Drizzle ORM Complete
+
+### What was done:
+- Created docker-compose.yml with PostgreSQL 16 Alpine container
+- Installed drizzle-orm, postgres (driver), and drizzle-kit
+- Created full database schema with tables: users, game_sessions, players, turns, game_history
+- Created db connection module exporting typed db instance
+- Added drizzle.config.ts for drizzle-kit
+- Added db scripts: db:push, db:studio, db:generate, db:migrate
+- Verified schema pushes to database and all tables created
+
+### Files created/modified:
+- docker-compose.yml (PostgreSQL container config, port 5433)
+- drizzle.config.ts (Drizzle Kit configuration)
+- src/db/schema.ts (full schema with types)
+- src/db/index.ts (database connection)
+- package.json (db scripts added)
+- .env.example, .env.local (updated DATABASE_URL with port 5433)
+
+### Dependencies added:
+- drizzle-orm, postgres
+- drizzle-kit, dotenv (dev)
+
+### Notes:
+- Uses port 5433 to avoid conflicts with local postgres on 5432
+- Run `docker compose up -d` to start postgres
+- Run `bun run db:push` to push schema changes
+- Run `bun run db:studio` for Drizzle Studio GUI
+- Schema includes: game_state enum, foreign key relationships, JSONB for flexible data
+
+### Next priority:
+Configure tRPC with TanStack React Query for RSC (PRD item #6)
