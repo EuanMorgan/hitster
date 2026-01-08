@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useTRPC } from "@/trpc/client";
 
 type Step = "pin" | "details";
@@ -205,11 +206,24 @@ function JoinPageContent() {
 function JoinPageLoading() {
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md animate-in fade-in-0 duration-200">
         <CardHeader>
-          <CardTitle>Join Game</CardTitle>
-          <CardDescription>Loading...</CardDescription>
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-7 w-24" />
+            <Skeleton className="h-9 w-9 rounded-md" />
+          </div>
+          <Skeleton className="h-4 w-48 mt-2" />
         </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="h-14 w-full" />
+          </div>
+          <div className="flex gap-2">
+            <Skeleton className="h-10 flex-1" />
+            <Skeleton className="h-10 flex-1" />
+          </div>
+        </CardContent>
       </Card>
     </div>
   );

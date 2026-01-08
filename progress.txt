@@ -656,3 +656,26 @@ Files changed:
 - src/app/lobby/[pin]/page.tsx (use useGameSession)
 - src/app/game/[pin]/page.tsx (use useGameSession)
 - plans/prd.json (marked api #38 as passes: true)
+
+## 2026-01-08: Implemented skeleton loaders for async content
+
+PRD items: ui #34 (Skeleton loaders for async content)
+
+Changes:
+- Added shadcn skeleton component via `bunx shadcn@latest add skeleton`
+- Created LobbySkeleton: matches lobby card layout (PIN area, QR code, player list)
+- Created GameSkeleton: matches game layout (header, current turn, player cards)
+- Updated JoinPageLoading: matches join form layout (title, input, buttons)
+- All skeletons use `animate-in fade-in-0 duration-200` for smooth transitions
+
+All 3 PRD steps verified:
+1. ✅ Gray animated placeholder matches layout - Skeleton uses bg-accent animate-pulse, layouts mirror final content
+2. ✅ React Suspense boundaries - join page already uses Suspense, skeletons used in isLoading states
+3. ✅ Content fades in 150-300ms - animate-in fade-in-0 duration-200 (200ms transition)
+
+Files changed:
+- src/components/ui/skeleton.tsx (new - shadcn skeleton component)
+- src/app/lobby/[pin]/page.tsx (added LobbySkeleton, use in isLoading)
+- src/app/game/[pin]/page.tsx (added GameSkeleton, use in isLoading)
+- src/app/join/page.tsx (enhanced JoinPageLoading with proper skeleton)
+- plans/prd.json (marked ui #34 as passes: true)

@@ -667,7 +667,7 @@
       "Use React Suspense boundaries",
       "Content fades in over 150-300ms, no layout shift"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "ui",
