@@ -22,9 +22,12 @@ interface TimelineDropZoneProps {
   currentSong: CurrentTurnSong;
   onConfirm: (placementIndex: number) => void;
   onTimeUp: () => void;
+  onSkip?: () => void;
   isSubmitting: boolean;
+  isSkipping?: boolean;
   turnDuration: number;
   turnStartedAt: string | null;
+  tokens: number;
 }
 
 function DropZone({
@@ -196,9 +199,12 @@ export function TimelineDropZone({
   currentSong,
   onConfirm,
   onTimeUp,
+  onSkip,
   isSubmitting,
+  isSkipping,
   turnDuration,
   turnStartedAt,
+  tokens,
 }: TimelineDropZoneProps) {
   const [placementIndex, setPlacementIndex] = useState<number | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -290,6 +296,32 @@ export function TimelineDropZone({
         {sortedTimeline.length === 0 && placementIndex === null && (
           <div className="text-center text-muted-foreground text-sm">
             Drag the song to the drop zone to place it in your timeline
+          </div>
+        )}
+
+        {/* Skip button - always visible but disabled when no tokens */}
+        {onSkip && placementIndex === null && (
+          <div className="flex justify-center">
+            <Button
+              variant="outline"
+              onClick={onSkip}
+              disabled={tokens < 1 || isSkipping || isSubmitting}
+              className="gap-2"
+            >
+              {isSkipping ? (
+                "Skipping..."
+              ) : (
+                <>
+                  <span>🪙</span>
+                  Skip Song (1 token)
+                </>
+              )}
+            </Button>
+            {tokens < 1 && (
+              <span className="ml-2 text-sm text-muted-foreground self-center">
+                No tokens
+              </span>
+            )}
           </div>
         )}
 

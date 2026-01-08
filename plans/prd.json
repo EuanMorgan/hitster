@@ -404,7 +404,7 @@
       "New random song drawn and played",
       "Turn timer resets"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "tokens",

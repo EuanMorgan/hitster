@@ -229,6 +229,13 @@ export default function GamePage() {
     },
   });
 
+  const skipSongMutation = useMutation({
+    ...trpc.game.skipSong.mutationOptions(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: trpc.game.getSession.queryKey({ pin }) });
+    },
+  });
+
   // Get current player ID from localStorage
   const [currentPlayerId, setCurrentPlayerId] = useState<string | null>(null);
   useEffect(() => {
@@ -299,6 +306,14 @@ export default function GamePage() {
   const handleTimeUp = useCallback(() => {
     // Called when timer expires - turn already auto-submitted via TimelineDropZone
   }, []);
+
+  const handleSkipSong = useCallback(() => {
+    if (!currentPlayerId || skipSongMutation.isPending) return;
+    skipSongMutation.mutate({
+      pin,
+      playerId: currentPlayerId,
+    });
+  }, [skipSongMutation, pin, currentPlayerId]);
 
   if (sessionQuery.isLoading) {
     return (
@@ -482,9 +497,12 @@ export default function GamePage() {
                   currentSong={session.currentSong}
                   onConfirm={handleConfirmTurn}
                   onTimeUp={handleTimeUp}
+                  onSkip={handleSkipSong}
                   isSubmitting={confirmTurnMutation.isPending}
+                  isSkipping={skipSongMutation.isPending}
                   turnDuration={session.turnDuration}
                   turnStartedAt={session.turnStartedAt}
+                  tokens={myPlayer.tokens}
                 />
               </CardContent>
             </Card>

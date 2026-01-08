@@ -661,6 +661,133 @@ export const gameRouter = createTRPCRouter({
       return { success: true, tokenDeducted: true };
     }),
 
+  skipSong: baseProcedure
+    .input(
+      z.object({
+        pin: z.string().length(4),
+        playerId: z.string().uuid(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const pin = input.pin.toUpperCase();
+
+      const session = await ctx.db.query.gameSessions.findFirst({
+        where: eq(gameSessions.pin, pin),
+        with: {
+          players: {
+            where: eq(players.isConnected, true),
+          },
+        },
+      });
+
+      if (!session) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Game not found" });
+      }
+
+      if (session.state !== "playing") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Game is not in progress",
+        });
+      }
+
+      if (session.isStealPhase) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Cannot skip during steal phase",
+        });
+      }
+
+      const currentPlayerId =
+        session.turnOrder && session.currentTurnIndex !== null
+          ? session.turnOrder[session.currentTurnIndex]
+          : null;
+
+      if (input.playerId !== currentPlayerId) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "It's not your turn",
+        });
+      }
+
+      const player = session.players.find((p) => p.id === input.playerId);
+      if (!player) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Player not found" });
+      }
+
+      if (player.tokens < 1) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Not enough tokens to skip",
+        });
+      }
+
+      if (!session.currentSong) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "No song for current turn",
+        });
+      }
+
+      // Deduct token
+      await ctx.db
+        .update(players)
+        .set({ tokens: player.tokens - 1 })
+        .where(eq(players.id, input.playerId));
+
+      // Draw a new song
+      const usedSongIds = new Set(session.usedSongIds ?? []);
+      usedSongIds.add(session.currentSong.songId); // Mark current song as used
+
+      const availableSongs = PLACEHOLDER_SONGS.filter(
+        (s) => !usedSongIds.has(s.songId)
+      );
+
+      if (availableSongs.length === 0) {
+        // No more songs - end game
+        await ctx.db
+          .update(gameSessions)
+          .set({
+            state: "finished",
+            currentSong: null,
+            updatedAt: new Date(),
+          })
+          .where(eq(gameSessions.id, session.id));
+
+        return {
+          success: false,
+          reason: "No more songs available",
+          gameEnded: true,
+        };
+      }
+
+      const nextSong = availableSongs[Math.floor(Math.random() * availableSongs.length)];
+
+      // Update session with new song and reset turn timer
+      await ctx.db
+        .update(gameSessions)
+        .set({
+          currentSong: {
+            songId: nextSong.songId,
+            name: nextSong.name,
+            artist: nextSong.artist,
+            year: nextSong.year,
+          },
+          usedSongIds: [...usedSongIds],
+          turnStartedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(gameSessions.id, session.id));
+
+      return {
+        success: true,
+        newSong: {
+          songId: nextSong.songId,
+        },
+        tokensRemaining: player.tokens - 1,
+      };
+    }),
+
   resolveStealPhase: baseProcedure
     .input(z.object({ pin: z.string().length(4) }))
     .mutation(async ({ ctx, input }) => {

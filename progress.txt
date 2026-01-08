@@ -631,3 +631,35 @@ Active player can position song in their timeline (PRD gameplay item)
 - Turn progression after steal phase (may already work, needs verification)
 - Token spending features (skip song, free song)
 - Spotify Web Playback SDK
+
+---
+
+## 2026-01-08: Skip Song Feature (1 Token) Complete
+
+### What was done:
+- Added `skipSong` tRPC mutation to game router
+- Validates: player's turn, has at least 1 token, game in progress, not in steal phase
+- Deducts 1 token from player
+- Marks current song as used and draws a new random song
+- Resets turn timer (turnStartedAt)
+- Added Skip button to TimelineDropZone component
+- Button shows "🪙 Skip Song (1 token)" and is disabled when player has 0 tokens
+- Button only shows when song hasn't been placed yet
+- Wired up mutation in game page with proper loading state
+
+### Files modified:
+- src/trpc/routers/game.ts (added skipSong mutation)
+- src/components/timeline-drop-zone.tsx (added skip button, onSkip/isSkipping/tokens props)
+- src/app/game/[pin]/page.tsx (added skipSongMutation, handleSkipSong callback)
+- plans/prd.json (marked PRD item 28 as passing)
+
+### Notes:
+- Skip button appears below the drag area, before the song is placed
+- No confirmation dialog implemented (direct skip for better UX)
+- If no more songs available after skip, game ends gracefully
+- Typecheck and all tests pass
+
+### Next priority:
+- Free song feature (3 tokens for auto-placed song)
+- Song/artist guessing for bonus token
+- Spotify Web Playback SDK integration
