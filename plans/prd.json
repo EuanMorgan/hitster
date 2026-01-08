@@ -633,7 +633,7 @@
       "Store all player data and results",
       "Link to host account"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "statistics",

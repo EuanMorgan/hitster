@@ -703,3 +703,27 @@ Files changed:
 - src/components/turn-shuffle-animation.tsx (new - animation component)
 - src/app/game/[pin]/page.tsx (import component, replace static overlays)
 - plans/prd.json (marked ui #44 as passes: true)
+
+## 2026-01-08: Implemented game history storage
+
+PRD items: statistics #34 (Full game data stored for host)
+
+Changes:
+- Added gameHistory + PlayerStanding imports to game router
+- Created storeGameHistory helper: fetches all players + turns, builds finalStandings, stores gameData
+- Called storeGameHistory at all 4 game-ending locations:
+  1. skipSong when songs exhausted (added winner determination)
+  2. getFreeSong when player reaches songsToWin
+  3. resolveStealPhase when recipient wins
+  4. resolveStealPhase when songs exhausted
+
+Data stored in gameHistory:
+- sessionId, hostId, winnerId
+- finalStandings: player rankings with timelineCount, tokensRemaining, correctPlacements/totalPlacements
+- gameData: settings (songsToWin, durations, playlistUrl) + totalTurns + totalRounds
+
+Turns table already tracked: each turn, placement, steal attempts (from prior work)
+
+Files changed:
+- src/trpc/routers/game.ts (import gameHistory/PlayerStanding, add storeGameHistory helper, call at 4 locations)
+- plans/prd.json (marked statistics #34 as passes: true)

@@ -5,8 +5,10 @@ import {
   type ActiveStealAttempt,
   account,
   type CurrentTurnSong,
+  gameHistory,
   gameSessions,
   type Player,
+  type PlayerStanding,
   type PlaylistSong,
   players,
   type TimelineSong,
@@ -338,6 +340,62 @@ function generatePin(): string {
     pin += chars[Math.floor(Math.random() * chars.length)];
   }
   return pin;
+}
+
+// Store game history when a game ends
+async function storeGameHistory(
+  db: Parameters<Parameters<typeof baseProcedure.query>[0]>[0]["ctx"]["db"],
+  sessionId: string,
+  winnerId: string | null,
+) {
+  // Fetch complete session with all players (not just connected ones)
+  const session = await db.query.gameSessions.findFirst({
+    where: eq(gameSessions.id, sessionId),
+    with: { players: true },
+  });
+
+  if (!session) return;
+
+  // Build final standings from all players
+  const gameTurns = await db.query.turns.findMany({
+    where: eq(turns.sessionId, sessionId),
+  });
+
+  const finalStandings: PlayerStanding[] = session.players
+    .map((player) => {
+      const playerTurns = gameTurns.filter((t) => t.playerId === player.id);
+      const correctPlacements = playerTurns.filter((t) => t.wasCorrect).length;
+      return {
+        playerId: player.id,
+        playerName: player.name,
+        avatar: player.avatar,
+        timelineCount: player.timeline?.length ?? 0,
+        tokensRemaining: player.tokens,
+        correctPlacements,
+        totalPlacements: playerTurns.length,
+      };
+    })
+    .sort((a, b) => b.timelineCount - a.timelineCount);
+
+  // Store game data including settings
+  const gameData = {
+    songsToWin: session.songsToWin,
+    songPlayDuration: session.songPlayDuration,
+    turnDuration: session.turnDuration,
+    stealWindowDuration: session.stealWindowDuration,
+    playlistUrl: session.playlistUrl,
+    totalTurns: gameTurns.length,
+    totalRounds: Math.max(...gameTurns.map((t) => t.roundNumber), 0),
+  };
+
+  await db.insert(gameHistory).values({
+    sessionId,
+    hostId: session.hostId,
+    winnerId,
+    finalStandings,
+    gameData,
+    completedAt: new Date(),
+  });
 }
 
 export const gameRouter = createTRPCRouter({
@@ -1222,7 +1280,19 @@ export const gameRouter = createTRPCRouter({
       }
 
       if (availableSongs.length === 0) {
-        // No more songs - end game
+        // Determine winner (player with most songs)
+        const sortedPlayers = [...session.players].sort(
+          (a, b) => (b.timeline?.length ?? 0) - (a.timeline?.length ?? 0),
+        );
+        const exhaustionWinner = sortedPlayers[0];
+
+        if (exhaustionWinner) {
+          await ctx.db
+            .update(players)
+            .set({ wins: exhaustionWinner.wins + 1 })
+            .where(eq(players.id, exhaustionWinner.id));
+        }
+
         await ctx.db
           .update(gameSessions)
           .set({
@@ -1232,12 +1302,18 @@ export const gameRouter = createTRPCRouter({
           })
           .where(eq(gameSessions.id, session.id));
 
+        await storeGameHistory(
+          ctx.db,
+          session.id,
+          exhaustionWinner?.id ?? null,
+        );
         emitSessionUpdate(pin);
 
         return {
           success: false,
           reason: "No more songs available",
           gameEnded: true,
+          winnerId: exhaustionWinner?.id ?? null,
         };
       }
 
@@ -1409,6 +1485,7 @@ export const gameRouter = createTRPCRouter({
           })
           .where(eq(gameSessions.id, session.id));
 
+        await storeGameHistory(ctx.db, session.id, input.playerId);
         emitSessionUpdate(pin);
 
         return {
@@ -1661,6 +1738,7 @@ export const gameRouter = createTRPCRouter({
               })
               .where(eq(gameSessions.id, session.id));
 
+            await storeGameHistory(ctx.db, session.id, recipientId);
             emitSessionUpdate(pin);
 
             return {
@@ -1733,6 +1811,11 @@ export const gameRouter = createTRPCRouter({
           })
           .where(eq(gameSessions.id, session.id));
 
+        await storeGameHistory(
+          ctx.db,
+          session.id,
+          songExhaustionWinner?.id ?? null,
+        );
         emitSessionUpdate(pin);
 
         return {
