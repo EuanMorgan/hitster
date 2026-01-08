@@ -90,3 +90,36 @@ Configure Playwright for E2E testing (PRD item #3)
 
 ### Next priority:
 Configure test mocking infrastructure (PRD item #4)
+
+---
+
+## 2026-01-08: T3 Env Type-Safe Environment Variables Complete
+
+### What was done:
+- Installed @t3-oss/env-nextjs for type-safe env validation
+- Created src/env.ts with server and client env schemas
+- Defined all required env vars: DATABASE_URL, BETTER_AUTH_SECRET, SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, NEXT_PUBLIC_APP_URL
+- Added optional env vars: PUSHOVER_USER_KEY, PUSHOVER_API_TOKEN
+- Added env validation import to next.config.ts
+- Created .env.example with all variables documented
+- Created .env.local for local development
+- Updated .gitignore to commit .env.example but ignore .env.local
+- Verified build fails on missing env vars, succeeds with valid env
+
+### Files created/modified:
+- src/env.ts (env validation schema)
+- next.config.ts (imports env for build-time validation)
+- .env.example (template for all env vars)
+- .env.local (local development values)
+- .gitignore (updated env file patterns)
+
+### Dependencies added:
+- @t3-oss/env-nextjs (zod already present)
+
+### Notes:
+- Import `env` from "@/env" to access type-safe env vars
+- Build will fail if required env vars missing (unless SKIP_ENV_VALIDATION=1)
+- Client-side vars must be prefixed with NEXT_PUBLIC_
+
+### Next priority:
+Configure test mocking infrastructure (PRD item #4)
