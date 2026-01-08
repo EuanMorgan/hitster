@@ -254,7 +254,7 @@
       "If duration set to 30s, song stops at exactly 30s and playback state updates",
       "Countdown timer visible during playback"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "gameplay",
@@ -768,7 +768,7 @@
       "Control play/pause/seek",
       "On playback error, show toast 'Playback failed - check Spotify Premium status', log error to console"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "spotify",

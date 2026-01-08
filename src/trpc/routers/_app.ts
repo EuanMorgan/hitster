@@ -1,6 +1,7 @@
 import { z } from "zod/v4";
 import { baseProcedure, createTRPCRouter } from "../init";
 import { gameRouter } from "./game";
+import { spotifyRouter } from "./spotify";
 
 export const appRouter = createTRPCRouter({
   healthcheck: baseProcedure.query(() => {
@@ -14,6 +15,7 @@ export const appRouter = createTRPCRouter({
     }),
 
   game: gameRouter,
+  spotify: spotifyRouter,
 });
 
 export type AppRouter = typeof appRouter;

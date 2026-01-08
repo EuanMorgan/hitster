@@ -886,3 +886,49 @@ Active player can position song in their timeline (PRD gameplay item)
 ### Next priority:
 - Spotify Web Playback SDK integration (PRD gameplay item #20)
 - Playlist loading features (PRD items #36-40)
+
+---
+
+## 2026-01-08: Spotify Web Playback SDK Integration Complete
+
+### What was done:
+- Created spotifyRouter with tRPC endpoints for Spotify API interactions:
+  - getAccessToken: Gets/refreshes host's Spotify access token from account table
+  - getPlaylistTracks: Fetches tracks from Spotify playlist with pagination
+  - playTrack: Starts playback on specified device
+  - pausePlayback: Pauses current playback
+  - transferPlayback: Transfers playback to web player device
+- Created SpotifyPlayer React component with Web Playback SDK:
+  - Initializes Spotify Web Playback SDK on host client
+  - Creates player instance and transfers playback
+  - Controls play/pause based on game state
+  - Shows progress bar with elapsed/total time
+  - Auto-stops after configured song duration
+  - Error handling for Premium requirement
+- Updated CurrentTurnSong and TimelineSong types to include uri field
+- Updated PLACEHOLDER_SONGS with real Spotify track URIs (20 popular songs)
+- Integrated SpotifyPlayer into game page (host only)
+
+### Files created:
+- src/trpc/routers/spotify.ts (Spotify tRPC router)
+- src/components/spotify-player.tsx (Web Playback SDK component)
+
+### Files modified:
+- src/trpc/routers/_app.ts (added spotify router)
+- src/db/schema.ts (added uri field to CurrentTurnSong, TimelineSong)
+- src/trpc/routers/game.ts (updated placeholder songs with Spotify URIs)
+- src/app/game/[pin]/page.tsx (integrated SpotifyPlayer for host)
+- plans/prd.json (marked Spotify SDK items as passing)
+
+### Dependencies added:
+- @types/spotify-web-playback-sdk (dev)
+
+### Notes:
+- Requires Spotify Premium for playback
+- Host must be authenticated via Spotify OAuth
+- Token auto-refresh implemented (5 min before expiry)
+- Song plays for configured duration (default 30s), then auto-stops
+- No song metadata shown during playback (mystery song)
+
+### Next priority:
+- Playlist loading features (PRD items #36-40)

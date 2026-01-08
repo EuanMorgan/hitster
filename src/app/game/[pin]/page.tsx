@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { SpotifyPlayer } from "@/components/spotify-player";
 import { StealPhase } from "@/components/steal-phase";
 import { TimelineDropZone } from "@/components/timeline-drop-zone";
 import { Button } from "@/components/ui/button";
@@ -802,6 +803,24 @@ export default function GamePage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Spotify Player - Host Only */}
+        {isHost && session?.state === "playing" && (
+          <SpotifyPlayer
+            isHost={isHost}
+            trackUri={session?.currentSong?.uri ?? null}
+            shouldPlay={
+              !isStealPhase &&
+              !showShuffleAnimation &&
+              !showRoundShuffleAnimation &&
+              !!session?.currentSong
+            }
+            durationMs={(session?.songPlayDuration ?? 30) * 1000}
+            onPlaybackError={(error) => {
+              console.error("Spotify playback error:", error);
+            }}
+          />
+        )}
 
         {/* Initial Shuffle Animation Overlay */}
         {showShuffleAnimation && (

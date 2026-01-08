@@ -121,6 +121,7 @@ export type CurrentTurnSong = {
   name: string;
   artist: string;
   year: number;
+  uri?: string; // Spotify track URI for playback
 };
 
 export type ActiveStealAttempt = {
@@ -278,6 +279,7 @@ export type TimelineSong = {
   artist: string;
   year: number;
   addedAt: string;
+  uri?: string; // Spotify track URI for playback
 };
 
 export type StealAttempt = {
