@@ -228,6 +228,10 @@ export default function GamePage() {
     setTurnResult(null);
   }, []);
 
+  const handleTimeUp = useCallback(() => {
+    // Called when timer expires - turn already auto-submitted via TimelineDropZone
+  }, []);
+
   if (sessionQuery.isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
@@ -355,6 +359,7 @@ export default function GamePage() {
                 timeline={myPlayer.timeline ?? []}
                 currentSong={session.currentSong}
                 onConfirm={handleConfirmTurn}
+                onTimeUp={handleTimeUp}
                 isSubmitting={confirmTurnMutation.isPending}
                 turnDuration={session.turnDuration}
                 turnStartedAt={session.turnStartedAt}

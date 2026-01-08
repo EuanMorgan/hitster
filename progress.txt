@@ -526,3 +526,31 @@ Active player can position song in their timeline (PRD gameplay item)
 - Steal phase implementation (PRD stealing items)
 - OR Auto-submit turn when timer expires (PRD item 22)
 - OR Song name/artist guessing (PRD item 21)
+
+---
+
+## 2026-01-08: Turn Auto-Submit on Timer Expiry Complete
+
+### What was done:
+- Added `onTimeUp` callback prop to TimelineDropZone component
+- Updated TurnTimer to detect when timer reaches 0 and call `onTimeUp`
+- Added `hasTriggered` state to prevent multiple submissions
+- Auto-submits turn with current placement index (or position 0 if nothing placed)
+- Added visual warning at 10 seconds remaining ("⚠️ Time running out!" with bounce animation)
+- Warning shows alongside existing red pulsing timer for extra visibility
+
+### Files modified:
+- src/components/timeline-drop-zone.tsx (added onTimeUp prop, timer auto-submit logic, visual warning)
+- src/app/game/[pin]/page.tsx (added handleTimeUp callback, passed to TimelineDropZone)
+- plans/prd.json (marked PRD item 22 as passing)
+
+### Notes:
+- Timer uses `hasTriggered` flag to ensure single submission even if effect runs multiple times
+- Default placement to index 0 if player hasn't placed song when time expires
+- Audio warning not implemented (would require browser Audio API or sound file)
+- Visual warning shows bounce animation + red text for 10 seconds
+
+### Next priority:
+- Steal phase implementation (PRD stealing items)
+- OR Song name/artist guessing (PRD item 21)
+- OR Spotify Web Playback SDK (PRD gameplay item)

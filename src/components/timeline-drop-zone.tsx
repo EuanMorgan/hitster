@@ -21,6 +21,7 @@ interface TimelineDropZoneProps {
   timeline: TimelineSong[];
   currentSong: CurrentTurnSong;
   onConfirm: (placementIndex: number) => void;
+  onTimeUp: () => void;
   isSubmitting: boolean;
   turnDuration: number;
   turnStartedAt: string | null;
@@ -122,15 +123,19 @@ function TimelineSongCard({ song }: { song: TimelineSong }) {
 function TurnTimer({
   turnDuration,
   turnStartedAt,
+  onTimeUp,
 }: {
   turnDuration: number;
   turnStartedAt: string | null;
+  onTimeUp: () => void;
 }) {
   const [timeLeft, setTimeLeft] = useState(turnDuration);
+  const [hasTriggered, setHasTriggered] = useState(false);
 
   useEffect(() => {
     if (!turnStartedAt) {
       setTimeLeft(turnDuration);
+      setHasTriggered(false);
       return;
     }
 
@@ -140,12 +145,22 @@ function TurnTimer({
       const elapsed = Math.floor((Date.now() - startTime) / 1000);
       const remaining = Math.max(0, turnDuration - elapsed);
       setTimeLeft(remaining);
+
+      if (remaining === 0 && !hasTriggered) {
+        setHasTriggered(true);
+        onTimeUp();
+      }
     };
 
     updateTimer();
     const interval = setInterval(updateTimer, 1000);
     return () => clearInterval(interval);
-  }, [turnDuration, turnStartedAt]);
+  }, [turnDuration, turnStartedAt, onTimeUp, hasTriggered]);
+
+  // Reset hasTriggered when turn changes
+  useEffect(() => {
+    setHasTriggered(false);
+  }, [turnStartedAt]);
 
   const percentage = (timeLeft / turnDuration) * 100;
   const isLow = timeLeft <= 10;
@@ -159,6 +174,11 @@ function TurnTimer({
       >
         {timeLeft}s
       </div>
+      {isLow && timeLeft > 0 && (
+        <div className="text-sm text-red-500 font-medium animate-bounce">
+          ⚠️ Time running out!
+        </div>
+      )}
       <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
         <div
           className={`h-full transition-all duration-1000 ${
@@ -175,6 +195,7 @@ export function TimelineDropZone({
   timeline,
   currentSong,
   onConfirm,
+  onTimeUp,
   isSubmitting,
   turnDuration,
   turnStartedAt,
@@ -183,6 +204,14 @@ export function TimelineDropZone({
   const [activeId, setActiveId] = useState<string | null>(null);
 
   const sortedTimeline = [...timeline].sort((a, b) => a.year - b.year);
+
+  const handleTimeUp = useCallback(() => {
+    if (isSubmitting) return;
+    // Auto-submit with current placement or default to position 0
+    const finalPlacement = placementIndex ?? 0;
+    onConfirm(finalPlacement);
+    onTimeUp();
+  }, [isSubmitting, placementIndex, onConfirm, onTimeUp]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -224,7 +253,7 @@ export function TimelineDropZone({
       onDragEnd={handleDragEnd}
     >
       <div className="space-y-6">
-        <TurnTimer turnDuration={turnDuration} turnStartedAt={turnStartedAt} />
+        <TurnTimer turnDuration={turnDuration} turnStartedAt={turnStartedAt} onTimeUp={handleTimeUp} />
 
         <div className="flex justify-center">
           <DraggableSongCard
