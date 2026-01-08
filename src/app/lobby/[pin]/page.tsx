@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
 import { useEffect, useState } from "react";
 import { GameSettings } from "@/components/game-settings";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -98,7 +99,10 @@ export default function LobbyPage() {
     <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle>Game Lobby</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>Game Lobby</CardTitle>
+            <ThemeToggle />
+          </div>
           <CardDescription>Share this PIN to invite players</CardDescription>
           <div className="mt-4 flex flex-col items-center gap-4">
             <div className="p-4 bg-muted rounded-lg w-full">

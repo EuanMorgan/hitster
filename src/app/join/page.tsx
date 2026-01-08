@@ -4,6 +4,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { AvatarSelector } from "@/components/avatar-selector";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -88,7 +89,10 @@ function JoinPageContent() {
     <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Join Game</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>Join Game</CardTitle>
+            <ThemeToggle />
+          </div>
           <CardDescription>
             {step === "pin"
               ? "Enter the game PIN to join"

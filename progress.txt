@@ -453,3 +453,31 @@ Files changed:
 - src/components/timeline-drop-zone.tsx (TurnTimer isPaused, timerPaused prop)
 - src/components/spotify-player.tsx (pausedPositionRef for resume, track reset fix)
 - plans/prd.json (marked reconnection #2 as passes: true)
+
+## 2026-01-08: Implemented theme toggle for light/dark mode
+
+PRD items: display #33 (Theme toggle for light/dark mode)
+
+Changes:
+- Added ThemeToggle to join page header
+- Added ThemeToggle to lobby page header
+- Added ThemeToggle to game page header (centered title with spacer)
+
+Verification:
+- ThemeProvider already configured with defaultTheme="system", enableSystem=true
+- next-themes stores preference in localStorage (key: "theme")
+- Toggling between light/dark works on all pages
+- Theme persists across page navigation
+- First visit follows prefers-color-scheme media query
+
+All 4 PRD steps verified:
+1. ✅ Toggle in settings/header - added to all page headers
+2. ✅ Follow shadcn theming patterns - uses next-themes + class attribute
+3. ✅ Preference stored in localStorage - verified "theme" key persists
+4. ✅ On first visit, follows prefers-color-scheme - defaultTheme="system"
+
+Files changed:
+- src/app/join/page.tsx (added ThemeToggle import + component)
+- src/app/lobby/[pin]/page.tsx (added ThemeToggle import + component)
+- src/app/game/[pin]/page.tsx (added ThemeToggle import + component)
+- plans/prd.json (marked display #33 as passes: true)

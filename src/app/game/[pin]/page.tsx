@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { SpotifyPlayer } from "@/components/spotify-player";
 import { StealPhase } from "@/components/steal-phase";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { TimelineDropZone } from "@/components/timeline-drop-zone";
 import { Button } from "@/components/ui/button";
 import {
@@ -944,7 +945,11 @@ export default function GamePage() {
         {/* Game Header - compact on mobile */}
         <Card>
           <CardHeader className="text-center pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
-            <CardTitle className="text-xl sm:text-2xl">Hitster</CardTitle>
+            <div className="flex items-center justify-between">
+              <div className="w-9" />
+              <CardTitle className="text-xl sm:text-2xl">Hitster</CardTitle>
+              <ThemeToggle />
+            </div>
             <CardDescription className="text-xs sm:text-sm">
               PIN: {session?.pin} • Round {session?.roundNumber}
               {isStealPhase && (
