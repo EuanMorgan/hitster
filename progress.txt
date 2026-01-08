@@ -454,6 +454,44 @@ Files changed:
 - src/components/spotify-player.tsx (pausedPositionRef for resume, track reset fix)
 - plans/prd.json (marked reconnection #2 as passes: true)
 
+## 2026-01-08: Verified avatar selector and QR code features
+
+PRD items: ui #2 (Avatar selection), ui #3 (QR code)
+
+Both features already implemented - no code changes needed:
+
+ui #2 Avatar selection:
+- 20 emoji presets in avatarPresets array
+- 5-column grid layout with grid-cols-5
+- Visual selection: ring-2 ring-offset-2 bg-primary on selected
+
+ui #3 QR code:
+- QRCodeSVG from qrcode.react renders on lobby page
+- joinUrl includes PIN: `${env.NEXT_PUBLIC_APP_URL}/join?pin=${pin}`
+- Scannable size (160px)
+
+Files changed:
+- plans/prd.json (marked ui #2, #3 as passes: true)
+
+## 2026-01-08: Added vibration API to drag-drop
+
+PRD items: ui #5 (Drag and drop timeline interaction)
+
+Changes:
+- timeline-drop-zone.tsx: navigator.vibrate(50) on successful drop
+- steal-phase.tsx: same vibration on steal drop
+
+All 4 PRD steps now verified:
+1. ✅ 60fps drag - CSS transforms via @dnd-kit/utilities
+2. ✅ Clear drop zone indicators - border-primary bg-primary/20 scale-105
+3. ✅ Vibration on drop - navigator.vibrate(50) if supported
+4. ✅ Snap-to-position - closestCenter collision + setPlacementIndex
+
+Files changed:
+- src/components/timeline-drop-zone.tsx (added vibration)
+- src/components/steal-phase.tsx (added vibration)
+- plans/prd.json (marked ui #5 as passes: true)
+
 ## 2026-01-08: Implemented theme toggle for light/dark mode
 
 PRD items: display #33 (Theme toggle for light/dark mode)

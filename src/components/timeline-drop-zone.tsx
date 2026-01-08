@@ -317,6 +317,10 @@ export function TimelineDropZone({
         10,
       );
       setPlacementIndex(index);
+      // Vibrate on successful drop if device supports it
+      if (navigator.vibrate) {
+        navigator.vibrate(50);
+      }
     }
   }, []);
 

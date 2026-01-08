@@ -678,7 +678,7 @@
       "Visual selection indicator",
       "Minimum 20 avatar options"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "ui",
@@ -688,7 +688,7 @@
       "Display alongside PIN in lobby",
       "Scannable on mobile devices"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "ui",
@@ -709,7 +709,7 @@
       "If device supports vibration API, short vibration on drop",
       "Snap-to-position behavior"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "ui",

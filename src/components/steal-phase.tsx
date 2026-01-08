@@ -264,6 +264,10 @@ export function StealPhase({
         // Check if position is already taken
         if (!stealAttempts.some((a) => a.placementIndex === index)) {
           setPlacementIndex(index);
+          // Vibrate on successful drop if device supports it
+          if (navigator.vibrate) {
+            navigator.vibrate(50);
+          }
         }
       }
     },
