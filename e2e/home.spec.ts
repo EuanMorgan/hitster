@@ -6,9 +6,9 @@ test.describe("Home Page", () => {
 	}) => {
 		await page.goto("/");
 
-		await expect(page.getByText("Hitster")).toBeVisible();
+		await expect(page.locator('[data-slot="card-title"]')).toContainText("Hitster");
 		await expect(
-			page.getByText("A multiplayer music timeline game"),
+			page.getByText("Hello, Hitster Player!"),
 		).toBeVisible();
 	});
 

@@ -1,0 +1,386 @@
+import type {
+  User,
+  GameSession,
+  Player,
+  Turn,
+  TimelineSong,
+  StealAttempt,
+  PlayerStanding,
+} from "@/db/schema";
+
+// User fixtures
+export const fixtures = {
+  users: {
+    host: {
+      id: "host-user-001",
+      name: "Test Host",
+      email: "host@example.com",
+      emailVerified: true,
+      image: "https://example.com/host-avatar.jpg",
+      createdAt: new Date("2024-01-01"),
+      updatedAt: new Date("2024-01-01"),
+    } satisfies User,
+
+    player1: {
+      id: "player-user-001",
+      name: "Player One",
+      email: "player1@example.com",
+      emailVerified: false,
+      image: null,
+      createdAt: new Date("2024-01-02"),
+      updatedAt: new Date("2024-01-02"),
+    } satisfies User,
+
+    player2: {
+      id: "player-user-002",
+      name: "Player Two",
+      email: "player2@example.com",
+      emailVerified: false,
+      image: null,
+      createdAt: new Date("2024-01-03"),
+      updatedAt: new Date("2024-01-03"),
+    } satisfies User,
+  },
+
+  gameSessions: {
+    lobby: {
+      id: "session-lobby-001",
+      pin: "ABCD",
+      hostId: "host-user-001",
+      state: "lobby",
+      songsToWin: 10,
+      songPlayDuration: 30,
+      turnDuration: 45,
+      stealWindowDuration: 10,
+      maxPlayers: 10,
+      playlistUrl: null,
+      currentTurnIndex: 0,
+      turnOrder: null,
+      usedSongIds: [],
+      createdAt: new Date("2024-01-10"),
+      updatedAt: new Date("2024-01-10"),
+    } satisfies GameSession,
+
+    playing: {
+      id: "session-playing-001",
+      pin: "WXYZ",
+      hostId: "host-user-001",
+      state: "playing",
+      songsToWin: 10,
+      songPlayDuration: 30,
+      turnDuration: 45,
+      stealWindowDuration: 10,
+      maxPlayers: 10,
+      playlistUrl: "https://open.spotify.com/playlist/test123",
+      currentTurnIndex: 2,
+      turnOrder: ["player-001", "player-002", "player-003"],
+      usedSongIds: ["track1", "track2"],
+      createdAt: new Date("2024-01-11"),
+      updatedAt: new Date("2024-01-11"),
+    } satisfies GameSession,
+
+    finished: {
+      id: "session-finished-001",
+      pin: "DONE",
+      hostId: "host-user-001",
+      state: "finished",
+      songsToWin: 10,
+      songPlayDuration: 30,
+      turnDuration: 45,
+      stealWindowDuration: 10,
+      maxPlayers: 10,
+      playlistUrl: null,
+      currentTurnIndex: 5,
+      turnOrder: ["player-001", "player-002"],
+      usedSongIds: ["track1", "track2", "track3", "track4", "track5"],
+      createdAt: new Date("2024-01-12"),
+      updatedAt: new Date("2024-01-12"),
+    } satisfies GameSession,
+  },
+
+  players: {
+    hostPlayer: {
+      id: "player-001",
+      sessionId: "session-lobby-001",
+      userId: "host-user-001",
+      name: "Test Host",
+      avatar: "👑",
+      tokens: 2,
+      timeline: [],
+      isHost: true,
+      isConnected: true,
+      createdAt: new Date("2024-01-10"),
+    } satisfies Player,
+
+    guestPlayer1: {
+      id: "player-002",
+      sessionId: "session-lobby-001",
+      userId: null,
+      name: "Guest One",
+      avatar: "🎸",
+      tokens: 2,
+      timeline: [],
+      isHost: false,
+      isConnected: true,
+      createdAt: new Date("2024-01-10"),
+    } satisfies Player,
+
+    guestPlayer2: {
+      id: "player-003",
+      sessionId: "session-lobby-001",
+      userId: null,
+      name: "Guest Two",
+      avatar: "🎤",
+      tokens: 3,
+      timeline: [],
+      isHost: false,
+      isConnected: true,
+      createdAt: new Date("2024-01-10"),
+    } satisfies Player,
+
+    disconnectedPlayer: {
+      id: "player-004",
+      sessionId: "session-lobby-001",
+      userId: null,
+      name: "Disconnected",
+      avatar: "👻",
+      tokens: 1,
+      timeline: [],
+      isHost: false,
+      isConnected: false,
+      createdAt: new Date("2024-01-10"),
+    } satisfies Player,
+  },
+
+  timelineSongs: {
+    song1975: {
+      songId: "track1",
+      name: "Bohemian Rhapsody",
+      artist: "Queen",
+      year: 1975,
+      addedAt: "2024-01-10T10:00:00Z",
+    } satisfies TimelineSong,
+
+    song1983: {
+      songId: "track2",
+      name: "Billie Jean",
+      artist: "Michael Jackson",
+      year: 1983,
+      addedAt: "2024-01-10T10:05:00Z",
+    } satisfies TimelineSong,
+
+    song1991: {
+      songId: "track3",
+      name: "Smells Like Teen Spirit",
+      artist: "Nirvana",
+      year: 1991,
+      addedAt: "2024-01-10T10:10:00Z",
+    } satisfies TimelineSong,
+
+    song1968: {
+      songId: "track4",
+      name: "Hey Jude",
+      artist: "The Beatles",
+      year: 1968,
+      addedAt: "2024-01-10T10:15:00Z",
+    } satisfies TimelineSong,
+
+    song2010: {
+      songId: "track5",
+      name: "Rolling in the Deep",
+      artist: "Adele",
+      year: 2010,
+      addedAt: "2024-01-10T10:20:00Z",
+    } satisfies TimelineSong,
+  },
+
+  turns: {
+    correctPlacement: {
+      id: "turn-001",
+      sessionId: "session-playing-001",
+      playerId: "player-001",
+      roundNumber: 1,
+      songId: "track1",
+      songName: "Bohemian Rhapsody",
+      songArtist: "Queen",
+      songYear: 1975,
+      placementIndex: 0,
+      wasCorrect: true,
+      guessedName: null,
+      guessedArtist: null,
+      guessWasCorrect: null,
+      stealAttempts: [],
+      completedAt: new Date("2024-01-11T10:05:00Z"),
+      createdAt: new Date("2024-01-11T10:00:00Z"),
+    } satisfies Turn,
+
+    incorrectPlacement: {
+      id: "turn-002",
+      sessionId: "session-playing-001",
+      playerId: "player-002",
+      roundNumber: 1,
+      songId: "track2",
+      songName: "Billie Jean",
+      songArtist: "Michael Jackson",
+      songYear: 1983,
+      placementIndex: 2,
+      wasCorrect: false,
+      guessedName: "Beat It",
+      guessedArtist: "Michael Jackson",
+      guessWasCorrect: false,
+      stealAttempts: [],
+      completedAt: new Date("2024-01-11T10:10:00Z"),
+      createdAt: new Date("2024-01-11T10:05:00Z"),
+    } satisfies Turn,
+
+    withStealAttempt: {
+      id: "turn-003",
+      sessionId: "session-playing-001",
+      playerId: "player-001",
+      roundNumber: 2,
+      songId: "track3",
+      songName: "Smells Like Teen Spirit",
+      songArtist: "Nirvana",
+      songYear: 1991,
+      placementIndex: 1,
+      wasCorrect: false,
+      guessedName: null,
+      guessedArtist: null,
+      guessWasCorrect: null,
+      stealAttempts: [
+        {
+          playerId: "player-002",
+          placementIndex: 2,
+          wasCorrect: true,
+          timestamp: "2024-01-11T10:20:00Z",
+        },
+      ],
+      completedAt: new Date("2024-01-11T10:20:00Z"),
+      createdAt: new Date("2024-01-11T10:15:00Z"),
+    } satisfies Turn,
+
+    inProgress: {
+      id: "turn-004",
+      sessionId: "session-playing-001",
+      playerId: "player-003",
+      roundNumber: 2,
+      songId: "track4",
+      songName: "Hey Jude",
+      songArtist: "The Beatles",
+      songYear: 1968,
+      placementIndex: null,
+      wasCorrect: null,
+      guessedName: null,
+      guessedArtist: null,
+      guessWasCorrect: null,
+      stealAttempts: [],
+      completedAt: null,
+      createdAt: new Date("2024-01-11T10:25:00Z"),
+    } satisfies Turn,
+  },
+
+  stealAttempts: {
+    successful: {
+      playerId: "player-002",
+      placementIndex: 2,
+      wasCorrect: true,
+      timestamp: "2024-01-11T10:20:00Z",
+    } satisfies StealAttempt,
+
+    failed: {
+      playerId: "player-003",
+      placementIndex: 0,
+      wasCorrect: false,
+      timestamp: "2024-01-11T10:21:00Z",
+    } satisfies StealAttempt,
+  },
+
+  playerStandings: {
+    winner: {
+      playerId: "player-001",
+      playerName: "Test Host",
+      avatar: "👑",
+      timelineCount: 10,
+      tokensRemaining: 3,
+      correctPlacements: 10,
+      totalPlacements: 12,
+    } satisfies PlayerStanding,
+
+    secondPlace: {
+      playerId: "player-002",
+      playerName: "Guest One",
+      avatar: "🎸",
+      timelineCount: 8,
+      tokensRemaining: 1,
+      correctPlacements: 8,
+      totalPlacements: 11,
+    } satisfies PlayerStanding,
+
+    thirdPlace: {
+      playerId: "player-003",
+      playerName: "Guest Two",
+      avatar: "🎤",
+      timelineCount: 6,
+      tokensRemaining: 2,
+      correctPlacements: 6,
+      totalPlacements: 10,
+    } satisfies PlayerStanding,
+  },
+
+  // Spotify API response fixtures
+  spotify: {
+    track: {
+      id: "track1",
+      name: "Bohemian Rhapsody",
+      artists: [{ name: "Queen" }],
+      album: {
+        release_date: "1975-10-31",
+        images: [{ url: "https://example.com/album.jpg" }],
+      },
+      uri: "spotify:track:track1",
+      duration_ms: 354000,
+    },
+
+    playlist: {
+      id: "playlist123",
+      name: "Hitster Playlist",
+      description: "Songs for Hitster game",
+      tracks: {
+        total: 100,
+      },
+    },
+
+    user: {
+      id: "spotify-user-123",
+      display_name: "Test User",
+      email: "test@example.com",
+      images: [{ url: "https://example.com/avatar.jpg" }],
+      country: "US",
+      product: "premium",
+    },
+  },
+};
+
+// Avatar presets for player selection
+export const avatarPresets = [
+  "👑",
+  "🎸",
+  "🎤",
+  "🎹",
+  "🥁",
+  "🎺",
+  "🎻",
+  "🎷",
+  "🎵",
+  "🎶",
+  "🎧",
+  "🎼",
+  "🎙️",
+  "🎚️",
+  "🎛️",
+  "📀",
+  "💿",
+  "🎭",
+  "🌟",
+  "✨",
+];

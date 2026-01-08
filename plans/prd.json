@@ -46,7 +46,7 @@
       "Add mock data fixtures for players, games, songs",
       "Verify mocks work in both Vitest and Playwright"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "setup",

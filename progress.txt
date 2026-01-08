@@ -262,3 +262,48 @@ Configure test mocking infrastructure (PRD item #4) OR implement Host login with
 
 ### Next priority:
 Configure test mocking infrastructure (PRD item #4) OR implement non-host player join flow (PRD item #12)
+
+---
+
+## 2026-01-08: Test Mocking Infrastructure Complete
+
+### What was done:
+- Installed msw (Mock Service Worker) 2.x for API mocking
+- Created src/mocks/handlers.ts with Spotify API mock handlers
+- Created src/mocks/server.ts for Vitest (Node.js) setup
+- Created src/mocks/browser.ts for browser environment (Playwright)
+- Created src/mocks/db.ts with database mocking utilities (seed functions, mock query builders)
+- Created src/mocks/fixtures.ts with comprehensive test fixtures for all entity types
+- Created src/mocks/index.ts for convenient re-exports
+- Updated vitest.setup.ts to start MSW server for all unit tests
+- Created e2e/helpers/mock-api.ts with Playwright route interception helpers
+- Added tests to verify mocks work in both Vitest and Playwright
+- Fixed outdated e2e/home.spec.ts test assertions
+
+### Files created/modified:
+- src/mocks/handlers.ts (Spotify API mocks)
+- src/mocks/server.ts (MSW Node server)
+- src/mocks/browser.ts (MSW browser worker)
+- src/mocks/db.ts (database mocking utilities)
+- src/mocks/fixtures.ts (test fixtures)
+- src/mocks/index.ts (re-exports)
+- src/mocks/__tests__/handlers.test.ts (API mock tests)
+- src/mocks/__tests__/db.test.ts (DB mock tests)
+- src/mocks/__tests__/fixtures.test.ts (fixture tests)
+- vitest.setup.ts (added MSW server lifecycle)
+- e2e/helpers/mock-api.ts (Playwright mock helpers)
+- e2e/mocks.spec.ts (E2E mock integration tests)
+- e2e/home.spec.ts (fixed outdated assertions)
+
+### Dependencies added:
+- msw
+
+### Notes:
+- Vitest: MSW server auto-starts via vitest.setup.ts, handlers reset between tests
+- Playwright: Use helpers from e2e/helpers/mock-api.ts (mockSpotifyApi, mockAuthenticatedUser, etc.)
+- Fixtures available for: users, gameSessions, players, turns, timelineSongs, stealAttempts, playerStandings
+- DB mocking: Use seedUser(), seedGameSession(), etc. to populate in-memory store
+- avatarPresets array has 20+ emoji options for player selection
+
+### Next priority:
+Implement non-host players join without authentication (PRD item #12)
