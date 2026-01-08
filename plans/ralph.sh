@@ -38,6 +38,12 @@ for ((i=1; i<=$1; i++)); do
         ./plans/notify.sh "Ralph is finished"
         exit 0
     fi
+
+    if [[ "$result" == *"You've hit your limit"* ]]; then
+        echo "Rate limit hit, waiting 1 hour..."
+        ./plans/notify.sh "Ralph hit rate limit, waiting 1 hour"
+        sleep 3600
+    fi
 done
 
 ./plans/notify.sh "Ralph ran out of iterations"
