@@ -657,7 +657,7 @@
       "Songs guessed correctly (count and percentage)",
       "Show 'X/Y steals successful (Z%)'"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "ui",

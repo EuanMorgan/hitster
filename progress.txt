@@ -754,3 +754,36 @@ Files changed:
 - src/components/ui/table.tsx (new - shadcn table component)
 - src/components/user-menu.tsx (added dashboard link)
 - plans/prd.json (marked statistics #35 as passes: true)
+
+## 2026-01-08: Implemented detailed stats per game
+
+PRD items: statistics #36 (Detailed stats per game)
+
+Changes:
+- Added getGameDetails tRPC procedure: queries gameHistory + turns, computes per-player stats
+- Created /dashboard/game/[id] page showing detailed game stats
+- Made dashboard table rows clickable to navigate to game detail page
+
+Stats computed for each player:
+- Accuracy (correctPlacements/totalPlacements)
+- Guesses (correctGuesses/totalGuesses with %)
+- Steals (successfulSteals/totalStealAttempts with %)
+- Avg turn duration in seconds
+- Tokens remaining
+
+Game-wide aggregates shown in 4 stat cards:
+- Accuracy, Guesses, Steals, Target songs
+
+All 6 PRD steps verified:
+1. ✅ Winner and final standings - winner + rankings table
+2. ✅ Each player's accuracy percentage - X/Y (Z%)
+3. ✅ Tokens remaining - 🪙 column in table
+4. ✅ Avg seconds from song start to confirmation - avgTurnDurationSec
+5. ✅ Songs guessed correctly (count and percentage) - guesses column
+6. ✅ Show 'X/Y steals successful (Z%)' - steals column
+
+Files changed:
+- src/trpc/routers/game.ts (added getGameDetails procedure)
+- src/app/dashboard/game/[id]/page.tsx (new - game detail page)
+- src/app/dashboard/page.tsx (made table rows clickable)
+- plans/prd.json (marked statistics #36 as passes: true)

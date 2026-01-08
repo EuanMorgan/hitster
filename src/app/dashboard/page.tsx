@@ -163,7 +163,11 @@ export default function DashboardPage() {
                 </TableHeader>
                 <TableBody>
                   {games.map((game) => (
-                    <TableRow key={game.id}>
+                    <TableRow
+                      key={game.id}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => router.push(`/dashboard/game/${game.id}`)}
+                    >
                       <TableCell className="whitespace-nowrap">
                         {formatDate(game.completedAt)}
                       </TableCell>

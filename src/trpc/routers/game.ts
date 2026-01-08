@@ -2078,4 +2078,210 @@ export const gameRouter = createTRPCRouter({
         gameEvents.off(channel, handleEvent);
       }
     }),
+
+  getGameDetails: protectedProcedure
+    .input(z.object({ gameId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const userId = ctx.user.id;
+
+      const game = await ctx.db.query.gameHistory.findFirst({
+        where: and(
+          eq(gameHistory.id, input.gameId),
+          eq(gameHistory.hostId, userId),
+        ),
+      });
+
+      if (!game) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Game not found",
+        });
+      }
+
+      // Get winner info
+      let winnerName: string | null = null;
+      let winnerAvatar: string | null = null;
+      if (game.winnerId) {
+        const winner = await ctx.db.query.players.findFirst({
+          where: eq(players.id, game.winnerId),
+        });
+        winnerName = winner?.name ?? null;
+        winnerAvatar = winner?.avatar ?? null;
+      }
+
+      // Fetch all turns for detailed stats
+      const allTurns = await ctx.db.query.turns.findMany({
+        where: eq(turns.sessionId, game.sessionId),
+        orderBy: [desc(turns.createdAt)],
+      });
+
+      // Compute detailed stats per player
+      const playerStats: Record<
+        string,
+        {
+          playerId: string;
+          playerName: string;
+          avatar: string;
+          timelineCount: number;
+          tokensRemaining: number;
+          correctPlacements: number;
+          totalPlacements: number;
+          correctGuesses: number;
+          totalGuesses: number;
+          totalStealAttempts: number;
+          successfulSteals: number;
+          turnDurationsMs: number[];
+        }
+      > = {};
+
+      // Initialize from finalStandings
+      for (const standing of game.finalStandings ?? []) {
+        playerStats[standing.playerId] = {
+          playerId: standing.playerId,
+          playerName: standing.playerName,
+          avatar: standing.avatar,
+          timelineCount: standing.timelineCount,
+          tokensRemaining: standing.tokensRemaining,
+          correctPlacements: standing.correctPlacements,
+          totalPlacements: standing.totalPlacements,
+          correctGuesses: 0,
+          totalGuesses: 0,
+          totalStealAttempts: 0,
+          successfulSteals: 0,
+          turnDurationsMs: [],
+        };
+      }
+
+      // Aggregate from turns
+      for (const turn of allTurns) {
+        const stat = playerStats[turn.playerId];
+        if (!stat) continue;
+
+        // Guess stats (only count if guess was attempted)
+        if (turn.guessedName || turn.guessedArtist) {
+          stat.totalGuesses++;
+          if (turn.guessWasCorrect) {
+            stat.correctGuesses++;
+          }
+        }
+
+        // Turn duration (createdAt to completedAt)
+        if (turn.completedAt && turn.createdAt) {
+          const durationMs =
+            turn.completedAt.getTime() - turn.createdAt.getTime();
+          if (durationMs > 0 && durationMs < 120000) {
+            stat.turnDurationsMs.push(durationMs);
+          }
+        }
+
+        // Steal attempts (from stealAttempts JSONB on each turn)
+        const stealAttempts = turn.stealAttempts ?? [];
+        for (const attempt of stealAttempts) {
+          const stealerStat = playerStats[attempt.playerId];
+          if (stealerStat) {
+            stealerStat.totalStealAttempts++;
+            if (attempt.wasCorrect) {
+              stealerStat.successfulSteals++;
+            }
+          }
+        }
+      }
+
+      // Format player stats for response
+      const formattedPlayerStats = Object.values(playerStats)
+        .sort((a, b) => b.timelineCount - a.timelineCount)
+        .map((stat) => ({
+          playerId: stat.playerId,
+          playerName: stat.playerName,
+          avatar: stat.avatar,
+          timelineCount: stat.timelineCount,
+          tokensRemaining: stat.tokensRemaining,
+          correctPlacements: stat.correctPlacements,
+          totalPlacements: stat.totalPlacements,
+          accuracy:
+            stat.totalPlacements > 0
+              ? Math.round(
+                  (stat.correctPlacements / stat.totalPlacements) * 100,
+                )
+              : 0,
+          correctGuesses: stat.correctGuesses,
+          totalGuesses: stat.totalGuesses,
+          guessAccuracy:
+            stat.totalGuesses > 0
+              ? Math.round((stat.correctGuesses / stat.totalGuesses) * 100)
+              : 0,
+          totalStealAttempts: stat.totalStealAttempts,
+          successfulSteals: stat.successfulSteals,
+          stealSuccessRate:
+            stat.totalStealAttempts > 0
+              ? Math.round(
+                  (stat.successfulSteals / stat.totalStealAttempts) * 100,
+                )
+              : 0,
+          avgTurnDurationSec:
+            stat.turnDurationsMs.length > 0
+              ? Math.round(
+                  stat.turnDurationsMs.reduce((a, b) => a + b, 0) /
+                    stat.turnDurationsMs.length /
+                    1000,
+                )
+              : null,
+        }));
+
+      // Game-wide aggregates
+      let totalCorrectPlacements = 0;
+      let totalPlacements = 0;
+      let totalCorrectGuesses = 0;
+      let totalGuesses = 0;
+      let totalSuccessfulSteals = 0;
+      let totalStealAttempts = 0;
+
+      for (const stat of Object.values(playerStats)) {
+        totalCorrectPlacements += stat.correctPlacements;
+        totalPlacements += stat.totalPlacements;
+        totalCorrectGuesses += stat.correctGuesses;
+        totalGuesses += stat.totalGuesses;
+        totalSuccessfulSteals += stat.successfulSteals;
+        totalStealAttempts += stat.totalStealAttempts;
+      }
+
+      return {
+        id: game.id,
+        sessionId: game.sessionId,
+        completedAt: game.completedAt.toISOString(),
+        winnerName,
+        winnerAvatar,
+        gameData: game.gameData as {
+          songsToWin?: number;
+          totalTurns?: number;
+          totalRounds?: number;
+          songPlayDuration?: number;
+          turnDuration?: number;
+          stealWindowDuration?: number;
+          playlistUrl?: string;
+        } | null,
+        playerCount: game.finalStandings?.length ?? 0,
+        playerStats: formattedPlayerStats,
+        aggregateStats: {
+          totalPlacements,
+          correctPlacements: totalCorrectPlacements,
+          accuracy:
+            totalPlacements > 0
+              ? Math.round((totalCorrectPlacements / totalPlacements) * 100)
+              : 0,
+          totalGuesses,
+          correctGuesses: totalCorrectGuesses,
+          guessAccuracy:
+            totalGuesses > 0
+              ? Math.round((totalCorrectGuesses / totalGuesses) * 100)
+              : 0,
+          totalStealAttempts,
+          successfulSteals: totalSuccessfulSteals,
+          stealSuccessRate:
+            totalStealAttempts > 0
+              ? Math.round((totalSuccessfulSteals / totalStealAttempts) * 100)
+              : 0,
+        },
+      };
+    }),
 });
