@@ -810,6 +810,6 @@
       "Docker compose for full stack",
       "Environment variable documentation"
     ],
-    "passes": false
+    "passes": true
   }
 ]

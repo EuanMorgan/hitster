@@ -813,3 +813,36 @@ Files changed:
 - .env.example (enhanced documentation)
 - src/app/page.tsx (added dynamic="force-dynamic")
 - plans/prd.json (marked deployment #43 as passes: true)
+
+## 2026-01-08: Implemented Docker support for self-hosting
+
+PRD items: deployment #44 (Docker support for self-hosting)
+
+Changes:
+- Created Dockerfile: multi-stage build (deps → builder → runner), uses bun for build, node:20-alpine for runtime
+- Added output: "standalone" to next.config.ts for Docker-optimized builds
+- Created docker-compose.prod.yml: app + postgres services, healthchecks, env var passthrough
+- Added /api/health endpoint for container healthcheck
+- Created .dockerignore to optimize build context
+- Updated .env.example with Docker-specific documentation
+
+All 3 PRD steps verified:
+1. ✅ Dockerfile for production build - multi-stage, standalone output
+2. ✅ Docker compose for full stack - app + postgres, healthchecks
+3. ✅ Environment variable documentation - .env.example updated
+
+Usage:
+```bash
+# Set required env vars
+export BETTER_AUTH_SECRET=... SPOTIFY_CLIENT_ID=... SPOTIFY_CLIENT_SECRET=...
+docker compose -f docker-compose.prod.yml up -d
+```
+
+Files changed:
+- Dockerfile (new)
+- docker-compose.prod.yml (new)
+- .dockerignore (new)
+- src/app/api/health/route.ts (new)
+- next.config.ts (added output: "standalone")
+- .env.example (added Docker docs)
+- plans/prd.json (marked deployment #44 as passes: true)

@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   poweredByHeader: false,
   compress: true,
+  output: "standalone",
   images: {
     remotePatterns: [
       {
