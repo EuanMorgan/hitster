@@ -75,3 +75,24 @@ Key files:
 
 Files changed:
 - plans/prd.json (marked authentication #3 as passes: true)
+
+## 2026-01-08: Verified lobby - host create game
+
+PRD items: lobby #1 (Host can create a new game session)
+
+Already implemented - no code changes needed:
+- CreateGameButton on home page (disabled until authenticated)
+- createGame tRPC procedure (protectedProcedure)
+- generatePin(): 4-char alphanumeric, excludes I/O/1/0
+- Unique PIN with retry logic (max 10 attempts)
+- Host added as first player with isHost: true
+- Redirects to /lobby/{pin} on success
+- LobbyPage displays PIN + QR code (qrcode.react)
+
+Key files:
+- src/components/create-game-button.tsx: mutation + redirect
+- src/app/lobby/[pin]/page.tsx: PIN display + QRCodeSVG
+- src/trpc/routers/game.ts: createGame (L609), generatePin (L333)
+
+Files changed:
+- plans/prd.json (marked lobby #1 as passes: true)
