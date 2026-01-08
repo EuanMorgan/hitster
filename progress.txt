@@ -1,0 +1,30 @@
+## 2026-01-08: shadcn/ui Setup Complete
+
+### What was done:
+- Ran `bunx shadcn@latest init` to initialize shadcn/ui with Tailwind v4
+- Configured components.json with new-york style, RSC support, lucide icons
+- Added base components: button, card, input, label, form
+- Updated home page to demonstrate components working
+- Verified typecheck passes and components render correctly
+
+### Files created/modified:
+- src/lib/utils.ts (cn utility)
+- components.json (shadcn config)
+- src/app/globals.css (updated with shadcn CSS variables)
+- src/components/ui/button.tsx
+- src/components/ui/card.tsx
+- src/components/ui/input.tsx
+- src/components/ui/label.tsx
+- src/components/ui/form.tsx
+- src/app/page.tsx (demo using components)
+
+### Dependencies added:
+- clsx, tailwind-merge (via utils)
+- @radix-ui/react-label, @radix-ui/react-slot
+- class-variance-authority
+- lucide-react
+- react-hook-form, @hookform/resolvers
+- tw-animate-css
+
+### Next priority:
+Configure Vitest for unit/integration testing (PRD item #2)
