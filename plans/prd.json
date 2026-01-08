@@ -267,7 +267,7 @@
       "Card follows cursor/finger position during drag with no perceptible lag",
       "Turn timer countdown visible"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "gameplay",

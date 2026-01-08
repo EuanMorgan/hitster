@@ -197,3 +197,25 @@ Key files:
 
 Files changed:
 - plans/prd.json (marked gameplay #2 as passes: true)
+
+## 2026-01-08: Verified gameplay #3 - timeline drag-and-drop
+
+PRD items: gameplay #3 (Active player can position song in their timeline)
+
+Already implemented - no code changes needed:
+
+1. Mystery song card: displayed above timeline via DraggableSongCard (timeline-drop-zone.tsx L70-107)
+2. Drag to any position: drop zones before/between/after all songs (L306-327)
+3. Drop zone highlighting: border-primary bg-primary/20 scale-105 on hover (L56-57)
+4. Years visible: TimelineSongCard shows year in bold primary color (L125)
+5. Smooth drag: CSS transforms via @dnd-kit/utilities, no perceptible lag
+6. Turn timer: TurnTimer component (L134-203) w/ countdown, color changes, progress bar
+
+Implementation uses @dnd-kit/core with PointerSensor + TouchSensor for mobile support.
+
+Key files:
+- src/components/timeline-drop-zone.tsx: full drag-drop UI + timer
+- src/app/game/[pin]/page.tsx: integrates TimelineDropZone for active player turn
+
+Files changed:
+- plans/prd.json (marked gameplay #3 as passes: true)
