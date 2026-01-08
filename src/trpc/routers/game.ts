@@ -565,6 +565,7 @@ export const gameRouter = createTRPCRouter({
         activePlayerPlacement: session.activePlayerPlacement ?? null,
         stealAttempts: session.stealAttempts ?? [],
         playerStats: session.state === "finished" ? playerStats : null,
+        gamesPlayed: session.gamesPlayed ?? 0,
         players: orderedPlayers.map((p: Player) => ({
           id: p.id,
           name: p.name,
@@ -860,6 +861,7 @@ export const gameRouter = createTRPCRouter({
           roundNumber: 1,
           playlistSongs: shuffledSongs, // Store shuffled songs for the game
           usingFallbackPlaylist: playlistSongs === PLACEHOLDER_SONGS,
+          gamesPlayed: (session.gamesPlayed ?? 0) + 1,
           updatedAt: new Date(),
         })
         .where(eq(gameSessions.id, session.id));

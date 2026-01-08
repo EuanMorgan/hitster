@@ -174,6 +174,8 @@ export const gameSessions = pgTable("game_sessions", {
   // Loaded playlist songs for the game
   playlistSongs: jsonb("playlist_songs").$type<PlaylistSong[]>(),
   usingFallbackPlaylist: boolean("using_fallback_playlist").default(false),
+  // Party stats tracking (persists across rematches)
+  gamesPlayed: integer("games_played").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

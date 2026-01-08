@@ -277,3 +277,29 @@ Files changed:
 - src/trpc/routers/game.ts (added playerStats to getSession)
 - src/app/game/[pin]/page.tsx (updated results UI)
 - plans/prd.json (marked winning #22 as passes: true)
+
+## 2026-01-08: Implemented party stats feature
+
+PRD items: winning #23 (Results screen shows party stats)
+
+Changes:
+- Added gamesPlayed counter to game_sessions schema
+- Increment gamesPlayed in startGame mutation
+- Expose gamesPlayed in getSession response
+- Fixed totalGamesPlayed calculation to use session.gamesPlayed instead of max wins
+- Results UI already had wins grid + MVP display (just needed correct data)
+
+Also verified playlist features (#25-29) were already implemented:
+- Default playlist: DEFAULT_PLAYLIST_ID in game.ts
+- Custom playlist: extractPlaylistId + warning for <100 tracks
+- Song uniqueness: usedSongIds tracking in session
+- Fallback: usingFallbackPlaylist flag + PLACEHOLDER_SONGS
+- Exhaustion: ends game gracefully with winner declaration
+
+Files changed:
+- src/db/schema.ts (added gamesPlayed field)
+- src/trpc/routers/game.ts (increment gamesPlayed, expose in getSession)
+- src/app/game/[pin]/page.tsx (use session.gamesPlayed)
+- src/mocks/db.ts (add gamesPlayed to seedGameSession)
+- src/mocks/fixtures.ts (add gamesPlayed to all session fixtures)
+- plans/prd.json (marked #23, #25-29 as passes: true)

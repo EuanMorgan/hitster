@@ -581,10 +581,7 @@ export default function GamePage() {
     const winner = sortedPlayers[0];
 
     // Party stats
-    const totalGamesPlayed = Math.max(
-      ...session.players.map((p) => p.wins ?? 0),
-      1,
-    );
+    const totalGamesPlayed = session.gamesPlayed ?? 1;
     const sortedByWins = [...session.players].sort(
       (a, b) => (b.wins ?? 0) - (a.wins ?? 0),
     );

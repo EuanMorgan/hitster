@@ -496,7 +496,7 @@
       "Show games played count",
       "Show party MVP (most wins)"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "winning",
@@ -519,7 +519,7 @@
       "Fetch tracks via Spotify API",
       "Store track pool for game session"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "playlist",
@@ -530,7 +530,7 @@
       "Show warning if playlist has fewer than 100 tracks",
       "Load tracks from custom playlist"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "playlist",
@@ -540,7 +540,7 @@
       "Never repeat a song in same game",
       "Remove used songs from pool"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "playlist",
@@ -551,7 +551,7 @@
       "Notify players of fallback",
       "Continue game"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "playlist",
@@ -562,7 +562,7 @@
       "Declare winner based on current standings",
       "Show appropriate message"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "reconnection",

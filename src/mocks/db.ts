@@ -86,6 +86,7 @@ export function seedGameSession(
     stealAttempts: sessionData.stealAttempts ?? [],
     playlistSongs: sessionData.playlistSongs ?? null,
     usingFallbackPlaylist: sessionData.usingFallbackPlaylist ?? false,
+    gamesPlayed: sessionData.gamesPlayed ?? 0,
     createdAt: sessionData.createdAt ?? new Date(),
     updatedAt: sessionData.updatedAt ?? new Date(),
   };
