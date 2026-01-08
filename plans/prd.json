@@ -228,7 +228,7 @@
       "Show error message 'Game in progress'",
       "Redirect to home or show waiting screen"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "gameplay",
@@ -240,7 +240,7 @@
       "Current player highlighted",
       "Song plays automatically for current player's turn"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "gameplay",

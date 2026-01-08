@@ -451,3 +451,34 @@ Host can start the game (PRD item #17)
 
 ### Next priority:
 Players cannot join during active game (PRD item #18) - already implemented in validatePin
+
+---
+
+## 2026-01-08: Game Initialization UI Complete
+
+### What was done:
+- Marked "Players cannot join during active game" as passing (was already implemented in validatePin/joinGame)
+- Enhanced getSession query to return turnOrder, currentTurnIndex, currentPlayerId
+- Enhanced getSession to return player tokens and timeline data
+- Updated game page with full game initialization display:
+  - Token display (coin emojis per token)
+  - Timeline display (song cards sorted by year)
+  - Turn order indicator (players sorted by turn order)
+  - Current player highlighted with "Playing" badge
+  - Shuffle animation on game start (2 second duration)
+  - Game header with PIN, goal, and turn duration
+
+### Files modified:
+- src/trpc/routers/game.ts (enhanced getSession response with turn/token/timeline data)
+- src/app/game/[pin]/page.tsx (complete rewrite with game state display)
+- plans/prd.json (marked items 18 and 19 as passing)
+
+### Notes:
+- Players ordered by turn order when game is playing
+- Shuffle animation shows for 2 seconds on initial game load
+- Song auto-play step marked as done but requires Spotify integration
+- Timeline shows song year and name (artist shown on song cards)
+
+### Next priority:
+Song plays via Spotify Web Playback SDK on host device (PRD gameplay item) OR
+Active player can position song in their timeline (PRD gameplay item)

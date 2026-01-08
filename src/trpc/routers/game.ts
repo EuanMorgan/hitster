@@ -210,6 +210,19 @@ export const gameRouter = createTRPCRouter({
         throw new TRPCError({ code: "NOT_FOUND", message: "Game not found" });
       }
 
+      // For playing state, order players by turn order
+      let orderedPlayers = session.players;
+      if (session.state === "playing" && session.turnOrder) {
+        const turnOrderMap = new Map(
+          session.turnOrder.map((id, index) => [id, index])
+        );
+        orderedPlayers = [...session.players].sort((a, b) => {
+          const aIndex = turnOrderMap.get(a.id) ?? 999;
+          const bIndex = turnOrderMap.get(b.id) ?? 999;
+          return aIndex - bIndex;
+        });
+      }
+
       return {
         id: session.id,
         pin: session.pin,
@@ -221,11 +234,19 @@ export const gameRouter = createTRPCRouter({
         stealWindowDuration: session.stealWindowDuration,
         maxPlayers: session.maxPlayers,
         playlistUrl: session.playlistUrl,
-        players: session.players.map((p: Player) => ({
+        turnOrder: session.turnOrder,
+        currentTurnIndex: session.currentTurnIndex,
+        currentPlayerId:
+          session.turnOrder && session.currentTurnIndex !== null
+            ? session.turnOrder[session.currentTurnIndex]
+            : null,
+        players: orderedPlayers.map((p: Player) => ({
           id: p.id,
           name: p.name,
           avatar: p.avatar,
           isHost: p.isHost,
+          tokens: p.tokens,
+          timeline: p.timeline,
         })),
       };
     }),
