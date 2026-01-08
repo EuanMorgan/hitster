@@ -36,6 +36,7 @@ interface TimelineDropZoneProps {
   turnDuration: number;
   turnStartedAt: string | null;
   tokens: number;
+  timerPaused?: boolean;
 }
 
 function DropZone({
@@ -137,19 +138,41 @@ function TurnTimer({
   turnDuration,
   turnStartedAt,
   onTimeUp,
+  isPaused = false,
 }: {
   turnDuration: number;
   turnStartedAt: string | null;
   onTimeUp: () => void;
+  isPaused?: boolean;
 }) {
   const [timeLeft, setTimeLeft] = useState(turnDuration);
   const [hasTriggered, setHasTriggered] = useState(false);
+  const [pausedTimeLeft, setPausedTimeLeft] = useState<number | null>(null);
 
   useEffect(() => {
     if (!turnStartedAt) {
       setTimeLeft(turnDuration);
       setHasTriggered(false);
+      setPausedTimeLeft(null);
       return;
+    }
+
+    // When pausing, store the current time left
+    if (isPaused) {
+      if (pausedTimeLeft === null) {
+        const startTime = new Date(turnStartedAt).getTime();
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        const remaining = Math.max(0, turnDuration - elapsed);
+        setPausedTimeLeft(remaining);
+        setTimeLeft(remaining);
+      }
+      return;
+    }
+
+    // If resuming from pause, we still show pausedTimeLeft (no actual timer resume logic needed here -
+    // server controls the actual timer, we just freeze the UI)
+    if (pausedTimeLeft !== null) {
+      setPausedTimeLeft(null);
     }
 
     const startTime = new Date(turnStartedAt).getTime();
@@ -168,7 +191,14 @@ function TurnTimer({
     updateTimer();
     const interval = setInterval(updateTimer, 1000);
     return () => clearInterval(interval);
-  }, [turnDuration, turnStartedAt, onTimeUp, hasTriggered]);
+  }, [
+    turnDuration,
+    turnStartedAt,
+    onTimeUp,
+    hasTriggered,
+    isPaused,
+    pausedTimeLeft,
+  ]);
 
   // Reset hasTriggered when turn changes
   useEffect(() => {
@@ -177,20 +207,23 @@ function TurnTimer({
 
   const percentage = (timeLeft / turnDuration) * 100;
   // Color based on percentage: green >50%, amber 25-50%, red <25%
-  const colorClass =
-    percentage <= 25
+  // Use gray/muted when paused
+  const colorClass = isPaused
+    ? "text-muted-foreground"
+    : percentage <= 25
       ? "text-red-500"
       : percentage <= 50
         ? "text-amber-500"
         : "text-green-500";
-  const barColorClass =
-    percentage <= 25
+  const barColorClass = isPaused
+    ? "bg-muted-foreground"
+    : percentage <= 25
       ? "bg-red-500"
       : percentage <= 50
         ? "bg-amber-500"
         : "bg-green-500";
-  // Pulse at 1Hz during last 5 seconds
-  const shouldPulse = timeLeft <= 5 && timeLeft > 0;
+  // Pulse at 1Hz during last 5 seconds (but not when paused)
+  const shouldPulse = !isPaused && timeLeft <= 5 && timeLeft > 0;
 
   return (
     <div className="flex flex-col items-center gap-2">
@@ -201,7 +234,12 @@ function TurnTimer({
       >
         {timeLeft}s
       </div>
-      {timeLeft <= 5 && timeLeft > 0 && (
+      {isPaused && (
+        <div className="text-xs sm:text-sm text-muted-foreground font-medium">
+          ⏸️ Paused
+        </div>
+      )}
+      {!isPaused && timeLeft <= 5 && timeLeft > 0 && (
         <div className="text-xs sm:text-sm text-red-500 font-medium animate-bounce">
           ⚠️ Time running out!
         </div>
@@ -229,6 +267,7 @@ export function TimelineDropZone({
   turnDuration,
   turnStartedAt,
   tokens,
+  timerPaused = false,
 }: TimelineDropZoneProps) {
   const [placementIndex, setPlacementIndex] = useState<number | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -307,6 +346,7 @@ export function TimelineDropZone({
           turnDuration={turnDuration}
           turnStartedAt={turnStartedAt}
           onTimeUp={handleTimeUp}
+          isPaused={timerPaused}
         />
 
         <div className="flex justify-center">

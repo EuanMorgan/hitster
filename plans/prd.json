@@ -587,7 +587,7 @@
       "Host can rejoin and resume",
       "Song continues from where it paused, not from beginning"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "display",

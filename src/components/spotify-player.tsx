@@ -156,17 +156,22 @@ export function SpotifyPlayer({
     transferMutation.mutate,
   ]);
 
+  // Track position when paused to enable resume
+  const pausedPositionRef = useRef<number>(0);
+
   // Handle play/pause based on shouldPlay prop
   useEffect(() => {
     if (!isReady || !deviceId || !trackUri) return;
 
     if (shouldPlay && !isPlaying) {
-      // Start playback
+      // Resume from paused position if we have one, otherwise start from beginning
+      const resumePosition = pausedPositionRef.current;
       playTrackMutation.mutate(
-        { trackUri, deviceId },
+        { trackUri, deviceId, positionMs: resumePosition },
         {
           onSuccess: () => {
-            playbackStartTimeRef.current = Date.now();
+            // Adjust start time to account for resumed position
+            playbackStartTimeRef.current = Date.now() - resumePosition;
             setIsPlaying(true);
           },
           onError: (err) => {
@@ -176,7 +181,8 @@ export function SpotifyPlayer({
         },
       );
     } else if (!shouldPlay && isPlaying) {
-      // Pause playback
+      // Store current position before pausing for later resume
+      pausedPositionRef.current = currentPosition;
       pauseMutation.mutate({ deviceId });
     }
   }, [
@@ -185,6 +191,7 @@ export function SpotifyPlayer({
     deviceId,
     trackUri,
     isPlaying,
+    currentPosition,
     onPlaybackError, // Pause playback
     pauseMutation.mutate, // Start playback
     playTrackMutation.mutate,
@@ -223,10 +230,15 @@ export function SpotifyPlayer({
   }, [isPlaying, durationMs, deviceId, onPositionChange, pauseMutation.mutate]);
 
   // Reset position when track changes
+  const prevTrackUriRef = useRef(trackUri);
   useEffect(() => {
-    setCurrentPosition(0);
-    playbackStartTimeRef.current = null;
-  }, []);
+    if (trackUri !== prevTrackUriRef.current) {
+      setCurrentPosition(0);
+      playbackStartTimeRef.current = null;
+      pausedPositionRef.current = 0;
+      prevTrackUriRef.current = trackUri;
+    }
+  });
 
   // Handle token errors
   useEffect(() => {

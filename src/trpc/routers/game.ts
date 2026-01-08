@@ -518,6 +518,10 @@ export const gameRouter = createTRPCRouter({
         return { ...p, isConnected };
       });
 
+      // Check if host is connected
+      const hostPlayer = playersWithConnectionStatus.find((p) => p.isHost);
+      const hostIsConnected = hostPlayer?.isConnected ?? false;
+
       // For playing state, order players by turn order
       let orderedPlayers = playersWithConnectionStatus;
       if (session.state === "playing" && session.turnOrder) {
@@ -581,6 +585,7 @@ export const gameRouter = createTRPCRouter({
         stealAttempts: session.stealAttempts ?? [],
         playerStats: session.state === "finished" ? playerStats : null,
         gamesPlayed: session.gamesPlayed ?? 0,
+        hostIsConnected,
         players: orderedPlayers.map((p) => ({
           id: p.id,
           name: p.name,

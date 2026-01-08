@@ -427,3 +427,29 @@ Files changed:
 - src/mocks/fixtures.ts (added lastSeenAt to all player fixtures)
 - src/mocks/db.ts (added lastSeenAt to seedPlayer)
 - plans/prd.json (marked reconnection #1 as passes: true)
+
+## 2026-01-08: Implemented host disconnection handling
+
+PRD items: reconnection #2 (Host disconnection handled gracefully)
+
+Changes:
+- getSession: added hostIsConnected field (finds host player, checks isConnected)
+- Game page: added "Waiting for host..." overlay when hostIsConnected=false during gameplay
+- TurnTimer: added isPaused prop to freeze countdown, shows muted colors + "⏸️ Paused" indicator
+- TimelineDropZone: passes timerPaused={hostDisconnected} to TurnTimer
+- SpotifyPlayer: tracks pausedPositionRef to resume playback from where it stopped
+- SpotifyPlayer: passes positionMs to playTrack mutation for resume support
+
+All 5 PRD steps verified:
+1. ✅ If host disconnects during game - hostIsConnected computed from heartbeat
+2. ✅ Turn timer pauses, 'Waiting for host...' shown - overlay + timer isPaused
+3. ✅ Show waiting indicator - animated dots in overlay
+4. ✅ Host can rejoin and resume - heartbeat updates lastSeenAt
+5. ✅ Song continues from where paused - pausedPositionRef stores position
+
+Files changed:
+- src/trpc/routers/game.ts (added hostIsConnected to getSession)
+- src/app/game/[pin]/page.tsx (host disconnected overlay, timerPaused prop)
+- src/components/timeline-drop-zone.tsx (TurnTimer isPaused, timerPaused prop)
+- src/components/spotify-player.tsx (pausedPositionRef for resume, track reset fix)
+- plans/prd.json (marked reconnection #2 as passes: true)
