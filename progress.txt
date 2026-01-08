@@ -519,3 +519,26 @@ Files changed:
 - src/app/lobby/[pin]/page.tsx (added ThemeToggle import + component)
 - src/app/game/[pin]/page.tsx (added ThemeToggle import + component)
 - plans/prd.json (marked display #33 as passes: true)
+
+## 2026-01-08: Added database indexes for frequently queried columns
+
+PRD items: database #37 (Database schema for game data)
+
+Schema already had all required tables + FK constraints. Missing indexes on frequently queried columns.
+
+Changes:
+- Added game_sessions_pin_idx on gameSessions.pin (used in validatePin, getSession)
+- Added players_sessionId_idx on players.sessionId (frequently joined)
+- Added turns_sessionId_idx on turns.sessionId (queried for stats)
+
+All 6 PRD steps verified:
+1. ✅ Users table - user + account tables from Better Auth
+2. ✅ GameSessions table - gameSessions with PIN, settings, state
+3. ✅ Players table - players with name, avatar, sessionId FK
+4. ✅ GameHistory table - gameHistory with JSON gameData
+5. ✅ Turns table - turns with all turn details
+6. ✅ FK constraints + indexes - FKs existed, added 3 indexes on PIN/session_id
+
+Files changed:
+- src/db/schema.ts (added 3 indexes)
+- plans/prd.json (marked database #37 as passes: true)

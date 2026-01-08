@@ -733,7 +733,7 @@
       "Turns table (each turn details)",
       "All tables have proper foreign key constraints and indexes on frequently queried columns (PIN, session_id)"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "api",

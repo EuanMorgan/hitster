@@ -144,81 +144,93 @@ export type PlaylistSong = {
   uri: string;
 };
 
-export const gameSessions = pgTable("game_sessions", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  pin: varchar("pin", { length: 4 }).notNull().unique(),
-  hostId: text("host_id")
-    .notNull()
-    .references(() => user.id),
-  state: gameStateEnum("state").notNull().default("lobby"),
-  songsToWin: integer("songs_to_win").notNull().default(10),
-  songPlayDuration: integer("song_play_duration").notNull().default(30),
-  turnDuration: integer("turn_duration").notNull().default(45),
-  stealWindowDuration: integer("steal_window_duration").notNull().default(10),
-  maxPlayers: integer("max_players").notNull().default(10),
-  playlistUrl: text("playlist_url"),
-  currentTurnIndex: integer("current_turn_index").default(0),
-  turnOrder: jsonb("turn_order").$type<string[]>(),
-  usedSongIds: jsonb("used_song_ids").$type<string[]>().default([]),
-  currentSong: jsonb("current_song").$type<CurrentTurnSong | null>(),
-  turnStartedAt: timestamp("turn_started_at"),
-  roundNumber: integer("round_number").default(1),
-  // Steal phase tracking
-  isStealPhase: boolean("is_steal_phase").default(false),
-  stealPhaseEndAt: timestamp("steal_phase_end_at"),
-  activePlayerPlacement: integer("active_player_placement"),
-  activePlayerGuess: jsonb("active_player_guess").$type<ActivePlayerGuess>(),
-  stealAttempts: jsonb("steal_attempts")
-    .$type<ActiveStealAttempt[]>()
-    .default([]),
-  // Loaded playlist songs for the game
-  playlistSongs: jsonb("playlist_songs").$type<PlaylistSong[]>(),
-  usingFallbackPlaylist: boolean("using_fallback_playlist").default(false),
-  // Party stats tracking (persists across rematches)
-  gamesPlayed: integer("games_played").notNull().default(0),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+export const gameSessions = pgTable(
+  "game_sessions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    pin: varchar("pin", { length: 4 }).notNull().unique(),
+    hostId: text("host_id")
+      .notNull()
+      .references(() => user.id),
+    state: gameStateEnum("state").notNull().default("lobby"),
+    songsToWin: integer("songs_to_win").notNull().default(10),
+    songPlayDuration: integer("song_play_duration").notNull().default(30),
+    turnDuration: integer("turn_duration").notNull().default(45),
+    stealWindowDuration: integer("steal_window_duration").notNull().default(10),
+    maxPlayers: integer("max_players").notNull().default(10),
+    playlistUrl: text("playlist_url"),
+    currentTurnIndex: integer("current_turn_index").default(0),
+    turnOrder: jsonb("turn_order").$type<string[]>(),
+    usedSongIds: jsonb("used_song_ids").$type<string[]>().default([]),
+    currentSong: jsonb("current_song").$type<CurrentTurnSong | null>(),
+    turnStartedAt: timestamp("turn_started_at"),
+    roundNumber: integer("round_number").default(1),
+    // Steal phase tracking
+    isStealPhase: boolean("is_steal_phase").default(false),
+    stealPhaseEndAt: timestamp("steal_phase_end_at"),
+    activePlayerPlacement: integer("active_player_placement"),
+    activePlayerGuess: jsonb("active_player_guess").$type<ActivePlayerGuess>(),
+    stealAttempts: jsonb("steal_attempts")
+      .$type<ActiveStealAttempt[]>()
+      .default([]),
+    // Loaded playlist songs for the game
+    playlistSongs: jsonb("playlist_songs").$type<PlaylistSong[]>(),
+    usingFallbackPlaylist: boolean("using_fallback_playlist").default(false),
+    // Party stats tracking (persists across rematches)
+    gamesPlayed: integer("games_played").notNull().default(0),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => [index("game_sessions_pin_idx").on(table.pin)],
+);
 
-export const players = pgTable("players", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  sessionId: uuid("session_id")
-    .notNull()
-    .references(() => gameSessions.id, { onDelete: "cascade" }),
-  userId: text("user_id").references(() => user.id),
-  name: varchar("name", { length: 50 }).notNull(),
-  avatar: varchar("avatar", { length: 10 }).notNull(),
-  tokens: integer("tokens").notNull().default(2),
-  timeline: jsonb("timeline").$type<TimelineSong[]>().default([]),
-  wins: integer("wins").notNull().default(0),
-  isHost: boolean("is_host").notNull().default(false),
-  isConnected: boolean("is_connected").notNull().default(true),
-  lastSeenAt: timestamp("last_seen_at").notNull().defaultNow(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+export const players = pgTable(
+  "players",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    sessionId: uuid("session_id")
+      .notNull()
+      .references(() => gameSessions.id, { onDelete: "cascade" }),
+    userId: text("user_id").references(() => user.id),
+    name: varchar("name", { length: 50 }).notNull(),
+    avatar: varchar("avatar", { length: 10 }).notNull(),
+    tokens: integer("tokens").notNull().default(2),
+    timeline: jsonb("timeline").$type<TimelineSong[]>().default([]),
+    wins: integer("wins").notNull().default(0),
+    isHost: boolean("is_host").notNull().default(false),
+    isConnected: boolean("is_connected").notNull().default(true),
+    lastSeenAt: timestamp("last_seen_at").notNull().defaultNow(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [index("players_sessionId_idx").on(table.sessionId)],
+);
 
-export const turns = pgTable("turns", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  sessionId: uuid("session_id")
-    .notNull()
-    .references(() => gameSessions.id, { onDelete: "cascade" }),
-  playerId: uuid("player_id")
-    .notNull()
-    .references(() => players.id, { onDelete: "cascade" }),
-  roundNumber: integer("round_number").notNull(),
-  songId: varchar("song_id", { length: 255 }).notNull(),
-  songName: varchar("song_name", { length: 500 }),
-  songArtist: varchar("song_artist", { length: 500 }),
-  songYear: integer("song_year").notNull(),
-  placementIndex: integer("placement_index"),
-  wasCorrect: boolean("was_correct"),
-  guessedName: varchar("guessed_name", { length: 500 }),
-  guessedArtist: varchar("guessed_artist", { length: 500 }),
-  guessWasCorrect: boolean("guess_was_correct"),
-  stealAttempts: jsonb("steal_attempts").$type<StealAttempt[]>().default([]),
-  completedAt: timestamp("completed_at"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+export const turns = pgTable(
+  "turns",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    sessionId: uuid("session_id")
+      .notNull()
+      .references(() => gameSessions.id, { onDelete: "cascade" }),
+    playerId: uuid("player_id")
+      .notNull()
+      .references(() => players.id, { onDelete: "cascade" }),
+    roundNumber: integer("round_number").notNull(),
+    songId: varchar("song_id", { length: 255 }).notNull(),
+    songName: varchar("song_name", { length: 500 }),
+    songArtist: varchar("song_artist", { length: 500 }),
+    songYear: integer("song_year").notNull(),
+    placementIndex: integer("placement_index"),
+    wasCorrect: boolean("was_correct"),
+    guessedName: varchar("guessed_name", { length: 500 }),
+    guessedArtist: varchar("guessed_artist", { length: 500 }),
+    guessWasCorrect: boolean("guess_was_correct"),
+    stealAttempts: jsonb("steal_attempts").$type<StealAttempt[]>().default([]),
+    completedAt: timestamp("completed_at"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [index("turns_sessionId_idx").on(table.sessionId)],
+);
 
 export const gameHistory = pgTable("game_history", {
   id: uuid("id").primaryKey().defaultRandom(),
