@@ -174,3 +174,26 @@ Key files:
 
 Files changed:
 - plans/prd.json (marked gameplay #1 as passes: true)
+
+## 2026-01-08: Verified gameplay #2 - Spotify playback
+
+PRD items: gameplay #2 (Song plays via Spotify Web Playback SDK on host device)
+
+Already implemented - no code changes needed:
+
+1. SDK initialization: spotify-player.tsx:68-149, loads SDK script, creates Player
+2. Transfer playback: spotify-player.tsx:115, transfers on player ready
+3. Play from beginning: spotify.ts playTrack mutation sets position_ms: 0
+4. Metadata hidden: shows "🎶 Mystery Song" only (L283)
+5. Progress bar: elapsed/total display (L269) + visual bar (L274-279)
+6. Auto-stop at duration: L211-215 pauses when elapsed >= durationMs
+7. Countdown timer: TurnTimer component in timeline-drop-zone.tsx (L134-203) + ActivePlayerTimeline (game/[pin]/page.tsx L182-194)
+
+Key files:
+- src/components/spotify-player.tsx: SDK init, playback control, progress display
+- src/components/timeline-drop-zone.tsx: TurnTimer component for active player
+- src/app/game/[pin]/page.tsx: ActivePlayerTimeline shows countdown for host view
+- src/trpc/routers/spotify.ts: playTrack, pausePlayback, transferPlayback mutations
+
+Files changed:
+- plans/prd.json (marked gameplay #2 as passes: true)

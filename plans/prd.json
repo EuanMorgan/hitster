@@ -254,7 +254,7 @@
       "If duration set to 30s, song stops at exactly 30s and playback state updates",
       "Countdown timer visible during playback"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "gameplay",
