@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CreateGameButton } from "@/components/create-game-button";
 import { Greeting } from "@/components/greeting";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -21,7 +22,10 @@ export default async function Home() {
       <div className="flex min-h-screen items-center justify-center p-8">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle>Hitster</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>Hitster</CardTitle>
+              <ThemeToggle />
+            </div>
             <CardDescription>
               <Greeting />
             </CardDescription>

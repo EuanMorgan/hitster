@@ -622,7 +622,7 @@
       "Preference stored in localStorage, survives page refresh",
       "On first visit, follows prefers-color-scheme media query"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "statistics",

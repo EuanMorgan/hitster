@@ -974,3 +974,43 @@ Active player can position song in their timeline (PRD gameplay item)
 - Reconnection handling (PRD items #43-44)
 - Theme toggle (PRD item #47)
 - Host/Player display optimization (PRD items #45-46)
+
+---
+
+## 2026-01-08: Theme Toggle (Light/Dark Mode) Complete
+
+### What was done:
+- Installed next-themes package for theme management
+- Created ThemeProvider component wrapping next-themes
+- Created ThemeToggle component with sun/moon icons
+- Added ThemeProvider to root layout with system default, localStorage persistence
+- Added ThemeToggle button to home page header (next to title)
+- Uses shadcn theming patterns (CSS variables in globals.css already configured)
+
+### Files created:
+- src/components/theme-provider.tsx (next-themes wrapper)
+- src/components/theme-toggle.tsx (toggle button component)
+
+### Files modified:
+- src/app/layout.tsx (added ThemeProvider)
+- src/app/page.tsx (added ThemeToggle to header)
+- plans/prd.json (marked #47 as passing)
+
+### Dependencies added:
+- next-themes
+
+### PRD steps completed:
+1. Toggle in settings/header - ThemeToggle in card header
+2. Follow shadcn theming patterns - uses next-themes with class attribute
+3. Preference stored in localStorage - next-themes handles this automatically
+4. On first visit, follows prefers-color-scheme - defaultTheme="system" + enableSystem
+
+### Notes:
+- suppressHydrationWarning on html tag prevents hydration mismatch warnings
+- Component renders placeholder during SSR/hydration to avoid flash
+- Dark mode CSS variables already existed in globals.css
+
+### Next priority:
+- Reconnection handling (PRD items #41-42)
+- Host/Player display optimization (PRD items #45-46)
+- Statistics features (PRD items #48-52)
