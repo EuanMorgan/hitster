@@ -7,9 +7,9 @@
       "Configure tailwind.config with shadcn presets",
       "Set up components.json with correct paths",
       "Add base shadcn components (button, card, input, form)",
-      "Verify components render correctly"
+      "Import Button from @/components/ui/button, render in page, confirm it displays with shadcn styling"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "setup",
@@ -19,9 +19,9 @@
       "Create vitest.config.ts with Next.js compatibility",
       "Add test script to package.json",
       "Create sample test to verify setup",
-      "Verify bun test runs successfully"
+      "Run 'bun test', expect sample test passes with green output"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "setup",
@@ -31,9 +31,9 @@
       "Create playwright.config.ts",
       "Add e2e test script to package.json",
       "Create sample E2E test for home page",
-      "Verify playwright test runs successfully"
+      "Run 'bun run e2e', expect home page test passes"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "setup",
@@ -44,9 +44,9 @@
       "Create mocks/server.ts for test server setup",
       "Create test utilities for database mocking with drizzle",
       "Add mock data fixtures for players, games, songs",
-      "Verify mocks work in both Vitest and Playwright"
+      "Run unit test using MSW mock for Spotify API, expect mocked response returned. Run E2E test with MSW, expect no real API calls"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "setup",
@@ -57,9 +57,9 @@
       "Create db/schema.ts with initial schema",
       "Create db/index.ts for database connection",
       "Add db:push and db:studio scripts to package.json",
-      "Verify database connection works"
+      "Run 'bun run db:push', expect schema pushed without errors. Run 'bun run db:studio', expect Drizzle Studio opens at localhost:4983"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "setup",
@@ -74,9 +74,9 @@
       "Create src/trpc/server.tsx ('server-only') - createTRPCOptionsProxy with ctx/router/queryClient, cached getQueryClient, export trpc proxy and caller",
       "Add TRPCReactProvider to app/layout.tsx wrapping children",
       "Add @tanstack/react-query-devtools in TRPCReactProvider (dev only)",
-      "Create sample procedure and verify type-safe query works in client component"
+      "Create hello procedure returning {greeting: string}, call from client component, expect greeting displayed and TypeScript autocomplete works on response"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "setup",
@@ -88,9 +88,9 @@
       "For suspense: use useSuspenseQuery with same pattern, wrap in Suspense boundary",
       "For direct server data: use caller.procedure({...}) for server-only data fetching without client hydration",
       "Document prefetch vs fetchQuery tradeoffs (streaming vs blocking)",
-      "Verify prefetched data hydrates correctly in client components"
+      "Prefetch in server component, check Network tab shows no duplicate request from client, data renders immediately without loading state"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "setup",
@@ -101,9 +101,9 @@
       "Define all required env vars (Spotify, DB, Auth, Pushover)",
       "Add env validation to next.config.ts",
       "Update .env.example with all required variables",
-      "Verify build fails on missing env vars"
+      "Remove SPOTIFY_CLIENT_ID from .env, run 'bun run build', expect build fails with 'Missing environment variable: SPOTIFY_CLIENT_ID'"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "setup",
@@ -116,7 +116,7 @@
       "Create auth client for frontend",
       "Add .env.example with required variables"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "authentication",
@@ -129,7 +129,7 @@
       "Verify host account created/updated in database",
       "Verify Spotify access token stored securely"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "authentication",
@@ -140,7 +140,7 @@
       "Redirect to home page",
       "Verify protected routes inaccessible"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "authentication",
@@ -152,7 +152,7 @@
       "Select avatar from presets",
       "Join game room without Spotify login"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "lobby",
@@ -164,7 +164,7 @@
       "Host redirected to lobby as first player",
       "PIN code and QR code displayed for sharing"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "lobby",
@@ -179,7 +179,7 @@
       "Configure custom Spotify playlist URL (optional, default provided)",
       "Settings saved and synced to all players in lobby"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "lobby",
@@ -193,7 +193,7 @@
       "Join lobby, appear in player list for all participants",
       "Receive real-time updates via subscription"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "lobby",
@@ -204,7 +204,7 @@
       "Real-time updates when players join/leave",
       "Show player count vs max players"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "lobby",
@@ -218,7 +218,7 @@
       "Turn order randomized",
       "First player's turn begins"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "lobby",
@@ -228,7 +228,7 @@
       "Show error message 'Game in progress'",
       "Redirect to home or show waiting screen"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "gameplay",
@@ -240,7 +240,7 @@
       "Current player highlighted",
       "Song plays automatically for current player's turn"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "gameplay",
@@ -250,8 +250,8 @@
       "Transfer playback to web player",
       "Play song from beginning",
       "No song metadata displayed (title, artist hidden)",
-      "Visual audio waveform or progress indicator shown",
-      "Song stops after configured duration (default 30s)",
+      "Progress bar shows elapsed time out of configured duration (e.g., '15s / 30s')",
+      "If duration set to 30s, song stops at exactly 30s and playback state updates",
       "Countdown timer visible during playback"
     ],
     "passes": false
@@ -262,12 +262,12 @@
     "steps": [
       "New song card appears at leftmost position in timeline",
       "Player can drag song to any position between existing songs",
-      "Visual drop zones indicate valid positions",
+      "Drop zones highlight with border/background color change on drag-over",
       "Timeline shows existing songs with years visible",
-      "Position updates in real-time as player drags",
+      "Card follows cursor/finger position during drag with no perceptible lag",
       "Turn timer countdown visible"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "gameplay",
@@ -278,18 +278,18 @@
       "Fuzzy matching for validation (handles & vs 'and', minor typos)",
       "Correct guess awards 1 bonus token"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "gameplay",
     "description": "Active player's turn auto-submits when timer expires",
     "steps": [
       "Turn timer counts down from configured duration",
-      "Visual and audio warning at 10 seconds remaining",
+      "Timer turns red/orange at 10s remaining, optional beep sound plays",
       "When timer reaches 0, current position is locked",
       "Turn automatically submitted with current state"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "gameplay",
@@ -299,7 +299,7 @@
       "Click confirm to lock in position and optional guess",
       "Turn ends, steal phase begins"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "gameplay",
@@ -311,7 +311,7 @@
       "Success animation plays",
       "Song permanently added to timeline"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "gameplay",
@@ -324,7 +324,7 @@
       "Failure animation plays",
       "Song discarded (not added to timeline)"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "stealing",
@@ -336,7 +336,7 @@
       "Active player sees their submission, can reflect on choice",
       "Other players can attempt to steal"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "stealing",
@@ -348,7 +348,7 @@
       "Submit steal attempt",
       "Token deducted immediately"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "stealing",
@@ -359,7 +359,7 @@
       "Visual indicator shows occupied positions",
       "Multiple players can steal at different positions"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "stealing",
@@ -370,7 +370,7 @@
       "Original player gets nothing",
       "Success animation for stealer"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "stealing",
@@ -381,7 +381,7 @@
       "No other penalty",
       "Song discarded if original player also wrong"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "tokens",
@@ -391,7 +391,7 @@
       "Token count displayed on player's UI",
       "Token count visible to all players"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "tokens",
@@ -404,7 +404,7 @@
       "New random song drawn and played",
       "Turn timer resets"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "tokens",
@@ -417,7 +417,7 @@
       "Random song added to timeline at correct position automatically",
       "Turn continues normally with original song"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "tokens",
@@ -428,7 +428,7 @@
       "If both correct, award 1 token",
       "Visual feedback for successful guess"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "turns",
@@ -439,7 +439,7 @@
       "Shuffle animation shown on all screens",
       "New order displayed before first turn of round"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "turns",
@@ -450,7 +450,7 @@
       "Other players' phones show who is playing",
       "Host display shows active player's timeline large"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "turns",
@@ -462,7 +462,7 @@
       "Advance to next player in order",
       "New song drawn and plays"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "winning",
@@ -474,7 +474,7 @@
       "Winner announcement with celebration animation",
       "Transition to results screen"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "winning",
@@ -486,7 +486,7 @@
       "Show token counts",
       "Show accuracy stats (correct placements vs total)"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "winning",
@@ -496,7 +496,7 @@
       "Show games played count",
       "Show party MVP (most wins)"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "winning",
@@ -509,7 +509,7 @@
       "Game stats reset",
       "Return to lobby briefly then start"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "playlist",
@@ -569,10 +569,10 @@
     "description": "Disconnected players can rejoin",
     "steps": [
       "Player loses connection",
-      "Show disconnected indicator to others",
+      "Disconnected player's avatar shows gray overlay or 'disconnected' badge within 5s of disconnect",
       "Player navigates back to join page",
       "Enter same PIN and name",
-      "Restore to previous game state",
+      "Player sees their timeline, token count, and current turn state exactly as before disconnect",
       "Resume participation"
     ],
     "passes": false
@@ -582,10 +582,10 @@
     "description": "Host disconnection handled gracefully",
     "steps": [
       "If host disconnects during game",
-      "Pause game state",
+      "Turn timer pauses, 'Waiting for host...' message shown to all players",
       "Show waiting indicator",
       "Host can rejoin and resume",
-      "Playback resumes on host device"
+      "Song continues from where it paused, not from beginning"
     ],
     "passes": false
   },
@@ -594,9 +594,9 @@
     "description": "Host main display shows current game state",
     "steps": [
       "Large view of active player's timeline",
-      "Song cards with years clearly visible",
+      "Year text readable from 2m away on typical TV/monitor (min 24px at 1080p)",
       "Drag position highlighted during turn",
-      "Timer prominently displayed",
+      "Timer visible in top corner, min 48px font",
       "Small progress indicators for all players (song counts)"
     ],
     "passes": false
@@ -605,10 +605,10 @@
     "category": "display",
     "description": "Player phone view optimized for mobile",
     "steps": [
-      "Responsive layout for phone screens",
+      "Layout works on 320px-428px width without horizontal scroll",
       "Touch-friendly drag and drop",
       "Timeline scrollable horizontally",
-      "Large touch targets for buttons",
+      "All interactive elements min 44x44px touch target",
       "Clear token and timer display"
     ],
     "passes": false
@@ -619,8 +619,8 @@
     "steps": [
       "Toggle in settings/header",
       "Follow shadcn theming patterns",
-      "Persist preference",
-      "System preference detection"
+      "Preference stored in localStorage, survives page refresh",
+      "On first visit, follows prefers-color-scheme media query"
     ],
     "passes": false
   },
@@ -653,9 +653,9 @@
       "Winner and final standings",
       "Each player's accuracy percentage",
       "Tokens earned and spent per player",
-      "Average placement time",
-      "Songs guessed correctly",
-      "Steal attempts and success rate"
+      "Average seconds from song start to placement confirmation",
+      "Songs guessed correctly (count and percentage)",
+      "Show 'X/Y steals successful (Z%)'"
     ],
     "passes": false
   },
@@ -663,9 +663,9 @@
     "category": "ui",
     "description": "Skeleton loaders for async content",
     "steps": [
-      "Show skeleton placeholders while loading",
+      "During data fetch, gray animated placeholder matches layout of final content",
       "Use React Suspense boundaries",
-      "Smooth transitions when content loads"
+      "Content fades in over 150-300ms, no layout shift"
     ],
     "passes": false
   },
@@ -678,7 +678,7 @@
       "Visual selection indicator",
       "Minimum 20 avatar options"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "ui",
@@ -688,15 +688,15 @@
       "Display alongside PIN in lobby",
       "Scannable on mobile devices"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "ui",
     "description": "Countdown timers with visual feedback",
     "steps": [
       "Circular or bar progress for timers",
-      "Color changes as time runs low",
-      "Final seconds pulse/flash animation"
+      "Timer green >50%, yellow 25-50%, red <25%",
+      "Last 5 seconds: timer pulses at 1Hz"
     ],
     "passes": false
   },
@@ -704,9 +704,9 @@
     "category": "ui",
     "description": "Drag and drop timeline interaction",
     "steps": [
-      "Smooth drag animations",
+      "Card follows touch/cursor at 60fps, no jank",
       "Clear drop zone indicators",
-      "Haptic feedback on mobile if available",
+      "If device supports vibration API, short vibration on drop",
       "Snap-to-position behavior"
     ],
     "passes": false
@@ -716,7 +716,7 @@
     "description": "Turn shuffle animation",
     "steps": [
       "Visual player order cards",
-      "Shuffle animation when order randomizes",
+      "Player cards animate to new positions over 500-800ms with easing",
       "Settle into new positions",
       "Highlight first player"
     ],
@@ -730,7 +730,8 @@
       "GameSessions table (PIN, settings, state)",
       "Players table (name, avatar, session link)",
       "GameHistory table (full game data JSON)",
-      "Turns table (each turn details)"
+      "Turns table (each turn details)",
+      "All tables have proper foreign key constraints and indexes on frequently queried columns (PIN, session_id)"
     ],
     "passes": false
   },
@@ -742,7 +743,7 @@
       "Subscription for lobby updates",
       "Subscription for game state changes",
       "Subscription for turn/steal events",
-      "Fallback to Socket.io if needed"
+      "If WebSocket connection fails, show connection error toast with retry button"
     ],
     "passes": false
   },
@@ -753,7 +754,7 @@
       "Configure Better Auth Spotify provider",
       "Request scopes: streaming, user-read-email, user-read-private, playlist-read-private",
       "Store and refresh access tokens",
-      "Handle token expiration"
+      "When token expires, auto-refresh using refresh_token. If refresh fails, redirect to re-auth"
     ],
     "passes": false
   },
@@ -765,7 +766,7 @@
       "Create player instance",
       "Transfer playback to web player",
       "Control play/pause/seek",
-      "Handle playback errors"
+      "On playback error, show toast 'Playback failed - check Spotify Premium status', log error to console"
     ],
     "passes": false
   },
@@ -775,7 +776,7 @@
     "steps": [
       "Call Spotify API for playlist tracks",
       "Extract track ID, name, artist, release year",
-      "Handle pagination for large playlists",
+      "For playlists >100 tracks, fetch all pages until complete",
       "Cache playlist data for session"
     ],
     "passes": false
@@ -787,7 +788,7 @@
       "Do not display track name or artist during turn",
       "Do not show album art",
       "Only reveal after placement confirmed",
-      "Ensure Web Playback SDK doesn't expose metadata to DOM"
+      "Inspect DOM during playback, confirm no track name/artist in any element or data attribute"
     ],
     "passes": false
   },
