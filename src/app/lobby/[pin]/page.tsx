@@ -1,6 +1,7 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import {
   Card,
@@ -9,8 +10,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { useTRPC } from "@/trpc/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useSession } from "@/lib/auth-client";
 import { env } from "@/env";
 import { GameSettings } from "@/components/game-settings";
@@ -18,6 +20,7 @@ import { GameSettings } from "@/components/game-settings";
 export default function LobbyPage() {
   const params = useParams();
   const pin = (params.pin as string).toUpperCase();
+  const router = useRouter();
 
   const trpc = useTRPC();
   const { data: authSession } = useSession();
@@ -26,6 +29,20 @@ export default function LobbyPage() {
     ...trpc.game.getSession.queryOptions({ pin }),
     refetchInterval: 2000,
   });
+
+  const startGame = useMutation({
+    ...trpc.game.startGame.mutationOptions(),
+    onSuccess: () => {
+      router.push(`/game/${pin}`);
+    },
+  });
+
+  // Redirect to game page when state changes to playing
+  useEffect(() => {
+    if (sessionQuery.data?.state === "playing") {
+      router.push(`/game/${pin}`);
+    }
+  }, [sessionQuery.data?.state, router, pin]);
 
   if (sessionQuery.isLoading) {
     return (
@@ -102,22 +119,39 @@ export default function LobbyPage() {
             </div>
 
             {isHost && session && (
-              <GameSettings
-                pin={session.pin}
-                initialSettings={{
-                  songsToWin: session.songsToWin,
-                  songPlayDuration: session.songPlayDuration,
-                  turnDuration: session.turnDuration,
-                  stealWindowDuration: session.stealWindowDuration,
-                  maxPlayers: session.maxPlayers,
-                  playlistUrl: session.playlistUrl,
-                }}
-              />
+              <>
+                <GameSettings
+                  pin={session.pin}
+                  initialSettings={{
+                    songsToWin: session.songsToWin,
+                    songPlayDuration: session.songPlayDuration,
+                    turnDuration: session.turnDuration,
+                    stealWindowDuration: session.stealWindowDuration,
+                    maxPlayers: session.maxPlayers,
+                    playlistUrl: session.playlistUrl,
+                  }}
+                />
+
+                <Button
+                  onClick={() => startGame.mutate({ pin })}
+                  disabled={startGame.isPending}
+                  className="w-full"
+                  size="lg"
+                >
+                  {startGame.isPending ? "Starting..." : "Start Game"}
+                </Button>
+
+                {startGame.error && (
+                  <p className="text-sm text-destructive text-center">
+                    {startGame.error.message}
+                  </p>
+                )}
+              </>
             )}
 
             <p className="text-sm text-muted-foreground text-center">
               {isHost
-                ? "Configure settings and start the game when ready"
+                ? "Configure settings above, then start the game"
                 : "Waiting for host to start the game..."}
             </p>
           </div>

@@ -218,7 +218,7 @@
       "Turn order randomized",
       "First player's turn begins"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "lobby",

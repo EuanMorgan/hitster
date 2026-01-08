@@ -423,3 +423,31 @@ Players can join game via PIN code - enhance with real-time updates (PRD item #1
 
 ### Next priority:
 Host can start the game (PRD item #17)
+
+---
+
+## 2026-01-08: Host Can Start Game Complete
+
+### What was done:
+- Added `startGame` tRPC mutation (host-only, transitions state to "playing")
+- Added Start Game button to lobby page (visible only to host)
+- Created placeholder game page at /game/[pin]
+- Implemented game initialization: shuffles turn order, assigns one random song to each player's timeline
+- Added redirect logic: lobby detects state change and redirects to game view
+- Used placeholder songs (20 songs) until Spotify integration is complete
+
+### Files created/modified:
+- src/trpc/routers/game.ts (added startGame mutation, shuffleArray helper, placeholder songs)
+- src/app/lobby/[pin]/page.tsx (added Start Game button, redirect on state change)
+- src/app/game/[pin]/page.tsx (new - placeholder game view)
+
+### Notes:
+- startGame mutation validates: host-only, lobby state only, at least 1 player
+- Turn order randomized using Fisher-Yates shuffle
+- Each player receives 1 random song in their timeline at game start
+- Used song IDs tracked in usedSongIds to prevent reuse
+- Game page shows player list with turn order (placeholder until gameplay features)
+- Polling continues on game page for real-time updates
+
+### Next priority:
+Players cannot join during active game (PRD item #18) - already implemented in validatePin

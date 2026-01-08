@@ -1,8 +1,46 @@
 import { createTRPCRouter, baseProcedure, protectedProcedure } from "../init";
 import { z } from "zod/v4";
-import { gameSessions, players, type Player } from "@/db/schema";
+import {
+  gameSessions,
+  players,
+  type Player,
+  type TimelineSong,
+} from "@/db/schema";
 import { eq, and, ne } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
+
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
+// Placeholder songs until Spotify integration
+const PLACEHOLDER_SONGS = [
+  { songId: "1", name: "Bohemian Rhapsody", artist: "Queen", year: 1975 },
+  { songId: "2", name: "Hotel California", artist: "Eagles", year: 1977 },
+  { songId: "3", name: "Thriller", artist: "Michael Jackson", year: 1982 },
+  { songId: "4", name: "Sweet Child O' Mine", artist: "Guns N' Roses", year: 1987 },
+  { songId: "5", name: "Smells Like Teen Spirit", artist: "Nirvana", year: 1991 },
+  { songId: "6", name: "Wonderwall", artist: "Oasis", year: 1995 },
+  { songId: "7", name: "Crazy in Love", artist: "Beyoncé", year: 2003 },
+  { songId: "8", name: "Rolling in the Deep", artist: "Adele", year: 2010 },
+  { songId: "9", name: "Uptown Funk", artist: "Bruno Mars", year: 2014 },
+  { songId: "10", name: "Blinding Lights", artist: "The Weeknd", year: 2019 },
+  { songId: "11", name: "Billie Jean", artist: "Michael Jackson", year: 1983 },
+  { songId: "12", name: "Like a Prayer", artist: "Madonna", year: 1989 },
+  { songId: "13", name: "Lose Yourself", artist: "Eminem", year: 2002 },
+  { songId: "14", name: "Shape of You", artist: "Ed Sheeran", year: 2017 },
+  { songId: "15", name: "Bad Guy", artist: "Billie Eilish", year: 2019 },
+  { songId: "16", name: "Respect", artist: "Aretha Franklin", year: 1967 },
+  { songId: "17", name: "Stayin' Alive", artist: "Bee Gees", year: 1977 },
+  { songId: "18", name: "Take On Me", artist: "a-ha", year: 1985 },
+  { songId: "19", name: "Vogue", artist: "Madonna", year: 1990 },
+  { songId: "20", name: "No Scrubs", artist: "TLC", year: 1999 },
+];
 
 function generatePin(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -304,4 +342,91 @@ export const gameRouter = createTRPCRouter({
       playerId: hostPlayer.id,
     };
   }),
+
+  startGame: protectedProcedure
+    .input(z.object({ pin: z.string().length(4) }))
+    .mutation(async ({ ctx, input }) => {
+      const pin = input.pin.toUpperCase();
+
+      const session = await ctx.db.query.gameSessions.findFirst({
+        where: eq(gameSessions.pin, pin),
+        with: {
+          players: {
+            where: eq(players.isConnected, true),
+          },
+        },
+      });
+
+      if (!session) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Game not found" });
+      }
+
+      if (session.hostId !== ctx.user.id) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only the host can start the game",
+        });
+      }
+
+      if (session.state !== "lobby") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Game has already started",
+        });
+      }
+
+      const connectedPlayers = session.players;
+      if (connectedPlayers.length < 1) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Need at least 1 player to start",
+        });
+      }
+
+      // Shuffle turn order
+      const playerIds = connectedPlayers.map((p: Player) => p.id);
+      const turnOrder = shuffleArray(playerIds);
+
+      // Shuffle available songs and assign one to each player
+      const shuffledSongs = shuffleArray(PLACEHOLDER_SONGS);
+      const usedSongIds: string[] = [];
+
+      for (let i = 0; i < connectedPlayers.length; i++) {
+        const player = connectedPlayers[i];
+        const song = shuffledSongs[i];
+
+        const timelineSong: TimelineSong = {
+          songId: song.songId,
+          name: song.name,
+          artist: song.artist,
+          year: song.year,
+          addedAt: new Date().toISOString(),
+        };
+
+        await ctx.db
+          .update(players)
+          .set({ timeline: [timelineSong] })
+          .where(eq(players.id, player.id));
+
+        usedSongIds.push(song.songId);
+      }
+
+      // Update game session state
+      await ctx.db
+        .update(gameSessions)
+        .set({
+          state: "playing",
+          turnOrder,
+          currentTurnIndex: 0,
+          usedSongIds,
+          updatedAt: new Date(),
+        })
+        .where(eq(gameSessions.id, session.id));
+
+      return {
+        success: true,
+        turnOrder,
+        firstPlayerId: turnOrder[0],
+      };
+    }),
 });
