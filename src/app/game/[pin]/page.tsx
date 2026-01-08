@@ -7,6 +7,7 @@ import { SpotifyPlayer } from "@/components/spotify-player";
 import { StealPhase } from "@/components/steal-phase";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { TimelineDropZone } from "@/components/timeline-drop-zone";
+import { TurnShuffleAnimation } from "@/components/turn-shuffle-animation";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -647,22 +648,6 @@ export default function GamePage() {
     return () => clearInterval(interval);
   }, [currentPlayerId, heartbeatMutation]);
 
-  // Hide shuffle animation after 2 seconds
-  useEffect(() => {
-    if (showShuffleAnimation) {
-      const timer = setTimeout(() => setShowShuffleAnimation(false), 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [showShuffleAnimation]);
-
-  // Hide round shuffle animation after 2.5 seconds
-  useEffect(() => {
-    if (showRoundShuffleAnimation) {
-      const timer = setTimeout(() => setShowRoundShuffleAnimation(false), 2500);
-      return () => clearTimeout(timer);
-    }
-  }, [showRoundShuffleAnimation]);
-
   // Redirect back to lobby if game is not playing
   useEffect(() => {
     if (sessionQuery.data?.state === "lobby") {
@@ -1054,33 +1039,25 @@ export default function GamePage() {
         )}
 
         {/* Initial Shuffle Animation Overlay */}
-        {showShuffleAnimation && (
-          <Card className="border-2 border-dashed border-primary/50 bg-primary/5">
-            <CardContent className="py-8 text-center">
-              <div className="text-4xl mb-4 animate-bounce">🎲</div>
-              <div className="text-lg font-medium">Shuffling turn order...</div>
-              <div className="text-sm text-muted-foreground mt-2">
-                Each player receives 1 starting song
-              </div>
-            </CardContent>
-          </Card>
+        {showShuffleAnimation && session?.turnOrder && (
+          <TurnShuffleAnimation
+            players={session.players ?? []}
+            turnOrder={session.turnOrder}
+            onComplete={() => setShowShuffleAnimation(false)}
+          />
         )}
 
         {/* New Round Shuffle Animation */}
-        {showRoundShuffleAnimation && !showShuffleAnimation && (
-          <Card className="border-2 border-dashed border-amber-500/50 bg-amber-500/5">
-            <CardContent className="py-8 text-center">
-              <div className="text-4xl mb-4 animate-spin">🔀</div>
-              <div className="text-lg font-medium">New Round!</div>
-              <div className="text-xl font-bold text-amber-500 mt-2">
-                Round {session?.roundNumber}
-              </div>
-              <div className="text-sm text-muted-foreground mt-2">
-                Shuffling turn order...
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        {showRoundShuffleAnimation &&
+          !showShuffleAnimation &&
+          session?.turnOrder && (
+            <TurnShuffleAnimation
+              players={session.players ?? []}
+              turnOrder={session.turnOrder}
+              roundNumber={session.roundNumber}
+              onComplete={() => setShowRoundShuffleAnimation(false)}
+            />
+          )}
 
         {/* Host Display - Shows active player's timeline prominently */}
         {!showShuffleAnimation &&

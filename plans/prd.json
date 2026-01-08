@@ -720,7 +720,7 @@
       "Settle into new positions",
       "Highlight first player"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "database",

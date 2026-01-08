@@ -679,3 +679,27 @@ Files changed:
 - src/app/game/[pin]/page.tsx (added GameSkeleton, use in isLoading)
 - src/app/join/page.tsx (enhanced JoinPageLoading with proper skeleton)
 - plans/prd.json (marked ui #34 as passes: true)
+
+## 2026-01-08: Implemented turn shuffle animation
+
+PRD items: ui #44 (Turn shuffle animation)
+
+Changes:
+- Created TurnShuffleAnimation component: shows player cards with avatar/name/turn number
+- Animation starts with cards at random positions (translateY + rotate offset)
+- Cards animate to final positions over 700ms with ease-out easing
+- First player gets highlighted with primary border/ring + "First" badge
+- Removed old static shuffle overlay from game page
+- Component handles own timing via onComplete callback (2.5s total duration)
+- Works for both initial game start and new round shuffles
+
+All 4 PRD steps verified:
+1. ✅ Visual player order cards - cards show number, avatar, name in order
+2. ✅ Player cards animate 500-800ms with easing - 700ms transition-all ease-out
+3. ✅ Settle into new positions - phase="settled" triggers final transform
+4. ✅ Highlight first player - index===0 gets primary colors + "First" badge
+
+Files changed:
+- src/components/turn-shuffle-animation.tsx (new - animation component)
+- src/app/game/[pin]/page.tsx (import component, replace static overlays)
+- plans/prd.json (marked ui #44 as passes: true)
