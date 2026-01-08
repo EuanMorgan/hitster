@@ -136,3 +136,41 @@ Key files:
 
 Files changed:
 - plans/prd.json (marked lobby #2-6 as passes: true)
+
+## 2026-01-08: Verified gameplay #1 - game initialization
+
+PRD items: gameplay #1 (Game initializes correctly for all players)
+
+Already implemented - no code changes needed:
+
+1. Each player receives 2 tokens:
+   - schema default tokens: 2 (src/db/schema.ts:189)
+   - explicit tokens: 2 in joinGame (L480) and createGame (L656)
+
+2. Each player receives 1 random song in timeline (year visible):
+   - startGame shuffles playlist, assigns song[i] to player[i] (L792-811)
+   - TimelineDisplay shows year prominently (L52)
+
+3. Turn order displayed with shuffle animation:
+   - shuffleArray(playerIds) in startGame (L786)
+   - 2-second shuffle animation overlay (L826-836)
+   - "Each player receives 1 starting song" message
+
+4. Current player highlighted:
+   - PlayerCard: green "Playing" badge with pulse animation (L97-100)
+   - Border/ring highlighting for current turn (L80-84)
+   - ActivePlayerTimeline shows current player's timeline prominently
+
+5. Song plays automatically for current player's turn:
+   - SpotifyPlayer renders for host only (L808-823)
+   - shouldPlay condition: !stealPhase && !shuffleAnimation && currentSong exists
+   - Plays on host device (party game - everyone in same room)
+
+Key files:
+- src/app/game/[pin]/page.tsx: game UI, shuffle animation, player highlighting
+- src/trpc/routers/game.ts: startGame (L668-849)
+- src/components/spotify-player.tsx: audio playback
+- src/db/schema.ts: tokens default, timeline structure
+
+Files changed:
+- plans/prd.json (marked gameplay #1 as passes: true)
