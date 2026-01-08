@@ -15,6 +15,7 @@ import type { TimelineSong } from "@/db/schema";
 import { useSession } from "@/lib/auth-client";
 import { TimelineDropZone } from "@/components/timeline-drop-zone";
 import { StealPhase } from "@/components/steal-phase";
+import { Button } from "@/components/ui/button";
 
 function TokenDisplay({ count }: { count: number }) {
   return (
@@ -420,6 +421,13 @@ export default function GamePage() {
     },
   });
 
+  const startRematchMutation = useMutation({
+    ...trpc.game.startRematch.mutationOptions(),
+    onSuccess: () => {
+      router.push(`/lobby/${pin}`);
+    },
+  });
+
   // Get current player ID from localStorage
   const [currentPlayerId, setCurrentPlayerId] = useState<string | null>(null);
   useEffect(() => {
@@ -536,11 +544,17 @@ export default function GamePage() {
 
   const session = sessionQuery.data;
 
+  const isHost = authSession?.user?.id === session?.hostId;
+
   if (session?.state === "finished") {
     const sortedPlayers = [...session.players].sort(
       (a, b) => (b.timeline?.length ?? 0) - (a.timeline?.length ?? 0)
     );
     const winner = sortedPlayers[0];
+
+    const handleRematch = () => {
+      startRematchMutation.mutate({ pin });
+    };
 
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
@@ -600,9 +614,29 @@ export default function GamePage() {
                 </div>
               ))}
             </div>
-            <div className="mt-6 text-center text-sm text-muted-foreground">
-              Thanks for playing Hitster! 🎵
-            </div>
+
+            {/* Rematch button for host */}
+            {isHost && (
+              <div className="mt-6">
+                <Button
+                  onClick={handleRematch}
+                  disabled={startRematchMutation.isPending}
+                  className="w-full"
+                  size="lg"
+                >
+                  {startRematchMutation.isPending ? "Starting..." : "🔄 Play Again"}
+                </Button>
+                <p className="mt-2 text-center text-xs text-muted-foreground">
+                  New players can join via PIN: {session.pin}
+                </p>
+              </div>
+            )}
+
+            {!isHost && (
+              <div className="mt-6 text-center text-sm text-muted-foreground">
+                Waiting for host to start a rematch...
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -618,8 +652,6 @@ export default function GamePage() {
   const hasAlreadyStolen = (session?.stealAttempts ?? []).some(
     (a) => a.playerId === currentPlayerId
   );
-  // Check if current authenticated user is the host
-  const isHost = authSession?.user?.id === session?.hostId;
 
   return (
     <div className="min-h-screen p-4">

@@ -1291,4 +1291,70 @@ export const gameRouter = createTRPCRouter({
         guessedArtist: guess?.guessedArtist ?? null,
       };
     }),
+
+  startRematch: protectedProcedure
+    .input(z.object({ pin: z.string().length(4) }))
+    .mutation(async ({ ctx, input }) => {
+      const pin = input.pin.toUpperCase();
+
+      const session = await ctx.db.query.gameSessions.findFirst({
+        where: eq(gameSessions.pin, pin),
+        with: {
+          players: true,
+        },
+      });
+
+      if (!session) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Game not found" });
+      }
+
+      if (session.hostId !== ctx.user.id) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only the host can start a rematch",
+        });
+      }
+
+      if (session.state !== "finished") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Game must be finished to start a rematch",
+        });
+      }
+
+      // Reset all connected players' tokens and timelines
+      for (const player of session.players) {
+        if (player.isConnected) {
+          await ctx.db
+            .update(players)
+            .set({
+              tokens: 2,
+              timeline: [],
+            })
+            .where(eq(players.id, player.id));
+        }
+      }
+
+      // Reset game session to lobby state
+      await ctx.db
+        .update(gameSessions)
+        .set({
+          state: "lobby",
+          turnOrder: null,
+          currentTurnIndex: 0,
+          usedSongIds: [],
+          currentSong: null,
+          turnStartedAt: null,
+          roundNumber: 1,
+          isStealPhase: false,
+          stealPhaseEndAt: null,
+          activePlayerPlacement: null,
+          activePlayerGuess: null,
+          stealAttempts: [],
+          updatedAt: new Date(),
+        })
+        .where(eq(gameSessions.id, session.id));
+
+      return { success: true, pin: session.pin };
+    }),
 });

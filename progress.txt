@@ -810,3 +810,39 @@ Active player can position song in their timeline (PRD gameplay item)
 - Spotify Web Playback SDK integration (PRD gameplay item)
 - Party stats on results screen (PRD winning item)
 - Host can start rematch (PRD winning item)
+
+---
+
+## 2026-01-08: Host Can Start Rematch Complete
+
+### What was done:
+- Added `startRematch` tRPC mutation to game router
+- Mutation validates host-only access and finished game state
+- Resets all connected players' tokens to 2 and clears timelines
+- Resets game session to lobby state (clears turn order, used songs, etc.)
+- Added "Play Again" button to game finished screen (visible only to host)
+- Non-hosts see "Waiting for host to start a rematch..." message
+- Rematch redirects all players to lobby where new players can join
+
+### Files modified:
+- src/trpc/routers/game.ts (added startRematch mutation)
+- src/app/game/[pin]/page.tsx (added rematch button and mutation call)
+- plans/prd.json (marked PRD "Host can start rematch" as passing)
+
+### PRD steps completed:
+1. ✅ Rematch button visible only to host
+2. ✅ New players can join during results screen (PIN displayed on results)
+3. ✅ Click rematch to start new game
+4. ⏳ Party stats preserved (not implemented yet - separate PRD item)
+5. ✅ Game stats reset (tokens, timelines, turn order cleared)
+6. ✅ Return to lobby briefly then start (redirects to lobby)
+
+### Notes:
+- Same PIN is preserved for rematch so players can rejoin
+- All game state is reset but session and players remain
+- Party stats tracking is a separate PRD item (not yet implemented)
+- Host can start game again from lobby with all/new players
+
+### Next priority:
+- Party stats on results screen (PRD winning item #35)
+- Spotify Web Playback SDK integration (PRD gameplay item #20)
