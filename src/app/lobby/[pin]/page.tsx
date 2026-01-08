@@ -11,13 +11,16 @@ import {
 } from "@/components/ui/card";
 import { useTRPC } from "@/trpc/client";
 import { useQuery } from "@tanstack/react-query";
+import { useSession } from "@/lib/auth-client";
 import { env } from "@/env";
+import { GameSettings } from "@/components/game-settings";
 
 export default function LobbyPage() {
   const params = useParams();
   const pin = (params.pin as string).toUpperCase();
 
   const trpc = useTRPC();
+  const { data: authSession } = useSession();
 
   const sessionQuery = useQuery(trpc.game.getSession.queryOptions({ pin }));
 
@@ -48,6 +51,7 @@ export default function LobbyPage() {
 
   const session = sessionQuery.data;
   const joinUrl = `${env.NEXT_PUBLIC_APP_URL}/join?pin=${session?.pin}`;
+  const isHost = authSession?.user?.id === session?.hostId;
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
@@ -93,8 +97,25 @@ export default function LobbyPage() {
                 ))}
               </div>
             </div>
+
+            {isHost && session && (
+              <GameSettings
+                pin={session.pin}
+                initialSettings={{
+                  songsToWin: session.songsToWin,
+                  songPlayDuration: session.songPlayDuration,
+                  turnDuration: session.turnDuration,
+                  stealWindowDuration: session.stealWindowDuration,
+                  maxPlayers: session.maxPlayers,
+                  playlistUrl: session.playlistUrl,
+                }}
+              />
+            )}
+
             <p className="text-sm text-muted-foreground text-center">
-              Waiting for host to start the game...
+              {isHost
+                ? "Configure settings and start the game when ready"
+                : "Waiting for host to start the game..."}
             </p>
           </div>
         </CardContent>

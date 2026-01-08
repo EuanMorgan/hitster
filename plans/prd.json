@@ -179,7 +179,7 @@
       "Configure custom Spotify playlist URL (optional, default provided)",
       "Settings saved and synced to all players in lobby"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "lobby",

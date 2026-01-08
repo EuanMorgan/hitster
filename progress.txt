@@ -368,3 +368,38 @@ Host can create a new game session (PRD item #13)
 
 ### Next priority:
 Host can configure game settings before starting (PRD item #14)
+
+---
+
+## 2026-01-08: Host Game Settings Configuration Complete
+
+### What was done:
+- Added `updateSettings` tRPC mutation for host to modify game settings
+- Updated `getSession` query to return all settings fields (songsToWin, songPlayDuration, turnDuration, stealWindowDuration, maxPlayers, playlistUrl)
+- Created `GameSettings` component with expandable settings panel
+- Settings show only for authenticated host in lobby
+- All settings fields have validation (min/max ranges per PRD spec)
+- Settings persist to database and sync to lobby UI via query invalidation
+
+### Files created/modified:
+- src/trpc/routers/game.ts (added updateSettings mutation, expanded getSession response)
+- src/components/game-settings.tsx (new - settings panel component)
+- src/app/lobby/[pin]/page.tsx (added settings panel for host, host detection via useSession)
+
+### Settings available:
+- Songs to Win: 5-20 (default 10)
+- Song Play Duration: 15-60s (default 30s)
+- Turn Duration: 30-90s (default 45s)
+- Steal Window: 5-20s (default 10s)
+- Max Players: 1-20 (default 10)
+- Custom Spotify Playlist URL (optional)
+
+### Notes:
+- Settings panel is collapsible (starts closed, click to open)
+- Only host sees the settings panel
+- Non-hosts see "Waiting for host to start the game..."
+- Host sees "Configure settings and start the game when ready"
+- Settings changes invalidate the session query for real-time sync
+
+### Next priority:
+Players can join game via PIN code - enhance with real-time updates (PRD item #15)

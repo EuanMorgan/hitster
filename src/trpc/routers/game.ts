@@ -175,8 +175,14 @@ export const gameRouter = createTRPCRouter({
       return {
         id: session.id,
         pin: session.pin,
+        hostId: session.hostId,
         state: session.state,
+        songsToWin: session.songsToWin,
+        songPlayDuration: session.songPlayDuration,
+        turnDuration: session.turnDuration,
+        stealWindowDuration: session.stealWindowDuration,
         maxPlayers: session.maxPlayers,
+        playlistUrl: session.playlistUrl,
         players: session.players.map((p: Player) => ({
           id: p.id,
           name: p.name,
@@ -184,6 +190,60 @@ export const gameRouter = createTRPCRouter({
           isHost: p.isHost,
         })),
       };
+    }),
+
+  updateSettings: protectedProcedure
+    .input(
+      z.object({
+        pin: z.string().length(4),
+        songsToWin: z.number().int().min(5).max(20).optional(),
+        songPlayDuration: z.number().int().min(15).max(60).optional(),
+        turnDuration: z.number().int().min(30).max(90).optional(),
+        stealWindowDuration: z.number().int().min(5).max(20).optional(),
+        maxPlayers: z.number().int().min(1).max(20).optional(),
+        playlistUrl: z.string().url().nullable().optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const pin = input.pin.toUpperCase();
+
+      const session = await ctx.db.query.gameSessions.findFirst({
+        where: eq(gameSessions.pin, pin),
+      });
+
+      if (!session) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Game not found" });
+      }
+
+      if (session.hostId !== ctx.user.id) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only the host can update settings",
+        });
+      }
+
+      if (session.state !== "lobby") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Cannot update settings after game has started",
+        });
+      }
+
+      const { pin: _pin, ...updates } = input;
+      const filteredUpdates = Object.fromEntries(
+        Object.entries(updates).filter(([_, v]) => v !== undefined)
+      );
+
+      if (Object.keys(filteredUpdates).length === 0) {
+        return { success: true };
+      }
+
+      await ctx.db
+        .update(gameSessions)
+        .set({ ...filteredUpdates, updatedAt: new Date() })
+        .where(eq(gameSessions.id, session.id));
+
+      return { success: true };
     }),
 
   createGame: protectedProcedure.mutation(async ({ ctx }) => {
