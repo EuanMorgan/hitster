@@ -201,3 +201,37 @@ Configure tRPC with TanStack React Query for RSC (PRD item #6)
 
 ### Next priority:
 Configure Better Auth with Spotify provider (PRD item #9)
+
+---
+
+## 2026-01-08: Better Auth with Spotify Provider Complete
+
+### What was done:
+- Installed better-auth package
+- Created src/lib/auth.ts with Spotify OAuth provider config
+- Configured required Spotify scopes: streaming, user-read-email, user-read-private, playlist-read-private
+- Created API route handler at src/app/api/auth/[...all]/route.ts
+- Created auth client for frontend at src/lib/auth-client.ts (signIn, signOut, useSession exports)
+- Updated database schema to use Better Auth tables (user, session, account, verification)
+- Updated game tables to reference Better Auth's user table (text IDs instead of uuid)
+- Added relations between Better Auth and game-specific tables
+- Verified schema pushes to database successfully
+
+### Files created/modified:
+- src/lib/auth.ts (Better Auth server config)
+- src/lib/auth-client.ts (Better Auth client)
+- src/app/api/auth/[...all]/route.ts (auth API handler)
+- src/db/schema.ts (integrated Better Auth tables, updated FK types)
+
+### Dependencies added:
+- better-auth
+
+### Notes:
+- Use `signIn.social({ provider: "spotify" })` to initiate Spotify login
+- Use `useSession()` hook in client components to get session state
+- Spotify tokens stored in account table (accessToken, refreshToken, accessTokenExpiresAt)
+- Game tables use text IDs for user foreign keys (Better Auth uses text, not uuid)
+- Redirect URL for local dev: http://localhost:3000/api/auth/callback/spotify
+
+### Next priority:
+Configure test mocking infrastructure (PRD item #4) OR implement Host login with Spotify OAuth (PRD item #10)

@@ -116,7 +116,7 @@
       "Create auth client for frontend",
       "Add .env.example with required variables"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "authentication",
