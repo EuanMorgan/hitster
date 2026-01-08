@@ -18,6 +18,7 @@ for ((i=1; i<=$1; i++)); do
     2. Check that the types check via bun typecheck, the lint passes with bun lint, and the tests pass via bun test. If any of these file, fix the issue before moving on. \
     3. (Optional) If you made UI changes, use the Playwright MCP to visually verify the changes are correct. \
     Navigate to the relevant page and take a snapshot to confirm the UI renders as expected. \
+    If Playwright fails to load or connect, kill and fully restart the dev server then retry. \
     4. Update the PRD with the work that was done. \
     5. After completing each task, append to progress.txt:
     - Task completed and PRD item reference
