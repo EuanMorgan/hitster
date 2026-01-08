@@ -28,3 +28,34 @@
 
 ### Next priority:
 Configure Vitest for unit/integration testing (PRD item #2)
+
+---
+
+## 2026-01-08: Vitest Testing Setup Complete
+
+### What was done:
+- Installed vitest 4.x, @testing-library/react, @testing-library/jest-dom, @testing-library/user-event
+- Created vitest.config.ts with jsdom environment, React plugin, path aliases
+- Created vitest.setup.ts with jest-dom matchers
+- Added test scripts to package.json (test, test:watch, test:coverage)
+- Created sample Button component tests (6 tests covering variants, sizes, events, asChild)
+- Verified tests pass via `bun run test`
+- Verified typecheck passes
+
+### Files created/modified:
+- vitest.config.ts (vitest configuration)
+- vitest.setup.ts (jest-dom setup)
+- package.json (updated test scripts)
+- src/components/ui/__tests__/button.test.tsx (sample tests)
+
+### Dependencies added:
+- vitest, @vitejs/plugin-react, jsdom
+- @testing-library/react, @testing-library/dom, @testing-library/jest-dom, @testing-library/user-event
+
+### Notes:
+- Use `bun run test` to run tests (not `bun test` which is bun's native test runner)
+- Tests use Vitest's globals (describe, it, expect, vi)
+- jsdom environment configured for React component testing
+
+### Next priority:
+Configure Playwright for E2E testing (PRD item #3)
