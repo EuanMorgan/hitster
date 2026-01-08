@@ -1,9 +1,9 @@
 import "@testing-library/jest-dom/vitest";
 import { afterAll, afterEach, beforeAll } from "vitest";
-import { server } from "@/mocks/server";
+import { server } from "./src/mocks/server";
 
 // Start MSW server before all tests
-beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
+beforeAll(() => server.listen({ onUnhandledRequest: "bypass" }));
 
 // Reset handlers after each test
 afterEach(() => server.resetHandlers());

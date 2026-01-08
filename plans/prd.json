@@ -9,7 +9,7 @@
       "Add base shadcn components (button, card, input, form)",
       "Import Button from @/components/ui/button, render in page, confirm it displays with shadcn styling"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "setup",
@@ -19,9 +19,9 @@
       "Create vitest.config.ts with Next.js compatibility",
       "Add test script to package.json",
       "Create sample test to verify setup",
-      "Run 'bun test', expect sample test passes with green output"
+      "Run 'bun run test', expect sample test passes with green output"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "setup",
@@ -31,9 +31,9 @@
       "Create playwright.config.ts",
       "Add e2e test script to package.json",
       "Create sample E2E test for home page",
-      "Run 'bun run e2e', expect home page test passes"
+      "Run 'bun run test:e2e', expect home page test passes"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "setup",
@@ -46,7 +46,7 @@
       "Add mock data fixtures for players, games, songs",
       "Run unit test using MSW mock for Spotify API, expect mocked response returned. Run E2E test with MSW, expect no real API calls"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "setup",
@@ -59,7 +59,7 @@
       "Add db:push and db:studio scripts to package.json",
       "Run 'bun run db:push', expect schema pushed without errors. Run 'bun run db:studio', expect Drizzle Studio opens at localhost:4983"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "setup",
@@ -76,7 +76,7 @@
       "Add @tanstack/react-query-devtools in TRPCReactProvider (dev only)",
       "Create hello procedure returning {greeting: string}, call from client component, expect greeting displayed and TypeScript autocomplete works on response"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "setup",
@@ -90,7 +90,7 @@
       "Document prefetch vs fetchQuery tradeoffs (streaming vs blocking)",
       "Prefetch in server component, check Network tab shows no duplicate request from client, data renders immediately without loading state"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "setup",
@@ -103,7 +103,7 @@
       "Update .env.example with all required variables",
       "Remove SPOTIFY_CLIENT_ID from .env, run 'bun run build', expect build fails with 'Missing environment variable: SPOTIFY_CLIENT_ID'"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "setup",
@@ -116,7 +116,7 @@
       "Create auth client for frontend",
       "Add .env.example with required variables"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "authentication",

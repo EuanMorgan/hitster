@@ -1,0 +1,18 @@
+## 2026-01-08: Verified & fixed test infrastructure
+
+PRD items: setup 1-9 (all setup tasks verified complete)
+
+Changes:
+- Fixed vitest.setup.ts: use relative path for MSW server import, set onUnhandledRequest to "bypass"
+- Fixed e2e/home.spec.ts: updated tests to match actual UI (Link vs Button, PIN on /join page)
+- Updated PRD: marked all 9 setup tasks as passes: true
+
+Key notes:
+- Use `bun run test` not `bun test` (latter uses bun's native runner, not vitest)
+- All 48 unit tests pass, all 6 E2E tests pass
+- typecheck + lint both pass
+
+Files changed:
+- vitest.setup.ts
+- e2e/home.spec.ts
+- plans/prd.json

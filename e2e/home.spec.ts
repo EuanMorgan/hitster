@@ -12,18 +12,22 @@ test.describe("Home Page", () => {
     await expect(page.getByText("Hello, Hitster Player!")).toBeVisible();
   });
 
-  test("displays game PIN input", async ({ page }) => {
+  test("displays Join Game and Create Game links/buttons", async ({ page }) => {
     await page.goto("/");
 
-    await expect(page.getByPlaceholder("Enter game PIN")).toBeVisible();
-  });
-
-  test("displays Join Game and Create Game buttons", async ({ page }) => {
-    await page.goto("/");
-
-    await expect(page.getByRole("button", { name: "Join Game" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Join Game" })).toBeVisible();
     await expect(
       page.getByRole("button", { name: "Create Game" }),
     ).toBeVisible();
+  });
+
+  test("Join Game link navigates to join page with PIN input", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await page.getByRole("link", { name: "Join Game" }).click();
+
+    await expect(page).toHaveURL("/join");
+    await expect(page.getByPlaceholder("ABCD")).toBeVisible();
   });
 });
