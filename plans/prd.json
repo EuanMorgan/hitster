@@ -278,7 +278,7 @@
       "Fuzzy matching for validation (handles & vs 'and', minor typos)",
       "Correct guess awards 1 bonus token"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "gameplay",
@@ -428,7 +428,7 @@
       "If both correct, award 1 token",
       "Visual feedback for successful guess"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "turns",

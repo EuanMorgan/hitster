@@ -16,11 +16,12 @@ import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import type { TimelineSong, CurrentTurnSong } from "@/db/schema";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface TimelineDropZoneProps {
   timeline: TimelineSong[];
   currentSong: CurrentTurnSong;
-  onConfirm: (placementIndex: number) => void;
+  onConfirm: (placementIndex: number, guessedName?: string, guessedArtist?: string) => void;
   onTimeUp: () => void;
   onSkip?: () => void;
   onGetFreeSong?: () => void;
@@ -212,6 +213,8 @@ export function TimelineDropZone({
 }: TimelineDropZoneProps) {
   const [placementIndex, setPlacementIndex] = useState<number | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [guessedName, setGuessedName] = useState("");
+  const [guessedArtist, setGuessedArtist] = useState("");
 
   const sortedTimeline = [...timeline].sort((a, b) => a.year - b.year);
 
@@ -219,9 +222,9 @@ export function TimelineDropZone({
     if (isSubmitting) return;
     // Auto-submit with current placement or default to position 0
     const finalPlacement = placementIndex ?? 0;
-    onConfirm(finalPlacement);
+    onConfirm(finalPlacement, guessedName || undefined, guessedArtist || undefined);
     onTimeUp();
-  }, [isSubmitting, placementIndex, onConfirm, onTimeUp]);
+  }, [isSubmitting, placementIndex, onConfirm, onTimeUp, guessedName, guessedArtist]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -247,9 +250,9 @@ export function TimelineDropZone({
 
   const handleConfirm = useCallback(() => {
     if (placementIndex !== null) {
-      onConfirm(placementIndex);
+      onConfirm(placementIndex, guessedName || undefined, guessedArtist || undefined);
     }
-  }, [placementIndex, onConfirm]);
+  }, [placementIndex, onConfirm, guessedName, guessedArtist]);
 
   const handleReset = useCallback(() => {
     setPlacementIndex(null);
@@ -353,13 +356,40 @@ export function TimelineDropZone({
         )}
 
         {placementIndex !== null && (
-          <div className="flex justify-center gap-4">
-            <Button variant="outline" onClick={handleReset} disabled={isSubmitting}>
-              Reset
-            </Button>
-            <Button onClick={handleConfirm} disabled={isSubmitting}>
-              {isSubmitting ? "Confirming..." : "Confirm Placement"}
-            </Button>
+          <div className="space-y-4">
+            {/* Optional guess inputs */}
+            <div className="bg-muted/50 rounded-lg p-4 space-y-3">
+              <div className="text-sm text-center text-muted-foreground">
+                🎯 Bonus: Guess the song for +1 token! (optional)
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-md mx-auto">
+                <Input
+                  placeholder="Song name..."
+                  value={guessedName}
+                  onChange={(e) => setGuessedName(e.target.value)}
+                  disabled={isSubmitting}
+                />
+                <Input
+                  placeholder="Artist..."
+                  value={guessedArtist}
+                  onChange={(e) => setGuessedArtist(e.target.value)}
+                  disabled={isSubmitting}
+                />
+              </div>
+              {guessedName && guessedArtist && (
+                <div className="text-xs text-center text-green-600">
+                  ✓ Both fields filled - guess will be submitted
+                </div>
+              )}
+            </div>
+            <div className="flex justify-center gap-4">
+              <Button variant="outline" onClick={handleReset} disabled={isSubmitting}>
+                Reset
+              </Button>
+              <Button onClick={handleConfirm} disabled={isSubmitting}>
+                {isSubmitting ? "Confirming..." : "Confirm Placement"}
+              </Button>
+            </div>
           </div>
         )}
       </div>

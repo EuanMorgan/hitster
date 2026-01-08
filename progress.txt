@@ -733,3 +733,45 @@ Active player can position song in their timeline (PRD gameplay item)
 - Song/artist guessing for bonus token (PRD item #30)
 - Current player indicator enhancements (PRD item #31)
 - Spotify Web Playback SDK integration (PRD item #20)
+
+---
+
+## 2026-01-08: Song/Artist Guessing for Bonus Token Complete
+
+### What was done:
+- Added fuzzy matching utility functions (normalizeString, levenshteinDistance, fuzzyMatch)
+- Extended confirmTurn mutation to accept optional guessedName/guessedArtist parameters
+- Added activePlayerGuess field to game session schema to persist guess during steal phase
+- Modified resolveStealPhase to validate guess and award +1 token if correct
+- Guesses stored in turns table (guessedName, guessedArtist, guessWasCorrect)
+- Added guess input fields to TimelineDropZone (appear after song placement)
+- Updated TurnResultOverlay to show guess result with visual feedback
+- Updated game page to pass guess info through the mutation flow
+
+### Files created/modified:
+- src/db/schema.ts (added ActivePlayerGuess type, activePlayerGuess field)
+- src/trpc/routers/game.ts (fuzzy matching, confirmTurn + resolveStealPhase changes)
+- src/components/timeline-drop-zone.tsx (guess input UI, updated props/callbacks)
+- src/app/game/[pin]/page.tsx (turnResult type, TurnResultOverlay guess display)
+- src/mocks/fixtures.ts (updated with activePlayerGuess field)
+- src/mocks/db.ts (updated seedGameSession with activePlayerGuess)
+- plans/prd.json (marked PRD items #21 and #30 as passing)
+
+### Fuzzy matching features:
+- Normalizes strings (lowercase, & → and, removes punctuation)
+- Levenshtein distance calculation for typo tolerance
+- 20% character tolerance for minor typos
+- Substring matching for partial matches
+- Both song name AND artist must match for token award
+
+### UX notes:
+- Guess fields appear after placing song in timeline (not before)
+- Both fields must be filled for guess to be submitted
+- Visual indicator shows when guess will be submitted
+- Result overlay shows guess outcome with green/red styling
+- Token +1 immediately awarded on correct guess
+
+### Next priority:
+- Current player indicator enhancements (PRD item #31)
+- Spotify Web Playback SDK integration (PRD item #20)
+- Host main display view (PRD display item)

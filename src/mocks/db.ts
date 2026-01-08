@@ -79,6 +79,7 @@ export function seedGameSession(
     isStealPhase: sessionData.isStealPhase ?? false,
     stealPhaseEndAt: sessionData.stealPhaseEndAt ?? null,
     activePlayerPlacement: sessionData.activePlayerPlacement ?? null,
+    activePlayerGuess: sessionData.activePlayerGuess ?? null,
     stealAttempts: sessionData.stealAttempts ?? [],
     createdAt: sessionData.createdAt ?? new Date(),
     updatedAt: sessionData.updatedAt ?? new Date(),

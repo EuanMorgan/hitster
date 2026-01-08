@@ -127,6 +127,9 @@ function TurnResultOverlay({
     recipientId?: string | null;
     gameEnded?: boolean;
     winnerId?: string;
+    guessWasCorrect?: boolean;
+    guessedName?: string | null;
+    guessedArtist?: string | null;
   };
   onClose: () => void;
   winnerName?: string;
@@ -186,6 +189,17 @@ function TurnResultOverlay({
               <div className="text-2xl font-bold text-primary mt-2">
                 {result.song.year}
               </div>
+              {/* Show guess result if a guess was made */}
+              {(result.guessedName || result.guessedArtist) && (
+                <div className={`mt-4 p-3 rounded-lg ${result.guessWasCorrect ? "bg-green-100 dark:bg-green-900/30" : "bg-red-100 dark:bg-red-900/30"}`}>
+                  <div className="text-sm font-medium mb-1">
+                    {result.guessWasCorrect ? "🎯 Correct guess! +1 token" : "❌ Wrong guess"}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Your guess: {result.guessedName || "—"} by {result.guessedArtist || "—"}
+                  </div>
+                </div>
+              )}
             </>
           )}
         </CardContent>
@@ -209,6 +223,9 @@ export default function GamePage() {
     winnerId?: string;
     isNewRound?: boolean;
     newRoundNumber?: number;
+    guessWasCorrect?: boolean;
+    guessedName?: string | null;
+    guessedArtist?: string | null;
   } | null>(null);
   const [showRoundShuffleAnimation, setShowRoundShuffleAnimation] = useState(false);
 
@@ -246,6 +263,9 @@ export default function GamePage() {
         winnerId: "winnerId" in data ? data.winnerId : undefined,
         isNewRound: "isNewRound" in data ? data.isNewRound : undefined,
         newRoundNumber: "newRoundNumber" in data ? data.newRoundNumber : undefined,
+        guessWasCorrect: data.guessWasCorrect,
+        guessedName: data.guessedName,
+        guessedArtist: data.guessedArtist,
       });
       queryClient.invalidateQueries({ queryKey: trpc.game.getSession.queryKey({ pin }) });
     },
@@ -304,12 +324,14 @@ export default function GamePage() {
   }, [sessionQuery.data?.state, router, pin]);
 
   const handleConfirmTurn = useCallback(
-    (placementIndex: number) => {
+    (placementIndex: number, guessedName?: string, guessedArtist?: string) => {
       if (!currentPlayerId) return;
       confirmTurnMutation.mutate({
         pin,
         playerId: currentPlayerId,
         placementIndex,
+        guessedName,
+        guessedArtist,
       });
     },
     [confirmTurnMutation, pin, currentPlayerId]

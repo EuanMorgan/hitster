@@ -21,6 +21,55 @@ function shuffleArray<T>(array: T[]): T[] {
   return shuffled;
 }
 
+// Normalize string for fuzzy matching
+function normalizeString(str: string): string {
+  return str
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/['']/g, "'")
+    .replace(/[^\w\s']/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+// Calculate Levenshtein distance for fuzzy matching
+function levenshteinDistance(a: string, b: string): number {
+  const matrix: number[][] = [];
+  for (let i = 0; i <= b.length; i++) {
+    matrix[i] = [i];
+  }
+  for (let j = 0; j <= a.length; j++) {
+    matrix[0][j] = j;
+  }
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      if (b.charAt(i - 1) === a.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1, // substitution
+          matrix[i][j - 1] + 1, // insertion
+          matrix[i - 1][j] + 1 // deletion
+        );
+      }
+    }
+  }
+  return matrix[b.length][a.length];
+}
+
+// Check if two strings match with fuzzy tolerance
+function fuzzyMatch(guess: string, actual: string, tolerance = 0.2): boolean {
+  const normalizedGuess = normalizeString(guess);
+  const normalizedActual = normalizeString(actual);
+
+  if (normalizedGuess === normalizedActual) return true;
+  if (normalizedActual.includes(normalizedGuess) || normalizedGuess.includes(normalizedActual)) return true;
+
+  const distance = levenshteinDistance(normalizedGuess, normalizedActual);
+  const maxLength = Math.max(normalizedGuess.length, normalizedActual.length);
+  return maxLength > 0 && distance / maxLength <= tolerance;
+}
+
 // Placeholder songs until Spotify integration
 const PLACEHOLDER_SONGS = [
   { songId: "1", name: "Bohemian Rhapsody", artist: "Queen", year: 1975 },
@@ -481,6 +530,8 @@ export const gameRouter = createTRPCRouter({
         pin: z.string().length(4),
         playerId: z.string().uuid(),
         placementIndex: z.number().int().min(0),
+        guessedName: z.string().optional(),
+        guessedArtist: z.string().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -532,17 +583,30 @@ export const gameRouter = createTRPCRouter({
         });
       }
 
+      // Validate guesses if provided
+      let guessCorrect = false;
+      const guessedName = input.guessedName?.trim() || null;
+      const guessedArtist = input.guessedArtist?.trim() || null;
+
+      if (guessedName && guessedArtist) {
+        const nameMatch = fuzzyMatch(guessedName, session.currentSong.name);
+        const artistMatch = fuzzyMatch(guessedArtist, session.currentSong.artist);
+        guessCorrect = nameMatch && artistMatch;
+      }
+
       // Start steal phase instead of immediately resolving
       const stealPhaseEndAt = new Date(
         Date.now() + session.stealWindowDuration * 1000
       );
 
+      // Store guesses in session for processing in resolveStealPhase
       await ctx.db
         .update(gameSessions)
         .set({
           isStealPhase: true,
           stealPhaseEndAt,
           activePlayerPlacement: input.placementIndex,
+          activePlayerGuess: { guessedName, guessedArtist },
           stealAttempts: [],
           updatedAt: new Date(),
         })
@@ -551,6 +615,9 @@ export const gameRouter = createTRPCRouter({
       return {
         stealPhaseStarted: true,
         stealPhaseEndAt: stealPhaseEndAt.toISOString(),
+        guessedName,
+        guessedArtist,
+        guessCorrect,
       };
     }),
 
@@ -997,6 +1064,23 @@ export const gameRouter = createTRPCRouter({
         activePlayerCorrect = songYear >= before.year && songYear <= after.year;
       }
 
+      // Process guess if provided
+      const guess = session.activePlayerGuess;
+      let guessWasCorrect = false;
+      if (guess?.guessedName && guess?.guessedArtist) {
+        const nameMatch = fuzzyMatch(guess.guessedName, session.currentSong.name);
+        const artistMatch = fuzzyMatch(guess.guessedArtist, session.currentSong.artist);
+        guessWasCorrect = nameMatch && artistMatch;
+      }
+
+      // Award token if guess was correct
+      if (guessWasCorrect) {
+        await ctx.db
+          .update(players)
+          .set({ tokens: activePlayer.tokens + 1 })
+          .where(eq(players.id, currentPlayerId!));
+      }
+
       // Check steal attempts
       const stealAttempts = session.stealAttempts ?? [];
       let winningStealer: { playerId: string; playerName: string } | null = null;
@@ -1047,6 +1131,9 @@ export const gameRouter = createTRPCRouter({
         songYear: session.currentSong.year,
         placementIndex: activePlayerPlacement,
         wasCorrect: activePlayerCorrect,
+        guessedName: guess?.guessedName ?? null,
+        guessedArtist: guess?.guessedArtist ?? null,
+        guessWasCorrect,
         stealAttempts: stealAttempts.map((a) => ({
           playerId: a.playerId,
           placementIndex: a.placementIndex,
@@ -1096,6 +1183,7 @@ export const gameRouter = createTRPCRouter({
                 isStealPhase: false,
                 stealPhaseEndAt: null,
                 activePlayerPlacement: null,
+                activePlayerGuess: null,
                 stealAttempts: [],
                 updatedAt: new Date(),
               })
@@ -1108,6 +1196,9 @@ export const gameRouter = createTRPCRouter({
               recipientId,
               gameEnded: true,
               winnerId,
+              guessWasCorrect,
+              guessedName: guess?.guessedName ?? null,
+              guessedArtist: guess?.guessedArtist ?? null,
             };
           }
         }
@@ -1136,6 +1227,7 @@ export const gameRouter = createTRPCRouter({
             isStealPhase: false,
             stealPhaseEndAt: null,
             activePlayerPlacement: null,
+            activePlayerGuess: null,
             stealAttempts: [],
             updatedAt: new Date(),
           })
@@ -1148,6 +1240,9 @@ export const gameRouter = createTRPCRouter({
           recipientId,
           gameEnded: true,
           reason: "No more songs available",
+          guessWasCorrect,
+          guessedName: guess?.guessedName ?? null,
+          guessedArtist: guess?.guessedArtist ?? null,
         };
       }
 
@@ -1176,6 +1271,7 @@ export const gameRouter = createTRPCRouter({
           isStealPhase: false,
           stealPhaseEndAt: null,
           activePlayerPlacement: null,
+          activePlayerGuess: null,
           stealAttempts: [],
           updatedAt: new Date(),
         })
@@ -1190,6 +1286,9 @@ export const gameRouter = createTRPCRouter({
         nextPlayerId: newTurnOrder![nextTurnIndex],
         isNewRound,
         newRoundNumber,
+        guessWasCorrect,
+        guessedName: guess?.guessedName ?? null,
+        guessedArtist: guess?.guessedArtist ?? null,
       };
     }),
 });

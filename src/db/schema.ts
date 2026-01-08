@@ -130,6 +130,11 @@ export type ActiveStealAttempt = {
   timestamp: string;
 };
 
+export type ActivePlayerGuess = {
+  guessedName: string | null;
+  guessedArtist: string | null;
+};
+
 export const gameSessions = pgTable("game_sessions", {
   id: uuid("id").primaryKey().defaultRandom(),
   pin: varchar("pin", { length: 4 }).notNull().unique(),
@@ -153,6 +158,7 @@ export const gameSessions = pgTable("game_sessions", {
   isStealPhase: boolean("is_steal_phase").default(false),
   stealPhaseEndAt: timestamp("steal_phase_end_at"),
   activePlayerPlacement: integer("active_player_placement"),
+  activePlayerGuess: jsonb("active_player_guess").$type<ActivePlayerGuess>(),
   stealAttempts: jsonb("steal_attempts").$type<ActiveStealAttempt[]>().default([]),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
