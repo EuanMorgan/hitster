@@ -663,3 +663,41 @@ Active player can position song in their timeline (PRD gameplay item)
 - Free song feature (3 tokens for auto-placed song)
 - Song/artist guessing for bonus token
 - Spotify Web Playback SDK integration
+
+---
+
+## 2026-01-08: Win Condition & Results Celebration Enhancement Complete
+
+### What was done:
+- Enhanced TurnResultOverlay to show celebration when game ends (bouncing trophy, animated confetti emojis)
+- Winner name displayed prominently in victory modal
+- Longer display time (6s) for game-ending result
+- Completely redesigned game finished screen with:
+  - Animated celebration header (🎉🏆🎉)
+  - Winner highlight card with avatar, name, song count
+  - Improved final standings with medal emojis (🥇🥈🥉)
+  - Color-coded podium positions (gold/silver/bronze backgrounds)
+  - Host badge on player cards
+- Updated PRD: marked 4 features as passing that were already implemented:
+  - "Players start with 2 tokens" (tokens #27) - was working
+  - "Turn progresses to next player after completion" (turns #32) - was working
+  - "Game ends when player reaches target songs" (winning #33) - enhanced
+  - "Results screen shows game leaderboard" (winning #34) - enhanced
+
+### Files modified:
+- src/app/game/[pin]/page.tsx (TurnResultOverlay and finished state enhancements)
+- plans/prd.json (marked 4 items as passing)
+
+### Notes:
+- Victory modal now shows winner name with celebration
+- Game finished screen shows full standings with visual hierarchy
+- 1st place: gold background with gold border
+- 2nd place: gray background with gray border
+- 3rd place: amber background with amber border
+- Typecheck and all tests pass
+
+### Next priority:
+- Free song feature (3 tokens for auto-placed song)
+- Song/artist guessing for bonus token
+- Current player indicator enhancements (host timeline view)
+- Spotify Web Playback SDK integration

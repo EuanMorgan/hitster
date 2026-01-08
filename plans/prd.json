@@ -391,7 +391,7 @@
       "Token count displayed on player's UI",
       "Token count visible to all players"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "tokens",
@@ -462,7 +462,7 @@
       "Advance to next player in order",
       "New song drawn and plays"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "winning",
@@ -474,7 +474,7 @@
       "Winner announcement with celebration animation",
       "Transition to results screen"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "winning",
@@ -486,7 +486,7 @@
       "Show token counts",
       "Show accuracy stats (correct placements vs total)"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "winning",

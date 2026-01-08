@@ -118,6 +118,7 @@ function PlayerCard({
 function TurnResultOverlay({
   result,
   onClose,
+  winnerName,
 }: {
   result: {
     activePlayerCorrect: boolean;
@@ -128,11 +129,13 @@ function TurnResultOverlay({
     winnerId?: string;
   };
   onClose: () => void;
+  winnerName?: string;
 }) {
   useEffect(() => {
-    const timer = setTimeout(onClose, 4000);
+    // Longer timeout if game ended to enjoy the celebration
+    const timer = setTimeout(onClose, result.gameEnded ? 6000 : 4000);
     return () => clearTimeout(timer);
-  }, [onClose]);
+  }, [onClose, result.gameEnded]);
 
   const wasStolen = !!result.stolenBy;
   const songLost = !result.activePlayerCorrect && !wasStolen;
@@ -141,30 +144,49 @@ function TurnResultOverlay({
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <Card className="w-full max-w-md mx-4 animate-in zoom-in-95">
         <CardContent className="py-8 text-center">
-          <div className="text-6xl mb-4">
-            {result.activePlayerCorrect ? "✅" : wasStolen ? "🎯" : "❌"}
-          </div>
-          <div className="text-2xl font-bold mb-2">
-            {result.activePlayerCorrect
-              ? "Correct!"
-              : wasStolen
-                ? `Stolen by ${result.stolenBy?.playerName}!`
-                : "Incorrect!"}
-          </div>
-          {songLost && (
-            <div className="text-sm text-muted-foreground mb-2">
-              Song discarded - no one got it right
-            </div>
-          )}
-          <div className="text-lg font-medium">{result.song.name}</div>
-          <div className="text-muted-foreground">{result.song.artist}</div>
-          <div className="text-2xl font-bold text-primary mt-2">
-            {result.song.year}
-          </div>
-          {result.gameEnded && (
-            <div className="mt-4 text-xl font-bold text-green-500">
-              Game Over!
-            </div>
+          {result.gameEnded ? (
+            // Winner celebration
+            <>
+              <div className="text-6xl mb-4 animate-bounce">🏆</div>
+              <div className="text-3xl font-bold mb-2 text-yellow-500">
+                Winner!
+              </div>
+              <div className="text-2xl font-bold mb-4">
+                {winnerName || "Unknown Player"}
+              </div>
+              <div className="flex justify-center gap-2 text-4xl mb-4">
+                <span className="animate-pulse">🎉</span>
+                <span className="animate-pulse" style={{ animationDelay: "0.2s" }}>🎊</span>
+                <span className="animate-pulse" style={{ animationDelay: "0.4s" }}>✨</span>
+              </div>
+              <div className="text-sm text-muted-foreground mb-4">
+                Final song: {result.song.name} ({result.song.year})
+              </div>
+            </>
+          ) : (
+            // Normal turn result
+            <>
+              <div className="text-6xl mb-4">
+                {result.activePlayerCorrect ? "✅" : wasStolen ? "🎯" : "❌"}
+              </div>
+              <div className="text-2xl font-bold mb-2">
+                {result.activePlayerCorrect
+                  ? "Correct!"
+                  : wasStolen
+                    ? `Stolen by ${result.stolenBy?.playerName}!`
+                    : "Incorrect!"}
+              </div>
+              {songLost && (
+                <div className="text-sm text-muted-foreground mb-2">
+                  Song discarded - no one got it right
+                </div>
+              )}
+              <div className="text-lg font-medium">{result.song.name}</div>
+              <div className="text-muted-foreground">{result.song.artist}</div>
+              <div className="text-2xl font-bold text-primary mt-2">
+                {result.song.year}
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
@@ -343,36 +365,71 @@ export default function GamePage() {
   const session = sessionQuery.data;
 
   if (session?.state === "finished") {
+    const sortedPlayers = [...session.players].sort(
+      (a, b) => (b.timeline?.length ?? 0) - (a.timeline?.length ?? 0)
+    );
+    const winner = sortedPlayers[0];
+
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <CardTitle>Game Finished!</CardTitle>
-            <CardDescription>Thanks for playing</CardDescription>
+            {/* Winner celebration header */}
+            <div className="flex justify-center gap-2 text-3xl mb-2">
+              <span className="animate-bounce">🎉</span>
+              <span className="animate-bounce" style={{ animationDelay: "0.1s" }}>🏆</span>
+              <span className="animate-bounce" style={{ animationDelay: "0.2s" }}>🎉</span>
+            </div>
+            <CardTitle className="text-2xl">Game Over!</CardTitle>
+            {winner && (
+              <div className="mt-4 p-4 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
+                <div className="text-4xl mb-2">{winner.avatar}</div>
+                <div className="text-xl font-bold text-yellow-600 dark:text-yellow-400">
+                  {winner.name} Wins!
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {winner.timeline?.length ?? 0} songs in timeline
+                </div>
+              </div>
+            )}
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {session.players
-                .sort(
-                  (a, b) => (b.timeline?.length ?? 0) - (a.timeline?.length ?? 0)
-                )
-                .map((player, idx) => (
-                  <div
-                    key={player.id}
-                    className={`flex items-center gap-3 p-3 rounded-lg ${
-                      idx === 0 ? "bg-yellow-100 dark:bg-yellow-900/30" : "bg-muted"
-                    }`}
-                  >
-                    <span className="text-2xl">
-                      {idx === 0 ? "🏆" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : ""}
-                    </span>
-                    <span className="text-2xl">{player.avatar}</span>
+            <h3 className="font-semibold mb-3 text-center">Final Standings</h3>
+            <div className="space-y-3">
+              {sortedPlayers.map((player, idx) => (
+                <div
+                  key={player.id}
+                  className={`flex items-center gap-3 p-3 rounded-lg transition-all ${
+                    idx === 0
+                      ? "bg-yellow-100 dark:bg-yellow-900/30 border-2 border-yellow-400"
+                      : idx === 1
+                        ? "bg-gray-100 dark:bg-gray-800/50 border border-gray-300"
+                        : idx === 2
+                          ? "bg-amber-50 dark:bg-amber-900/20 border border-amber-300"
+                          : "bg-muted"
+                  }`}
+                >
+                  <span className="text-2xl min-w-[32px] text-center">
+                    {idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `#${idx + 1}`}
+                  </span>
+                  <span className="text-2xl">{player.avatar}</span>
+                  <div className="flex-1">
                     <span className="font-medium">{player.name}</span>
-                    <span className="ml-auto text-muted-foreground">
-                      {player.timeline?.length ?? 0} songs
-                    </span>
+                    {player.isHost && (
+                      <span className="ml-2 text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded">
+                        Host
+                      </span>
+                    )}
                   </div>
-                ))}
+                  <div className="text-right">
+                    <div className="font-bold">{player.timeline?.length ?? 0}</div>
+                    <div className="text-xs text-muted-foreground">songs</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-6 text-center text-sm text-muted-foreground">
+              Thanks for playing Hitster! 🎵
             </div>
           </CardContent>
         </Card>
@@ -393,7 +450,11 @@ export default function GamePage() {
   return (
     <div className="min-h-screen p-4">
       {turnResult && (
-        <TurnResultOverlay result={turnResult} onClose={handleCloseResult} />
+        <TurnResultOverlay
+          result={turnResult}
+          onClose={handleCloseResult}
+          winnerName={turnResult.winnerId ? session?.players.find(p => p.id === turnResult.winnerId)?.name : undefined}
+        />
       )}
 
       <div className="max-w-4xl mx-auto space-y-6">
