@@ -566,3 +566,27 @@ Files changed:
 - src/trpc/routers/spotify.ts (getValidAccessToken helper, refactored all procedures)
 - src/components/spotify-player.tsx (refetchToken, handleReauth, reauth UI)
 - plans/prd.json (marked spotify #39 as passes: true)
+
+## 2026-01-08: Added toast notifications for Spotify playback errors
+
+PRD items: spotify #40 (Spotify Web Playback SDK integration)
+
+Changes:
+- Installed sonner toast library
+- Added Toaster component to app layout (richColors, position: top-center)
+- SpotifyPlayer: added toast.error() calls for all error types
+- SpotifyPlayer: added console.error() logging for all errors
+- All error handlers show "Playback failed - check Spotify Premium status" toast
+
+All 5 PRD steps verified:
+1. ✅ Initialize SDK on host client - already implemented (lines 92-170)
+2. ✅ Create player instance - already implemented (line 102)
+3. ✅ Transfer playback to web player - already implemented (line 147)
+4. ✅ Control play/pause/seek - already implemented (playTrackMutation, pauseMutation)
+5. ✅ On playback error, show toast + log to console - NOW IMPLEMENTED
+
+Files changed:
+- package.json (added sonner dependency)
+- src/app/layout.tsx (added Toaster component)
+- src/components/spotify-player.tsx (added toast.error + console.error calls)
+- plans/prd.json (marked spotify #40 as passes: true)

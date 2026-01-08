@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { signIn } from "@/lib/auth-client";
 import { useTRPC } from "@/trpc/client";
 
@@ -113,26 +114,33 @@ export function SpotifyPlayer({
         volume: 0.5,
       });
 
-      // Error handling
+      // Error handling - show toast and log to console per PRD
       player.addListener("initialization_error", ({ message }) => {
+        console.error("Spotify initialization error:", message);
         setError(`Initialization error: ${message}`);
+        toast.error("Playback failed - check Spotify Premium status");
         onPlaybackError?.(message);
       });
 
       player.addListener("authentication_error", ({ message }) => {
-        // SDK auth error - try to get fresh token, redirect to reauth if fails
+        console.error("Spotify authentication error:", message);
         setError(`Authentication error: ${message}`);
+        toast.error("Spotify authentication failed - reconnecting...");
         onPlaybackError?.(message);
         handleReauth();
       });
 
       player.addListener("account_error", ({ message }) => {
+        console.error("Spotify account error:", message);
         setError(`Account error: ${message}. You need Spotify Premium.`);
+        toast.error("Playback failed - check Spotify Premium status");
         onPlaybackError?.(message);
       });
 
       player.addListener("playback_error", ({ message }) => {
+        console.error("Spotify playback error:", message);
         setError(`Playback error: ${message}`);
+        toast.error("Playback failed - check Spotify Premium status");
         onPlaybackError?.(message);
       });
 
@@ -209,10 +217,12 @@ export function SpotifyPlayer({
             setIsPlaying(true);
           },
           onError: (err) => {
+            console.error("Spotify play track error:", err.message);
             if (isReauthRequired(err)) {
               handleReauth();
             } else {
               setError(err.message);
+              toast.error("Playback failed - check Spotify Premium status");
               onPlaybackError?.(err.message);
             }
           },
