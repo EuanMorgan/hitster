@@ -116,6 +116,13 @@ export const gameStateEnum = pgEnum("game_state", [
   "finished",
 ]);
 
+export type CurrentTurnSong = {
+  songId: string;
+  name: string;
+  artist: string;
+  year: number;
+};
+
 export const gameSessions = pgTable("game_sessions", {
   id: uuid("id").primaryKey().defaultRandom(),
   pin: varchar("pin", { length: 4 }).notNull().unique(),
@@ -132,6 +139,9 @@ export const gameSessions = pgTable("game_sessions", {
   currentTurnIndex: integer("current_turn_index").default(0),
   turnOrder: jsonb("turn_order").$type<string[]>(),
   usedSongIds: jsonb("used_song_ids").$type<string[]>().default([]),
+  currentSong: jsonb("current_song").$type<CurrentTurnSong | null>(),
+  turnStartedAt: timestamp("turn_started_at"),
+  roundNumber: integer("round_number").default(1),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

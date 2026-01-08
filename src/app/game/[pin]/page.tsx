@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -10,8 +10,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useTRPC } from "@/trpc/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { TimelineSong } from "@/db/schema";
+import { TimelineDropZone } from "@/components/timeline-drop-zone";
 
 function TokenDisplay({ count }: { count: number }) {
   return (
@@ -21,7 +22,9 @@ function TokenDisplay({ count }: { count: number }) {
           🪙
         </span>
       ))}
-      {count === 0 && <span className="text-muted-foreground text-sm">No tokens</span>}
+      {count === 0 && (
+        <span className="text-muted-foreground text-sm">No tokens</span>
+      )}
     </div>
   );
 }
@@ -101,7 +104,8 @@ function PlayerCard({
         <div className="text-right">
           <TokenDisplay count={player.tokens} />
           <div className="text-sm text-muted-foreground mt-1">
-            {(player.timeline?.length ?? 0)} song{(player.timeline?.length ?? 0) !== 1 ? "s" : ""}
+            {player.timeline?.length ?? 0} song
+            {(player.timeline?.length ?? 0) !== 1 ? "s" : ""}
           </div>
         </div>
       </div>
@@ -110,11 +114,61 @@ function PlayerCard({
   );
 }
 
+function TurnResultOverlay({
+  result,
+  onClose,
+}: {
+  result: {
+    wasCorrect: boolean;
+    song: { name: string; artist: string; year: number };
+    gameEnded?: boolean;
+    winnerId?: string;
+  };
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    const timer = setTimeout(onClose, 3000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <Card className="w-full max-w-md mx-4 animate-in zoom-in-95">
+        <CardContent className="py-8 text-center">
+          <div className="text-6xl mb-4">
+            {result.wasCorrect ? "✅" : "❌"}
+          </div>
+          <div className="text-2xl font-bold mb-2">
+            {result.wasCorrect ? "Correct!" : "Incorrect!"}
+          </div>
+          <div className="text-lg font-medium">{result.song.name}</div>
+          <div className="text-muted-foreground">{result.song.artist}</div>
+          <div className="text-2xl font-bold text-primary mt-2">
+            {result.song.year}
+          </div>
+          {result.gameEnded && (
+            <div className="mt-4 text-xl font-bold text-green-500">
+              Game Over!
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 export default function GamePage() {
   const params = useParams();
   const pin = (params.pin as string).toUpperCase();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [showShuffleAnimation, setShowShuffleAnimation] = useState(true);
+  const [turnResult, setTurnResult] = useState<{
+    wasCorrect: boolean;
+    song: { name: string; artist: string; year: number };
+    gameEnded?: boolean;
+    winnerId?: string;
+  } | null>(null);
 
   const trpc = useTRPC();
 
@@ -122,6 +176,26 @@ export default function GamePage() {
     ...trpc.game.getSession.queryOptions({ pin }),
     refetchInterval: 2000,
   });
+
+  const confirmTurnMutation = useMutation({
+    ...trpc.game.confirmTurn.mutationOptions(),
+    onSuccess: (data) => {
+      setTurnResult({
+        wasCorrect: data.wasCorrect,
+        song: data.song,
+        gameEnded: data.gameEnded,
+        winnerId: "winnerId" in data ? data.winnerId : undefined,
+      });
+      queryClient.invalidateQueries({ queryKey: trpc.game.getSession.queryKey({ pin }) });
+    },
+  });
+
+  // Get current player ID from localStorage
+  const [currentPlayerId, setCurrentPlayerId] = useState<string | null>(null);
+  useEffect(() => {
+    const storedPlayerId = localStorage.getItem("hitster_player_id");
+    setCurrentPlayerId(storedPlayerId);
+  }, []);
 
   // Hide shuffle animation after 2 seconds
   useEffect(() => {
@@ -137,6 +211,22 @@ export default function GamePage() {
       router.push(`/lobby/${pin}`);
     }
   }, [sessionQuery.data?.state, router, pin]);
+
+  const handleConfirmTurn = useCallback(
+    (placementIndex: number) => {
+      if (!currentPlayerId) return;
+      confirmTurnMutation.mutate({
+        pin,
+        playerId: currentPlayerId,
+        placementIndex,
+      });
+    },
+    [confirmTurnMutation, pin, currentPlayerId]
+  );
+
+  const handleCloseResult = useCallback(() => {
+    setTurnResult(null);
+  }, []);
 
   if (sessionQuery.isLoading) {
     return (
@@ -170,26 +260,59 @@ export default function GamePage() {
       <div className="flex min-h-screen items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <CardTitle>Game Finished</CardTitle>
-            <CardDescription>This game has ended</CardDescription>
+            <CardTitle>Game Finished!</CardTitle>
+            <CardDescription>Thanks for playing</CardDescription>
           </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {session.players
+                .sort(
+                  (a, b) => (b.timeline?.length ?? 0) - (a.timeline?.length ?? 0)
+                )
+                .map((player, idx) => (
+                  <div
+                    key={player.id}
+                    className={`flex items-center gap-3 p-3 rounded-lg ${
+                      idx === 0 ? "bg-yellow-100 dark:bg-yellow-900/30" : "bg-muted"
+                    }`}
+                  >
+                    <span className="text-2xl">
+                      {idx === 0 ? "🏆" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : ""}
+                    </span>
+                    <span className="text-2xl">{player.avatar}</span>
+                    <span className="font-medium">{player.name}</span>
+                    <span className="ml-auto text-muted-foreground">
+                      {player.timeline?.length ?? 0} songs
+                    </span>
+                  </div>
+                ))}
+            </div>
+          </CardContent>
         </Card>
       </div>
     );
   }
 
+  const isMyTurn = currentPlayerId === session?.currentPlayerId;
   const currentPlayer = session?.players.find(
     (p) => p.id === session.currentPlayerId
   );
+  const myPlayer = session?.players.find((p) => p.id === currentPlayerId);
 
   return (
     <div className="min-h-screen p-4">
+      {turnResult && (
+        <TurnResultOverlay result={turnResult} onClose={handleCloseResult} />
+      )}
+
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Game Header */}
         <Card>
           <CardHeader className="text-center pb-2">
             <CardTitle className="text-2xl">Hitster</CardTitle>
-            <CardDescription>PIN: {session?.pin}</CardDescription>
+            <CardDescription>
+              PIN: {session?.pin} | Round {session?.roundNumber}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex justify-center gap-8 text-sm">
@@ -218,10 +341,32 @@ export default function GamePage() {
           </Card>
         )}
 
-        {/* Current Turn Indicator */}
-        {!showShuffleAnimation && currentPlayer && (
-          <Card className="bg-primary/10 border-primary">
-            <CardContent className="py-4">
+        {/* My Turn - Active Player View */}
+        {!showShuffleAnimation && isMyTurn && session?.currentSong && myPlayer && (
+          <Card className="border-2 border-primary">
+            <CardHeader className="text-center">
+              <CardTitle className="text-green-500">Your Turn!</CardTitle>
+              <CardDescription>
+                Place the mystery song in your timeline
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <TimelineDropZone
+                timeline={myPlayer.timeline ?? []}
+                currentSong={session.currentSong}
+                onConfirm={handleConfirmTurn}
+                isSubmitting={confirmTurnMutation.isPending}
+                turnDuration={session.turnDuration}
+                turnStartedAt={session.turnStartedAt}
+              />
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Waiting View - Not My Turn */}
+        {!showShuffleAnimation && !isMyTurn && currentPlayer && (
+          <Card className="bg-muted/50">
+            <CardContent className="py-6">
               <div className="flex items-center justify-center gap-3">
                 <span className="text-3xl">{currentPlayer.avatar}</span>
                 <div className="text-center">
@@ -231,8 +376,23 @@ export default function GamePage() {
                   <div className="text-xl font-bold">{currentPlayer.name}</div>
                 </div>
               </div>
-              <div className="text-center mt-3 text-sm text-muted-foreground">
-                Song playback coming with Spotify integration
+              <div className="text-center mt-4 text-sm text-muted-foreground">
+                Waiting for {currentPlayer.name} to place their song...
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* My Timeline (when not my turn) */}
+        {!showShuffleAnimation && !isMyTurn && myPlayer && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Your Timeline</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <TimelineDisplay timeline={myPlayer.timeline ?? []} />
+              <div className="mt-2 text-sm text-muted-foreground">
+                {myPlayer.timeline?.length ?? 0} / {session?.songsToWin} songs
               </div>
             </CardContent>
           </Card>

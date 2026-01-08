@@ -267,7 +267,7 @@
       "Position updates in real-time as player drags",
       "Turn timer countdown visible"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "gameplay",
@@ -299,7 +299,7 @@
       "Click confirm to lock in position and optional guess",
       "Turn ends, steal phase begins"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "gameplay",
@@ -311,7 +311,7 @@
       "Success animation plays",
       "Song permanently added to timeline"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "gameplay",
@@ -324,7 +324,7 @@
       "Failure animation plays",
       "Song discarded (not added to timeline)"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "stealing",

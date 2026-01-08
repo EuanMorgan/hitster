@@ -3,8 +3,10 @@ import { z } from "zod/v4";
 import {
   gameSessions,
   players,
+  turns,
   type Player,
   type TimelineSong,
+  type CurrentTurnSong,
 } from "@/db/schema";
 import { eq, and, ne } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
@@ -240,6 +242,9 @@ export const gameRouter = createTRPCRouter({
           session.turnOrder && session.currentTurnIndex !== null
             ? session.turnOrder[session.currentTurnIndex]
             : null,
+        currentSong: session.currentSong,
+        turnStartedAt: session.turnStartedAt?.toISOString() ?? null,
+        roundNumber: session.roundNumber ?? 1,
         players: orderedPlayers.map((p: Player) => ({
           id: p.id,
           name: p.name,
@@ -432,6 +437,17 @@ export const gameRouter = createTRPCRouter({
         usedSongIds.push(song.songId);
       }
 
+      // Draw the first song for the first turn
+      const remainingSongs = shuffledSongs.slice(connectedPlayers.length);
+      const firstTurnSong = remainingSongs[0];
+      const currentSong: CurrentTurnSong = {
+        songId: firstTurnSong.songId,
+        name: firstTurnSong.name,
+        artist: firstTurnSong.artist,
+        year: firstTurnSong.year,
+      };
+      usedSongIds.push(firstTurnSong.songId);
+
       // Update game session state
       await ctx.db
         .update(gameSessions)
@@ -440,6 +456,9 @@ export const gameRouter = createTRPCRouter({
           turnOrder,
           currentTurnIndex: 0,
           usedSongIds,
+          currentSong,
+          turnStartedAt: new Date(),
+          roundNumber: 1,
           updatedAt: new Date(),
         })
         .where(eq(gameSessions.id, session.id));
@@ -448,6 +467,197 @@ export const gameRouter = createTRPCRouter({
         success: true,
         turnOrder,
         firstPlayerId: turnOrder[0],
+      };
+    }),
+
+  confirmTurn: baseProcedure
+    .input(
+      z.object({
+        pin: z.string().length(4),
+        playerId: z.string().uuid(),
+        placementIndex: z.number().int().min(0),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const pin = input.pin.toUpperCase();
+
+      const session = await ctx.db.query.gameSessions.findFirst({
+        where: eq(gameSessions.pin, pin),
+        with: {
+          players: {
+            where: eq(players.isConnected, true),
+          },
+        },
+      });
+
+      if (!session) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Game not found" });
+      }
+
+      if (session.state !== "playing") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Game is not in progress",
+        });
+      }
+
+      const currentPlayerId =
+        session.turnOrder && session.currentTurnIndex !== null
+          ? session.turnOrder[session.currentTurnIndex]
+          : null;
+
+      if (input.playerId !== currentPlayerId) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "It's not your turn",
+        });
+      }
+
+      if (!session.currentSong) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "No song for current turn",
+        });
+      }
+
+      const player = session.players.find((p) => p.id === input.playerId);
+      if (!player) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Player not found" });
+      }
+
+      const timeline = player.timeline ?? [];
+      const sortedTimeline = [...timeline].sort((a, b) => a.year - b.year);
+      const songYear = session.currentSong.year;
+
+      // Validate placement
+      let isCorrect = false;
+      if (sortedTimeline.length === 0) {
+        isCorrect = true;
+      } else if (input.placementIndex === 0) {
+        isCorrect = songYear <= sortedTimeline[0].year;
+      } else if (input.placementIndex >= sortedTimeline.length) {
+        isCorrect = songYear >= sortedTimeline[sortedTimeline.length - 1].year;
+      } else {
+        const before = sortedTimeline[input.placementIndex - 1];
+        const after = sortedTimeline[input.placementIndex];
+        isCorrect = songYear >= before.year && songYear <= after.year;
+      }
+
+      // Record the turn
+      await ctx.db.insert(turns).values({
+        sessionId: session.id,
+        playerId: input.playerId,
+        roundNumber: session.roundNumber ?? 1,
+        songId: session.currentSong.songId,
+        songName: session.currentSong.name,
+        songArtist: session.currentSong.artist,
+        songYear: session.currentSong.year,
+        placementIndex: input.placementIndex,
+        wasCorrect: isCorrect,
+        completedAt: new Date(),
+      });
+
+      // If correct, add song to timeline
+      if (isCorrect) {
+        const newSong: TimelineSong = {
+          songId: session.currentSong.songId,
+          name: session.currentSong.name,
+          artist: session.currentSong.artist,
+          year: session.currentSong.year,
+          addedAt: new Date().toISOString(),
+        };
+        const newTimeline = [...timeline, newSong];
+
+        await ctx.db
+          .update(players)
+          .set({ timeline: newTimeline })
+          .where(eq(players.id, input.playerId));
+
+        // Check win condition
+        if (newTimeline.length >= session.songsToWin) {
+          await ctx.db
+            .update(gameSessions)
+            .set({
+              state: "finished",
+              currentSong: null,
+              updatedAt: new Date(),
+            })
+            .where(eq(gameSessions.id, session.id));
+
+          return {
+            wasCorrect: true,
+            song: session.currentSong,
+            gameEnded: true,
+            winnerId: input.playerId,
+          };
+        }
+      }
+
+      // Advance to next turn
+      const nextTurnIndex =
+        ((session.currentTurnIndex ?? 0) + 1) % session.turnOrder!.length;
+      const isNewRound = nextTurnIndex === 0;
+      const newRoundNumber = isNewRound
+        ? (session.roundNumber ?? 1) + 1
+        : session.roundNumber ?? 1;
+
+      // Draw next song
+      const usedSongIds = new Set(session.usedSongIds ?? []);
+      const availableSongs = PLACEHOLDER_SONGS.filter(
+        (s) => !usedSongIds.has(s.songId)
+      );
+
+      if (availableSongs.length === 0) {
+        // No more songs - end game
+        await ctx.db
+          .update(gameSessions)
+          .set({
+            state: "finished",
+            currentSong: null,
+            updatedAt: new Date(),
+          })
+          .where(eq(gameSessions.id, session.id));
+
+        return {
+          wasCorrect: isCorrect,
+          song: session.currentSong,
+          gameEnded: true,
+          reason: "No more songs available",
+        };
+      }
+
+      const nextSong = availableSongs[Math.floor(Math.random() * availableSongs.length)];
+      const newUsedSongIds = [...(session.usedSongIds ?? []), nextSong.songId];
+
+      // If new round, reshuffle turn order
+      let newTurnOrder = session.turnOrder;
+      if (isNewRound) {
+        newTurnOrder = shuffleArray(session.turnOrder!);
+      }
+
+      await ctx.db
+        .update(gameSessions)
+        .set({
+          currentTurnIndex: nextTurnIndex,
+          turnOrder: newTurnOrder,
+          roundNumber: newRoundNumber,
+          currentSong: {
+            songId: nextSong.songId,
+            name: nextSong.name,
+            artist: nextSong.artist,
+            year: nextSong.year,
+          },
+          usedSongIds: newUsedSongIds,
+          turnStartedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(gameSessions.id, session.id));
+
+      return {
+        wasCorrect: isCorrect,
+        song: session.currentSong,
+        gameEnded: false,
+        nextPlayerId: newTurnOrder![nextTurnIndex],
       };
     }),
 });

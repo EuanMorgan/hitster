@@ -482,3 +482,47 @@ Players cannot join during active game (PRD item #18) - already implemented in v
 ### Next priority:
 Song plays via Spotify Web Playback SDK on host device (PRD gameplay item) OR
 Active player can position song in their timeline (PRD gameplay item)
+
+---
+
+## 2026-01-08: Active Player Timeline Positioning Complete
+
+### What was done:
+- Added currentSong, turnStartedAt, roundNumber fields to game_sessions schema
+- Created TimelineDropZone component with @dnd-kit for drag-and-drop song placement
+- Implemented confirmTurn tRPC mutation with full turn flow:
+  - Validates placement against timeline years
+  - Records turn in turns table
+  - Adds song to timeline if correct
+  - Checks win condition
+  - Advances to next player/round
+  - Reshuffles turn order on new rounds
+- Added turn timer with visual countdown and low-time warning
+- Added turn result overlay showing correct/incorrect with song reveal
+- Updated game page with active player view (drag-drop) vs waiting view
+- Updated mock fixtures and db.ts for new schema fields
+
+### Files created/modified:
+- src/db/schema.ts (added currentSong, turnStartedAt, roundNumber to gameSessions)
+- src/components/timeline-drop-zone.tsx (new - drag-and-drop timeline component)
+- src/trpc/routers/game.ts (added confirmTurn mutation, updated startGame to draw first song)
+- src/app/game/[pin]/page.tsx (complete rewrite with active player turn flow)
+- src/mocks/fixtures.ts (updated with new schema fields)
+- src/mocks/db.ts (updated seedGameSession with new fields)
+- plans/prd.json (marked positioning, confirm turn, correct/incorrect placement as passing)
+
+### Dependencies added:
+- @dnd-kit/core, @dnd-kit/sortable, @dnd-kit/utilities
+
+### Notes:
+- Active player sees drag-and-drop interface with timer
+- Non-active players see waiting view with current player info
+- Turn result shows for 3 seconds with song name/artist/year revealed
+- Correct placements add song to timeline, incorrect ones discard
+- Round number increments and turn order reshuffles when all players have played
+- Win condition checked after each correct placement (reaches songsToWin)
+
+### Next priority:
+- Steal phase implementation (PRD stealing items)
+- OR Auto-submit turn when timer expires (PRD item 22)
+- OR Song name/artist guessing (PRD item 21)

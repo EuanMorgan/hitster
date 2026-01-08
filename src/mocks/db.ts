@@ -73,6 +73,9 @@ export function seedGameSession(
     currentTurnIndex: sessionData.currentTurnIndex ?? 0,
     turnOrder: sessionData.turnOrder ?? null,
     usedSongIds: sessionData.usedSongIds ?? [],
+    currentSong: sessionData.currentSong ?? null,
+    turnStartedAt: sessionData.turnStartedAt ?? null,
+    roundNumber: sessionData.roundNumber ?? 1,
     createdAt: sessionData.createdAt ?? new Date(),
     updatedAt: sessionData.updatedAt ?? new Date(),
   };
