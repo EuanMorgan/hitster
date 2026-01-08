@@ -17,11 +17,11 @@ import { CSS } from "@dnd-kit/utilities";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { CurrentTurnSong, TimelineSong } from "@/db/schema";
+import type { SafeCurrentTurnSong, TimelineSong } from "@/db/schema";
 
 interface TimelineDropZoneProps {
   timeline: TimelineSong[];
-  currentSong: CurrentTurnSong;
+  currentSong: SafeCurrentTurnSong;
   onConfirm: (
     placementIndex: number,
     guessedName?: string,
@@ -72,7 +72,7 @@ function DraggableSongCard({
   song,
   isPlaced,
 }: {
-  song: CurrentTurnSong;
+  song: SafeCurrentTurnSong;
   isPlaced: boolean;
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
@@ -107,7 +107,7 @@ function DraggableSongCard({
   );
 }
 
-function PlacedSongCard({ song }: { song: CurrentTurnSong }) {
+function PlacedSongCard({ song }: { song: SafeCurrentTurnSong }) {
   return (
     <div className="bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-lg p-3 shadow-lg min-w-[70px] sm:min-w-[80px] min-h-[60px] animate-pulse">
       <div className="text-center">

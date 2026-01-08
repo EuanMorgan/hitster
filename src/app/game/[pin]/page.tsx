@@ -15,7 +15,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import type { TimelineSong } from "@/db/schema";
+import type { SafeCurrentTurnSong, TimelineSong } from "@/db/schema";
 import { useSession } from "@/lib/auth-client";
 import { useTRPC } from "@/trpc/client";
 
@@ -205,7 +205,7 @@ function ActivePlayerTimeline({
     tokens: number;
     timeline: TimelineSong[] | null;
   };
-  currentSong: { name: string; artist: string; year: number } | null;
+  currentSong: SafeCurrentTurnSong | null;
   turnStartedAt: string | null;
   turnDuration: number;
 }) {

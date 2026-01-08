@@ -124,6 +124,12 @@ export type CurrentTurnSong = {
   uri?: string; // Spotify track URI for playback
 };
 
+// Safe version of CurrentTurnSong that hides metadata during active gameplay
+export type SafeCurrentTurnSong = {
+  songId: string;
+  uri?: string;
+};
+
 export type ActiveStealAttempt = {
   playerId: string;
   playerName: string;

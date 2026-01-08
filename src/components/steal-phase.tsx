@@ -19,12 +19,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type {
   ActiveStealAttempt,
-  CurrentTurnSong,
+  SafeCurrentTurnSong,
   TimelineSong,
 } from "@/db/schema";
 
 interface StealPhaseProps {
-  currentSong: CurrentTurnSong;
+  currentSong: SafeCurrentTurnSong;
   myTimeline: TimelineSong[];
   activePlayerName: string;
   activePlayerPlacement: number;

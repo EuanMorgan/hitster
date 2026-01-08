@@ -779,7 +779,7 @@
       "For playlists >100 tracks, fetch all pages until complete",
       "Cache playlist data for session"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "spotify",
@@ -790,7 +790,7 @@
       "Only reveal after placement confirmed",
       "Inspect DOM during playback, confirm no track name/artist in any element or data attribute"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "deployment",

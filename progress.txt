@@ -590,3 +590,28 @@ Files changed:
 - src/app/layout.tsx (added Toaster component)
 - src/components/spotify-player.tsx (added toast.error + console.error calls)
 - plans/prd.json (marked spotify #40 as passes: true)
+
+## 2026-01-08: Verified playlist pagination + hid song metadata
+
+PRD items: spotify #41 (Fetch playlist tracks), spotify #42 (Hide song metadata)
+
+#41 was already implemented - verified:
+- fetchPlaylistTracks has pagination loop via data.next
+- Tracks cached in session.playlistSongs
+
+#42 security fix - hid metadata from API during gameplay:
+- getSession now returns SafeCurrentTurnSong (only songId + uri) during state="playing"
+- Full metadata only revealed after game ends
+- Created SafeCurrentTurnSong type in schema
+- Updated TimelineDropZone, StealPhase, ActivePlayerTimeline to use safe type
+- UI already showed "Mystery Song" - now API also protects metadata
+
+Key decision: Hide year too (not just name/artist) since knowing year = knowing answer
+
+Files changed:
+- src/trpc/routers/game.ts (filter currentSong in getSession)
+- src/db/schema.ts (added SafeCurrentTurnSong type)
+- src/components/timeline-drop-zone.tsx (use SafeCurrentTurnSong)
+- src/components/steal-phase.tsx (use SafeCurrentTurnSong)
+- src/app/game/[pin]/page.tsx (use SafeCurrentTurnSong)
+- plans/prd.json (marked spotify #41, #42 as passes: true)

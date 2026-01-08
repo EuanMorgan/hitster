@@ -576,7 +576,16 @@ export const gameRouter = createTRPCRouter({
           session.turnOrder && session.currentTurnIndex !== null
             ? session.turnOrder[session.currentTurnIndex]
             : null,
-        currentSong: session.currentSong,
+        // Hide song metadata during active gameplay to prevent cheating
+        // Only include uri (for playback) and songId - reveal full info after game ends
+        currentSong: session.currentSong
+          ? session.state === "playing"
+            ? {
+                songId: session.currentSong.songId,
+                uri: session.currentSong.uri,
+              }
+            : session.currentSong
+          : null,
         turnStartedAt: session.turnStartedAt?.toISOString() ?? null,
         roundNumber: session.roundNumber ?? 1,
         isStealPhase: session.isStealPhase ?? false,
