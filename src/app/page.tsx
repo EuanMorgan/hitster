@@ -14,6 +14,8 @@ import {
 import { UserMenu } from "@/components/user-menu";
 import { HydrateClient, trpc } from "@/trpc/server";
 
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   void trpc.hello.prefetch({ name: "Hitster Player" });
 

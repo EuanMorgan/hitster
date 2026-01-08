@@ -800,7 +800,7 @@
       "Build outputs optimized",
       "Edge functions where appropriate"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "deployment",

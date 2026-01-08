@@ -787,3 +787,29 @@ Files changed:
 - src/app/dashboard/game/[id]/page.tsx (new - game detail page)
 - src/app/dashboard/page.tsx (made table rows clickable)
 - plans/prd.json (marked statistics #36 as passes: true)
+
+## 2026-01-08: Implemented Vercel-ready configuration
+
+PRD items: deployment #43 (Vercel-ready configuration)
+
+Changes:
+- Created vercel.json: framework=nextjs, regions=iad1, maxDuration=30s for API routes
+- Updated next.config.ts: poweredByHeader=false, compress=true, Spotify CDN image domain
+- Enhanced .env.example: Vercel-specific documentation for each env var
+- Added dynamic="force-dynamic" to home page (uses tRPC server-side)
+- Build now completes successfully with proper static/dynamic page splitting
+
+Edge functions note: Not used because postgres (node-postgres) requires Node.js runtime.
+tRPC context imports db directly, so all API routes need Node.js. This is intentional.
+
+All 3 PRD steps verified:
+1. ✅ Environment variables configured - enhanced .env.example with Vercel docs
+2. ✅ Build outputs optimized - poweredByHeader/compress config, build succeeds
+3. ✅ Edge functions where appropriate - N/A (DB requires Node.js runtime)
+
+Files changed:
+- vercel.json (new)
+- next.config.ts (added optimizations)
+- .env.example (enhanced documentation)
+- src/app/page.tsx (added dynamic="force-dynamic")
+- plans/prd.json (marked deployment #43 as passes: true)
