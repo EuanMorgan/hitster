@@ -509,7 +509,7 @@
       "Game stats reset",
       "Return to lobby briefly then start"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "playlist",

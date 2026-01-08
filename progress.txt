@@ -303,3 +303,25 @@ Files changed:
 - src/mocks/db.ts (add gamesPlayed to seedGameSession)
 - src/mocks/fixtures.ts (add gamesPlayed to all session fixtures)
 - plans/prd.json (marked #23, #25-29 as passes: true)
+
+## 2026-01-08: Fixed rematch feature - allow new players to join
+
+PRD items: winning #24 (Host can start rematch)
+
+Bug fix: validatePin and joinGame blocked joining during "finished" state. PRD says "New players can join during results screen" to prepare for rematch.
+
+Changes:
+- validatePin: removed check blocking "finished" state, now only blocks "playing"
+- joinGame: changed from requiring state === "lobby" to blocking only "playing"
+
+All 6 PRD steps verified:
+1. ✅ Rematch button visible only to host - line 748
+2. ✅ New players can join during results screen - FIXED
+3. ✅ Click rematch to start new game - handleRematch → startRematchMutation
+4. ✅ Party stats preserved - wins field NOT reset in startRematch
+5. ✅ Game stats reset - tokens/timeline reset to 2/[]
+6. ✅ Return to lobby briefly then start - onSuccess redirects to /lobby/{pin}
+
+Files changed:
+- src/trpc/routers/game.ts (validatePin + joinGame state checks)
+- plans/prd.json (marked #24 as passes: true)

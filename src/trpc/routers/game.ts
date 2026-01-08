@@ -358,9 +358,7 @@ export const gameRouter = createTRPCRouter({
         return { valid: false, reason: "Game in progress" } as const;
       }
 
-      if (session.state === "finished") {
-        return { valid: false, reason: "Game has ended" } as const;
-      }
+      // Allow joining during "finished" state - new players can join before rematch
 
       const connectedPlayers = session.players.filter(
         (p: Player) => p.isConnected,
@@ -427,11 +425,11 @@ export const gameRouter = createTRPCRouter({
         throw new TRPCError({ code: "NOT_FOUND", message: "Game not found" });
       }
 
-      if (session.state !== "lobby") {
+      // Allow joining during "lobby" or "finished" (for rematch)
+      if (session.state === "playing") {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message:
-            session.state === "playing" ? "Game in progress" : "Game has ended",
+          message: "Game in progress",
         });
       }
 
