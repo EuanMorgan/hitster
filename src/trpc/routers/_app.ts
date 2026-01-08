@@ -1,5 +1,5 @@
-import { createTRPCRouter, baseProcedure } from "../init";
 import { z } from "zod/v4";
+import { baseProcedure, createTRPCRouter } from "../init";
 import { gameRouter } from "./game";
 
 export const appRouter = createTRPCRouter({

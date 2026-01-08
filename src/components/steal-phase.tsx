@@ -1,22 +1,27 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
 import {
-  DndContext,
-  DragOverlay,
   closestCenter,
+  DndContext,
+  type DragEndEvent,
+  DragOverlay,
+  type DragStartEvent,
   PointerSensor,
   TouchSensor,
+  useDraggable,
+  useDroppable,
   useSensor,
   useSensors,
-  type DragStartEvent,
-  type DragEndEvent,
 } from "@dnd-kit/core";
-import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
-import type { TimelineSong, CurrentTurnSong, ActiveStealAttempt } from "@/db/schema";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type {
+  ActiveStealAttempt,
+  CurrentTurnSong,
+  TimelineSong,
+} from "@/db/schema";
 
 interface StealPhaseProps {
   currentSong: CurrentTurnSong;
@@ -213,7 +218,7 @@ export function StealPhase({
     }),
     useSensor(TouchSensor, {
       activationConstraint: { delay: 100, tolerance: 5 },
-    })
+    }),
   );
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
@@ -224,10 +229,10 @@ export function StealPhase({
     (event: DragEndEvent) => {
       setActiveId(null);
       const { over } = event;
-      if (over && over.id.toString().startsWith("steal-drop-")) {
+      if (over?.id.toString().startsWith("steal-drop-")) {
         const index = Number.parseInt(
           over.id.toString().replace("steal-drop-", ""),
-          10
+          10,
         );
         // Check if position is already taken
         if (!stealAttempts.some((a) => a.placementIndex === index)) {
@@ -235,7 +240,7 @@ export function StealPhase({
         }
       }
     },
-    [stealAttempts]
+    [stealAttempts],
   );
 
   const handleConfirmSteal = useCallback(() => {

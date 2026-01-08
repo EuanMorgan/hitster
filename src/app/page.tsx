@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { CreateGameButton } from "@/components/create-game-button";
+import { Greeting } from "@/components/greeting";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -8,10 +10,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Greeting } from "@/components/greeting";
 import { UserMenu } from "@/components/user-menu";
-import { CreateGameButton } from "@/components/create-game-button";
-import { trpc, HydrateClient } from "@/trpc/server";
+import { HydrateClient, trpc } from "@/trpc/server";
 
 export default async function Home() {
   void trpc.hello.prefetch({ name: "Hitster Player" });

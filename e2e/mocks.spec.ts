@@ -1,10 +1,10 @@
 import { expect, test } from "@playwright/test";
+import { mockPlaylistTracks, mockSpotifyUser } from "../src/mocks/handlers";
 import {
-  mockSpotifyApi,
   mockAuthenticatedUser,
+  mockSpotifyApi,
   mockUnauthenticated,
 } from "./helpers/mock-api";
-import { mockSpotifyUser, mockPlaylistTracks } from "../src/mocks/handlers";
 
 test.describe("Mock API Integration", () => {
   test("can mock Spotify API endpoints via page routes", async ({ page }) => {
@@ -16,7 +16,7 @@ test.describe("Mock API Integration", () => {
     // Make a request through page.evaluate to use the page's fetch
     const data = await page.evaluate(async () => {
       const response = await fetch(
-        "https://api.spotify.com/v1/playlists/test123/tracks"
+        "https://api.spotify.com/v1/playlists/test123/tracks",
       );
       return response.json();
     });

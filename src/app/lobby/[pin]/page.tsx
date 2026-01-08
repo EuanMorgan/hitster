@@ -1,8 +1,11 @@
 "use client";
 
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect } from "react";
 import { QRCodeSVG } from "qrcode.react";
+import { useEffect } from "react";
+import { GameSettings } from "@/components/game-settings";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -10,12 +13,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useTRPC } from "@/trpc/client";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { useSession } from "@/lib/auth-client";
 import { env } from "@/env";
-import { GameSettings } from "@/components/game-settings";
+import { useSession } from "@/lib/auth-client";
+import { useTRPC } from "@/trpc/client";
 
 export default function LobbyPage() {
   const params = useParams();

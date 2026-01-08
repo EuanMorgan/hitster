@@ -1,27 +1,32 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
 import {
-  DndContext,
-  DragOverlay,
   closestCenter,
+  DndContext,
+  type DragEndEvent,
+  DragOverlay,
+  type DragStartEvent,
   PointerSensor,
   TouchSensor,
+  useDraggable,
+  useDroppable,
   useSensor,
   useSensors,
-  type DragStartEvent,
-  type DragEndEvent,
 } from "@dnd-kit/core";
-import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
-import type { TimelineSong, CurrentTurnSong } from "@/db/schema";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import type { CurrentTurnSong, TimelineSong } from "@/db/schema";
 
 interface TimelineDropZoneProps {
   timeline: TimelineSong[];
   currentSong: CurrentTurnSong;
-  onConfirm: (placementIndex: number, guessedName?: string, guessedArtist?: string) => void;
+  onConfirm: (
+    placementIndex: number,
+    guessedName?: string,
+    guessedArtist?: string,
+  ) => void;
   onTimeUp: () => void;
   onSkip?: () => void;
   onGetFreeSong?: () => void;
@@ -166,7 +171,7 @@ function TurnTimer({
   // Reset hasTriggered when turn changes
   useEffect(() => {
     setHasTriggered(false);
-  }, [turnStartedAt]);
+  }, []);
 
   const percentage = (timeLeft / turnDuration) * 100;
   const isLow = timeLeft <= 10;
@@ -222,9 +227,20 @@ export function TimelineDropZone({
     if (isSubmitting) return;
     // Auto-submit with current placement or default to position 0
     const finalPlacement = placementIndex ?? 0;
-    onConfirm(finalPlacement, guessedName || undefined, guessedArtist || undefined);
+    onConfirm(
+      finalPlacement,
+      guessedName || undefined,
+      guessedArtist || undefined,
+    );
     onTimeUp();
-  }, [isSubmitting, placementIndex, onConfirm, onTimeUp, guessedName, guessedArtist]);
+  }, [
+    isSubmitting,
+    placementIndex,
+    onConfirm,
+    onTimeUp,
+    guessedName,
+    guessedArtist,
+  ]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -232,7 +248,7 @@ export function TimelineDropZone({
     }),
     useSensor(TouchSensor, {
       activationConstraint: { delay: 100, tolerance: 5 },
-    })
+    }),
   );
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
@@ -242,15 +258,22 @@ export function TimelineDropZone({
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     setActiveId(null);
     const { over } = event;
-    if (over && over.id.toString().startsWith("drop-")) {
-      const index = Number.parseInt(over.id.toString().replace("drop-", ""), 10);
+    if (over?.id.toString().startsWith("drop-")) {
+      const index = Number.parseInt(
+        over.id.toString().replace("drop-", ""),
+        10,
+      );
       setPlacementIndex(index);
     }
   }, []);
 
   const handleConfirm = useCallback(() => {
     if (placementIndex !== null) {
-      onConfirm(placementIndex, guessedName || undefined, guessedArtist || undefined);
+      onConfirm(
+        placementIndex,
+        guessedName || undefined,
+        guessedArtist || undefined,
+      );
     }
   }, [placementIndex, onConfirm, guessedName, guessedArtist]);
 
@@ -266,7 +289,11 @@ export function TimelineDropZone({
       onDragEnd={handleDragEnd}
     >
       <div className="space-y-6">
-        <TurnTimer turnDuration={turnDuration} turnStartedAt={turnStartedAt} onTimeUp={handleTimeUp} />
+        <TurnTimer
+          turnDuration={turnDuration}
+          turnStartedAt={turnStartedAt}
+          onTimeUp={handleTimeUp}
+        />
 
         <div className="flex justify-center">
           <DraggableSongCard
@@ -315,7 +342,12 @@ export function TimelineDropZone({
                 <Button
                   variant="outline"
                   onClick={onSkip}
-                  disabled={tokens < 1 || isSkipping || isSubmitting || isGettingFreeSong}
+                  disabled={
+                    tokens < 1 ||
+                    isSkipping ||
+                    isSubmitting ||
+                    isGettingFreeSong
+                  }
                   className="gap-2"
                 >
                   {isSkipping ? (
@@ -333,7 +365,12 @@ export function TimelineDropZone({
                 <Button
                   variant="outline"
                   onClick={onGetFreeSong}
-                  disabled={tokens < 3 || isGettingFreeSong || isSubmitting || isSkipping}
+                  disabled={
+                    tokens < 3 ||
+                    isGettingFreeSong ||
+                    isSubmitting ||
+                    isSkipping
+                  }
                   className="gap-2"
                 >
                   {isGettingFreeSong ? (
@@ -383,7 +420,11 @@ export function TimelineDropZone({
               )}
             </div>
             <div className="flex justify-center gap-4">
-              <Button variant="outline" onClick={handleReset} disabled={isSubmitting}>
+              <Button
+                variant="outline"
+                onClick={handleReset}
+                disabled={isSubmitting}
+              >
                 Reset
               </Button>
               <Button onClick={handleConfirm} disabled={isSubmitting}>

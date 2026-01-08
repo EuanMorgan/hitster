@@ -1,4 +1,4 @@
-import { http, HttpResponse } from "msw";
+import { HttpResponse, http } from "msw";
 
 const SPOTIFY_API_BASE = "https://api.spotify.com/v1";
 const SPOTIFY_ACCOUNTS_BASE = "https://accounts.spotify.com";
@@ -113,8 +113,8 @@ export const spotifyHandlers = [
     `${SPOTIFY_API_BASE}/playlists/:playlistId/tracks`,
     ({ request }) => {
       const url = new URL(request.url);
-      const offset = Number.parseInt(url.searchParams.get("offset") ?? "0");
-      const limit = Number.parseInt(url.searchParams.get("limit") ?? "100");
+      const offset = Number.parseInt(url.searchParams.get("offset") ?? "0", 10);
+      const limit = Number.parseInt(url.searchParams.get("limit") ?? "100", 10);
 
       const items = mockPlaylistTracks.slice(offset, offset + limit);
       return HttpResponse.json({
@@ -128,7 +128,7 @@ export const spotifyHandlers = [
             : null,
         previous: null,
       });
-    }
+    },
   ),
 
   // Transfer playback
@@ -168,7 +168,8 @@ export const spotifyHandlers = [
       access_token: "mock-access-token-refreshed",
       token_type: "Bearer",
       expires_in: 3600,
-      scope: "streaming user-read-email user-read-private playlist-read-private",
+      scope:
+        "streaming user-read-email user-read-private playlist-read-private",
     });
   }),
 ];

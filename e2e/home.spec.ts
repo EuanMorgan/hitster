@@ -1,29 +1,29 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("Home Page", () => {
-	test("displays the main card with title and description", async ({
-		page,
-	}) => {
-		await page.goto("/");
+  test("displays the main card with title and description", async ({
+    page,
+  }) => {
+    await page.goto("/");
 
-		await expect(page.locator('[data-slot="card-title"]')).toContainText("Hitster");
-		await expect(
-			page.getByText("Hello, Hitster Player!"),
-		).toBeVisible();
-	});
+    await expect(page.locator('[data-slot="card-title"]')).toContainText(
+      "Hitster",
+    );
+    await expect(page.getByText("Hello, Hitster Player!")).toBeVisible();
+  });
 
-	test("displays game PIN input", async ({ page }) => {
-		await page.goto("/");
+  test("displays game PIN input", async ({ page }) => {
+    await page.goto("/");
 
-		await expect(page.getByPlaceholder("Enter game PIN")).toBeVisible();
-	});
+    await expect(page.getByPlaceholder("Enter game PIN")).toBeVisible();
+  });
 
-	test("displays Join Game and Create Game buttons", async ({ page }) => {
-		await page.goto("/");
+  test("displays Join Game and Create Game buttons", async ({ page }) => {
+    await page.goto("/");
 
-		await expect(page.getByRole("button", { name: "Join Game" })).toBeVisible();
-		await expect(
-			page.getByRole("button", { name: "Create Game" }),
-		).toBeVisible();
-	});
+    await expect(page.getByRole("button", { name: "Join Game" })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Create Game" }),
+    ).toBeVisible();
+  });
 });

@@ -1,7 +1,7 @@
 "use client";
 
-import { useSession, signOut } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
+import { signOut, useSession } from "@/lib/auth-client";
 import { SpotifyLoginButton } from "./spotify-login-button";
 
 export function UserMenu() {

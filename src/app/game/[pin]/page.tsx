@@ -1,7 +1,11 @@
 "use client";
 
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { StealPhase } from "@/components/steal-phase";
+import { TimelineDropZone } from "@/components/timeline-drop-zone";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -9,13 +13,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useTRPC } from "@/trpc/client";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { TimelineSong } from "@/db/schema";
 import { useSession } from "@/lib/auth-client";
-import { TimelineDropZone } from "@/components/timeline-drop-zone";
-import { StealPhase } from "@/components/steal-phase";
-import { Button } from "@/components/ui/button";
+import { useTRPC } from "@/trpc/client";
 
 function TokenDisplay({ count }: { count: number }) {
   return (
@@ -135,7 +135,7 @@ function ActivePlayerTimeline({
   turnDuration: number;
 }) {
   const sortedTimeline = [...(player.timeline ?? [])].sort(
-    (a, b) => a.year - b.year
+    (a, b) => a.year - b.year,
   );
 
   // Calculate time remaining
@@ -149,7 +149,7 @@ function ActivePlayerTimeline({
 
     const updateTimer = () => {
       const elapsed = Math.floor(
-        (Date.now() - new Date(turnStartedAt).getTime()) / 1000
+        (Date.now() - new Date(turnStartedAt).getTime()) / 1000,
       );
       const remaining = Math.max(0, turnDuration - elapsed);
       setTimeRemaining(remaining);
@@ -167,14 +167,14 @@ function ActivePlayerTimeline({
           <div className="flex items-center gap-3">
             <span className="text-5xl">{player.avatar}</span>
             <div>
-              <CardTitle className="text-2xl">{player.name}&apos;s Turn</CardTitle>
+              <CardTitle className="text-2xl">
+                {player.name}&apos;s Turn
+              </CardTitle>
               <CardDescription className="flex items-center gap-4">
                 <span>
                   <TokenDisplay count={player.tokens} />
                 </span>
-                <span>
-                  {player.timeline?.length ?? 0} songs in timeline
-                </span>
+                <span>{player.timeline?.length ?? 0} songs in timeline</span>
               </CardDescription>
             </div>
           </div>
@@ -286,8 +286,18 @@ function TurnResultOverlay({
               </div>
               <div className="flex justify-center gap-2 text-4xl mb-4">
                 <span className="animate-pulse">🎉</span>
-                <span className="animate-pulse" style={{ animationDelay: "0.2s" }}>🎊</span>
-                <span className="animate-pulse" style={{ animationDelay: "0.4s" }}>✨</span>
+                <span
+                  className="animate-pulse"
+                  style={{ animationDelay: "0.2s" }}
+                >
+                  🎊
+                </span>
+                <span
+                  className="animate-pulse"
+                  style={{ animationDelay: "0.4s" }}
+                >
+                  ✨
+                </span>
               </div>
               <div className="text-sm text-muted-foreground mb-4">
                 Final song: {result.song.name} ({result.song.year})
@@ -318,12 +328,17 @@ function TurnResultOverlay({
               </div>
               {/* Show guess result if a guess was made */}
               {(result.guessedName || result.guessedArtist) && (
-                <div className={`mt-4 p-3 rounded-lg ${result.guessWasCorrect ? "bg-green-100 dark:bg-green-900/30" : "bg-red-100 dark:bg-red-900/30"}`}>
+                <div
+                  className={`mt-4 p-3 rounded-lg ${result.guessWasCorrect ? "bg-green-100 dark:bg-green-900/30" : "bg-red-100 dark:bg-red-900/30"}`}
+                >
                   <div className="text-sm font-medium mb-1">
-                    {result.guessWasCorrect ? "🎯 Correct guess! +1 token" : "❌ Wrong guess"}
+                    {result.guessWasCorrect
+                      ? "🎯 Correct guess! +1 token"
+                      : "❌ Wrong guess"}
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    Your guess: {result.guessedName || "—"} by {result.guessedArtist || "—"}
+                    Your guess: {result.guessedName || "—"} by{" "}
+                    {result.guessedArtist || "—"}
                   </div>
                 </div>
               )}
@@ -355,7 +370,8 @@ export default function GamePage() {
     guessedName?: string | null;
     guessedArtist?: string | null;
   } | null>(null);
-  const [showRoundShuffleAnimation, setShowRoundShuffleAnimation] = useState(false);
+  const [showRoundShuffleAnimation, setShowRoundShuffleAnimation] =
+    useState(false);
 
   const trpc = useTRPC();
 
@@ -368,14 +384,18 @@ export default function GamePage() {
     ...trpc.game.confirmTurn.mutationOptions(),
     onSuccess: () => {
       // Steal phase started - just invalidate query
-      queryClient.invalidateQueries({ queryKey: trpc.game.getSession.queryKey({ pin }) });
+      queryClient.invalidateQueries({
+        queryKey: trpc.game.getSession.queryKey({ pin }),
+      });
     },
   });
 
   const submitStealMutation = useMutation({
     ...trpc.game.submitSteal.mutationOptions(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: trpc.game.getSession.queryKey({ pin }) });
+      queryClient.invalidateQueries({
+        queryKey: trpc.game.getSession.queryKey({ pin }),
+      });
     },
   });
 
@@ -390,26 +410,33 @@ export default function GamePage() {
         gameEnded: data.gameEnded,
         winnerId: "winnerId" in data ? data.winnerId : undefined,
         isNewRound: "isNewRound" in data ? data.isNewRound : undefined,
-        newRoundNumber: "newRoundNumber" in data ? data.newRoundNumber : undefined,
+        newRoundNumber:
+          "newRoundNumber" in data ? data.newRoundNumber : undefined,
         guessWasCorrect: data.guessWasCorrect,
         guessedName: data.guessedName,
         guessedArtist: data.guessedArtist,
       });
-      queryClient.invalidateQueries({ queryKey: trpc.game.getSession.queryKey({ pin }) });
+      queryClient.invalidateQueries({
+        queryKey: trpc.game.getSession.queryKey({ pin }),
+      });
     },
   });
 
   const skipSongMutation = useMutation({
     ...trpc.game.skipSong.mutationOptions(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: trpc.game.getSession.queryKey({ pin }) });
+      queryClient.invalidateQueries({
+        queryKey: trpc.game.getSession.queryKey({ pin }),
+      });
     },
   });
 
   const getFreeSongMutation = useMutation({
     ...trpc.game.getFreeSong.mutationOptions(),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: trpc.game.getSession.queryKey({ pin }) });
+      queryClient.invalidateQueries({
+        queryKey: trpc.game.getSession.queryKey({ pin }),
+      });
       if (data.gameEnded && "winnerId" in data) {
         setTurnResult({
           activePlayerCorrect: true,
@@ -469,7 +496,7 @@ export default function GamePage() {
         guessedArtist,
       });
     },
-    [confirmTurnMutation, pin, currentPlayerId]
+    [confirmTurnMutation, pin, currentPlayerId],
   );
 
   const handleSubmitSteal = useCallback(
@@ -481,7 +508,7 @@ export default function GamePage() {
         placementIndex,
       });
     },
-    [submitStealMutation, pin, currentPlayerId]
+    [submitStealMutation, pin, currentPlayerId],
   );
 
   const handleResolveStealPhase = useCallback(() => {
@@ -548,14 +575,17 @@ export default function GamePage() {
 
   if (session?.state === "finished") {
     const sortedPlayers = [...session.players].sort(
-      (a, b) => (b.timeline?.length ?? 0) - (a.timeline?.length ?? 0)
+      (a, b) => (b.timeline?.length ?? 0) - (a.timeline?.length ?? 0),
     );
     const winner = sortedPlayers[0];
 
     // Party stats
-    const totalGamesPlayed = Math.max(...session.players.map((p) => p.wins ?? 0), 1);
+    const totalGamesPlayed = Math.max(
+      ...session.players.map((p) => p.wins ?? 0),
+      1,
+    );
     const sortedByWins = [...session.players].sort(
-      (a, b) => (b.wins ?? 0) - (a.wins ?? 0)
+      (a, b) => (b.wins ?? 0) - (a.wins ?? 0),
     );
     const partyMVP = sortedByWins[0];
     const hasPartyStats = session.players.some((p) => (p.wins ?? 0) > 0);
@@ -571,8 +601,18 @@ export default function GamePage() {
             {/* Winner celebration header */}
             <div className="flex justify-center gap-2 text-3xl mb-2">
               <span className="animate-bounce">🎉</span>
-              <span className="animate-bounce" style={{ animationDelay: "0.1s" }}>🏆</span>
-              <span className="animate-bounce" style={{ animationDelay: "0.2s" }}>🎉</span>
+              <span
+                className="animate-bounce"
+                style={{ animationDelay: "0.1s" }}
+              >
+                🏆
+              </span>
+              <span
+                className="animate-bounce"
+                style={{ animationDelay: "0.2s" }}
+              >
+                🎉
+              </span>
             </div>
             <CardTitle className="text-2xl">Game Over!</CardTitle>
             {winner && (
@@ -589,7 +629,9 @@ export default function GamePage() {
           </CardHeader>
           <CardContent className="space-y-6">
             <div>
-              <h3 className="font-semibold mb-3 text-center">Final Standings</h3>
+              <h3 className="font-semibold mb-3 text-center">
+                Final Standings
+              </h3>
               <div className="space-y-3">
                 {sortedPlayers.map((player, idx) => (
                   <div
@@ -605,7 +647,13 @@ export default function GamePage() {
                     }`}
                   >
                     <span className="text-2xl min-w-[32px] text-center">
-                      {idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `#${idx + 1}`}
+                      {idx === 0
+                        ? "🥇"
+                        : idx === 1
+                          ? "🥈"
+                          : idx === 2
+                            ? "🥉"
+                            : `#${idx + 1}`}
                     </span>
                     <span className="text-2xl">{player.avatar}</span>
                     <div className="flex-1">
@@ -617,7 +665,9 @@ export default function GamePage() {
                       )}
                     </div>
                     <div className="text-right">
-                      <div className="font-bold">{player.timeline?.length ?? 0}</div>
+                      <div className="font-bold">
+                        {player.timeline?.length ?? 0}
+                      </div>
                       <div className="text-xs text-muted-foreground">songs</div>
                     </div>
                   </div>
@@ -637,7 +687,9 @@ export default function GamePage() {
                 {/* Party MVP */}
                 {partyMVP && (partyMVP.wins ?? 0) > 0 && (
                   <div className="mb-3 p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg text-center border border-purple-300">
-                    <div className="text-xs text-muted-foreground mb-1">Party MVP</div>
+                    <div className="text-xs text-muted-foreground mb-1">
+                      Party MVP
+                    </div>
                     <div className="flex items-center justify-center gap-2">
                       <span className="text-2xl">{partyMVP.avatar}</span>
                       <span className="font-bold">{partyMVP.name}</span>
@@ -678,7 +730,9 @@ export default function GamePage() {
                   className="w-full"
                   size="lg"
                 >
-                  {startRematchMutation.isPending ? "Starting..." : "🔄 Play Again"}
+                  {startRematchMutation.isPending
+                    ? "Starting..."
+                    : "🔄 Play Again"}
                 </Button>
                 <p className="mt-2 text-center text-xs text-muted-foreground">
                   New players can join via PIN: {session.pin}
@@ -699,12 +753,12 @@ export default function GamePage() {
 
   const isMyTurn = currentPlayerId === session?.currentPlayerId;
   const currentPlayer = session?.players.find(
-    (p) => p.id === session.currentPlayerId
+    (p) => p.id === session.currentPlayerId,
   );
   const myPlayer = session?.players.find((p) => p.id === currentPlayerId);
   const isStealPhase = session?.isStealPhase ?? false;
   const hasAlreadyStolen = (session?.stealAttempts ?? []).some(
-    (a) => a.playerId === currentPlayerId
+    (a) => a.playerId === currentPlayerId,
   );
 
   return (
@@ -713,7 +767,11 @@ export default function GamePage() {
         <TurnResultOverlay
           result={turnResult}
           onClose={handleCloseResult}
-          winnerName={turnResult.winnerId ? session?.players.find(p => p.id === turnResult.winnerId)?.name : undefined}
+          winnerName={
+            turnResult.winnerId
+              ? session?.players.find((p) => p.id === turnResult.winnerId)?.name
+              : undefined
+          }
         />
       )}
 
@@ -782,8 +840,10 @@ export default function GamePage() {
           !isMyTurn && (
             <ActivePlayerTimeline
               player={currentPlayer}
-              currentSong={isStealPhase ? null : session?.currentSong ?? null}
-              turnStartedAt={isStealPhase ? null : session?.turnStartedAt ?? null}
+              currentSong={isStealPhase ? null : (session?.currentSong ?? null)}
+              turnStartedAt={
+                isStealPhase ? null : (session?.turnStartedAt ?? null)
+              }
               turnDuration={session?.turnDuration ?? 45}
             />
           )}
@@ -846,39 +906,49 @@ export default function GamePage() {
           )}
 
         {/* Waiting View - Not My Turn (only when NOT in steal phase) */}
-        {!showShuffleAnimation && !showRoundShuffleAnimation && !isStealPhase && !isMyTurn && currentPlayer && (
-          <Card className="bg-muted/50">
-            <CardContent className="py-6">
-              <div className="flex items-center justify-center gap-3">
-                <span className="text-3xl">{currentPlayer.avatar}</span>
-                <div className="text-center">
-                  <div className="text-sm text-muted-foreground">
-                    Current Turn
+        {!showShuffleAnimation &&
+          !showRoundShuffleAnimation &&
+          !isStealPhase &&
+          !isMyTurn &&
+          currentPlayer && (
+            <Card className="bg-muted/50">
+              <CardContent className="py-6">
+                <div className="flex items-center justify-center gap-3">
+                  <span className="text-3xl">{currentPlayer.avatar}</span>
+                  <div className="text-center">
+                    <div className="text-sm text-muted-foreground">
+                      Current Turn
+                    </div>
+                    <div className="text-xl font-bold">
+                      {currentPlayer.name}
+                    </div>
                   </div>
-                  <div className="text-xl font-bold">{currentPlayer.name}</div>
                 </div>
-              </div>
-              <div className="text-center mt-4 text-sm text-muted-foreground">
-                Waiting for {currentPlayer.name} to place their song...
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                <div className="text-center mt-4 text-sm text-muted-foreground">
+                  Waiting for {currentPlayer.name} to place their song...
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
         {/* My Timeline (when not my turn and not in steal phase) */}
-        {!showShuffleAnimation && !showRoundShuffleAnimation && !isStealPhase && !isMyTurn && myPlayer && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Your Timeline</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <TimelineDisplay timeline={myPlayer.timeline ?? []} />
-              <div className="mt-2 text-sm text-muted-foreground">
-                {myPlayer.timeline?.length ?? 0} / {session?.songsToWin} songs
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        {!showShuffleAnimation &&
+          !showRoundShuffleAnimation &&
+          !isStealPhase &&
+          !isMyTurn &&
+          myPlayer && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Your Timeline</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <TimelineDisplay timeline={myPlayer.timeline ?? []} />
+                <div className="mt-2 text-sm text-muted-foreground">
+                  {myPlayer.timeline?.length ?? 0} / {session?.songsToWin} songs
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
         {/* Players List */}
         {!showShuffleAnimation && !showRoundShuffleAnimation && (

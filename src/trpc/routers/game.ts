@@ -1,16 +1,16 @@
-import { createTRPCRouter, baseProcedure, protectedProcedure } from "../init";
+import { TRPCError } from "@trpc/server";
+import { and, eq, ne } from "drizzle-orm";
 import { z } from "zod/v4";
 import {
-  gameSessions,
-  players,
-  turns,
-  type Player,
-  type TimelineSong,
-  type CurrentTurnSong,
   type ActiveStealAttempt,
+  type CurrentTurnSong,
+  gameSessions,
+  type Player,
+  players,
+  type TimelineSong,
+  turns,
 } from "@/db/schema";
-import { eq, and, ne } from "drizzle-orm";
-import { TRPCError } from "@trpc/server";
+import { baseProcedure, createTRPCRouter, protectedProcedure } from "../init";
 
 function shuffleArray<T>(array: T[]): T[] {
   const shuffled = [...array];
@@ -49,7 +49,7 @@ function levenshteinDistance(a: string, b: string): number {
         matrix[i][j] = Math.min(
           matrix[i - 1][j - 1] + 1, // substitution
           matrix[i][j - 1] + 1, // insertion
-          matrix[i - 1][j] + 1 // deletion
+          matrix[i - 1][j] + 1, // deletion
         );
       }
     }
@@ -63,7 +63,11 @@ function fuzzyMatch(guess: string, actual: string, tolerance = 0.2): boolean {
   const normalizedActual = normalizeString(actual);
 
   if (normalizedGuess === normalizedActual) return true;
-  if (normalizedActual.includes(normalizedGuess) || normalizedGuess.includes(normalizedActual)) return true;
+  if (
+    normalizedActual.includes(normalizedGuess) ||
+    normalizedGuess.includes(normalizedActual)
+  )
+    return true;
 
   const distance = levenshteinDistance(normalizedGuess, normalizedActual);
   const maxLength = Math.max(normalizedGuess.length, normalizedActual.length);
@@ -75,8 +79,18 @@ const PLACEHOLDER_SONGS = [
   { songId: "1", name: "Bohemian Rhapsody", artist: "Queen", year: 1975 },
   { songId: "2", name: "Hotel California", artist: "Eagles", year: 1977 },
   { songId: "3", name: "Thriller", artist: "Michael Jackson", year: 1982 },
-  { songId: "4", name: "Sweet Child O' Mine", artist: "Guns N' Roses", year: 1987 },
-  { songId: "5", name: "Smells Like Teen Spirit", artist: "Nirvana", year: 1991 },
+  {
+    songId: "4",
+    name: "Sweet Child O' Mine",
+    artist: "Guns N' Roses",
+    year: 1987,
+  },
+  {
+    songId: "5",
+    name: "Smells Like Teen Spirit",
+    artist: "Nirvana",
+    year: 1991,
+  },
   { songId: "6", name: "Wonderwall", artist: "Oasis", year: 1995 },
   { songId: "7", name: "Crazy in Love", artist: "Beyoncé", year: 2003 },
   { songId: "8", name: "Rolling in the Deep", artist: "Adele", year: 2010 },
@@ -126,7 +140,9 @@ export const gameRouter = createTRPCRouter({
         return { valid: false, reason: "Game has ended" } as const;
       }
 
-      const connectedPlayers = session.players.filter((p: Player) => p.isConnected);
+      const connectedPlayers = session.players.filter(
+        (p: Player) => p.isConnected,
+      );
       if (connectedPlayers.length >= session.maxPlayers) {
         return { valid: false, reason: "Game is full" } as const;
       }
@@ -144,7 +160,7 @@ export const gameRouter = createTRPCRouter({
       z.object({
         pin: z.string().length(4),
         name: z.string().min(1).max(50),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       const pin = input.pin.toUpperCase();
@@ -160,7 +176,8 @@ export const gameRouter = createTRPCRouter({
       }
 
       const nameTaken = session.players.some(
-        (p: Player) => p.name.toLowerCase() === name.toLowerCase() && p.isConnected
+        (p: Player) =>
+          p.name.toLowerCase() === name.toLowerCase() && p.isConnected,
       );
 
       return { available: !nameTaken } as const;
@@ -172,7 +189,7 @@ export const gameRouter = createTRPCRouter({
         pin: z.string().length(4),
         name: z.string().min(1).max(50),
         avatar: z.string().min(1).max(10),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const pin = input.pin.toUpperCase();
@@ -192,19 +209,20 @@ export const gameRouter = createTRPCRouter({
         throw new TRPCError({
           code: "BAD_REQUEST",
           message:
-            session.state === "playing"
-              ? "Game in progress"
-              : "Game has ended",
+            session.state === "playing" ? "Game in progress" : "Game has ended",
         });
       }
 
-      const connectedPlayers = session.players.filter((p: Player) => p.isConnected);
+      const connectedPlayers = session.players.filter(
+        (p: Player) => p.isConnected,
+      );
       if (connectedPlayers.length >= session.maxPlayers) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Game is full" });
       }
 
       const nameTaken = session.players.some(
-        (p: Player) => p.name.toLowerCase() === name.toLowerCase() && p.isConnected
+        (p: Player) =>
+          p.name.toLowerCase() === name.toLowerCase() && p.isConnected,
       );
       if (nameTaken) {
         throw new TRPCError({
@@ -215,7 +233,8 @@ export const gameRouter = createTRPCRouter({
 
       // Check for disconnected player with same name (reconnection)
       const existingPlayer = session.players.find(
-        (p: Player) => p.name.toLowerCase() === name.toLowerCase() && !p.isConnected
+        (p: Player) =>
+          p.name.toLowerCase() === name.toLowerCase() && !p.isConnected,
       );
 
       if (existingPlayer) {
@@ -266,7 +285,7 @@ export const gameRouter = createTRPCRouter({
       let orderedPlayers = session.players;
       if (session.state === "playing" && session.turnOrder) {
         const turnOrderMap = new Map(
-          session.turnOrder.map((id, index) => [id, index])
+          session.turnOrder.map((id, index) => [id, index]),
         );
         orderedPlayers = [...session.players].sort((a, b) => {
           const aIndex = turnOrderMap.get(a.id) ?? 999;
@@ -321,7 +340,7 @@ export const gameRouter = createTRPCRouter({
         stealWindowDuration: z.number().int().min(5).max(20).optional(),
         maxPlayers: z.number().int().min(1).max(20).optional(),
         playlistUrl: z.string().url().nullable().optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const pin = input.pin.toUpperCase();
@@ -350,7 +369,7 @@ export const gameRouter = createTRPCRouter({
 
       const { pin: _pin, ...updates } = input;
       const filteredUpdates = Object.fromEntries(
-        Object.entries(updates).filter(([_, v]) => v !== undefined)
+        Object.entries(updates).filter(([_, v]) => v !== undefined),
       );
 
       if (Object.keys(filteredUpdates).length === 0) {
@@ -379,7 +398,7 @@ export const gameRouter = createTRPCRouter({
       const existing = await ctx.db.query.gameSessions.findFirst({
         where: and(
           eq(gameSessions.pin, pin),
-          ne(gameSessions.state, "finished")
+          ne(gameSessions.state, "finished"),
         ),
       });
       if (!existing) break;
@@ -533,7 +552,7 @@ export const gameRouter = createTRPCRouter({
         placementIndex: z.number().int().min(0),
         guessedName: z.string().optional(),
         guessedArtist: z.string().optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const pin = input.pin.toUpperCase();
@@ -591,13 +610,16 @@ export const gameRouter = createTRPCRouter({
 
       if (guessedName && guessedArtist) {
         const nameMatch = fuzzyMatch(guessedName, session.currentSong.name);
-        const artistMatch = fuzzyMatch(guessedArtist, session.currentSong.artist);
+        const artistMatch = fuzzyMatch(
+          guessedArtist,
+          session.currentSong.artist,
+        );
         guessCorrect = nameMatch && artistMatch;
       }
 
       // Start steal phase instead of immediately resolving
       const stealPhaseEndAt = new Date(
-        Date.now() + session.stealWindowDuration * 1000
+        Date.now() + session.stealWindowDuration * 1000,
       );
 
       // Store guesses in session for processing in resolveStealPhase
@@ -628,7 +650,7 @@ export const gameRouter = createTRPCRouter({
         pin: z.string().length(4),
         playerId: z.string().uuid(),
         placementIndex: z.number().int().min(0),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const pin = input.pin.toUpperCase();
@@ -697,7 +719,9 @@ export const gameRouter = createTRPCRouter({
       }
 
       // Check if position is already taken
-      if (existingAttempts.some((a) => a.placementIndex === input.placementIndex)) {
+      if (
+        existingAttempts.some((a) => a.placementIndex === input.placementIndex)
+      ) {
         throw new TRPCError({
           code: "CONFLICT",
           message: "This position is already taken by another steal attempt",
@@ -734,7 +758,7 @@ export const gameRouter = createTRPCRouter({
       z.object({
         pin: z.string().length(4),
         playerId: z.string().uuid(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const pin = input.pin.toUpperCase();
@@ -808,7 +832,7 @@ export const gameRouter = createTRPCRouter({
       usedSongIds.add(session.currentSong.songId); // Mark current song as used
 
       const availableSongs = PLACEHOLDER_SONGS.filter(
-        (s) => !usedSongIds.has(s.songId)
+        (s) => !usedSongIds.has(s.songId),
       );
 
       if (availableSongs.length === 0) {
@@ -829,7 +853,8 @@ export const gameRouter = createTRPCRouter({
         };
       }
 
-      const nextSong = availableSongs[Math.floor(Math.random() * availableSongs.length)];
+      const nextSong =
+        availableSongs[Math.floor(Math.random() * availableSongs.length)];
 
       // Update session with new song and reset turn timer
       await ctx.db
@@ -861,7 +886,7 @@ export const gameRouter = createTRPCRouter({
       z.object({
         pin: z.string().length(4),
         playerId: z.string().uuid(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const pin = input.pin.toUpperCase();
@@ -920,7 +945,7 @@ export const gameRouter = createTRPCRouter({
       // Draw a random unused song
       const usedSongIds = new Set(session.usedSongIds ?? []);
       const availableSongs = PLACEHOLDER_SONGS.filter(
-        (s) => !usedSongIds.has(s.songId)
+        (s) => !usedSongIds.has(s.songId),
       );
 
       if (availableSongs.length === 0) {
@@ -930,7 +955,8 @@ export const gameRouter = createTRPCRouter({
         });
       }
 
-      const freeSong = availableSongs[Math.floor(Math.random() * availableSongs.length)];
+      const freeSong =
+        availableSongs[Math.floor(Math.random() * availableSongs.length)];
 
       // Add song to player's timeline
       const newTimelineSong: TimelineSong = {
@@ -1044,7 +1070,9 @@ export const gameRouter = createTRPCRouter({
           ? session.turnOrder[session.currentTurnIndex]
           : null;
 
-      const activePlayer = session.players.find((p) => p.id === currentPlayerId);
+      const activePlayer = session.players.find(
+        (p) => p.id === currentPlayerId,
+      );
       if (!activePlayer) {
         throw new TRPCError({
           code: "NOT_FOUND",
@@ -1053,7 +1081,9 @@ export const gameRouter = createTRPCRouter({
       }
 
       const activeTimeline = activePlayer.timeline ?? [];
-      const sortedTimeline = [...activeTimeline].sort((a, b) => a.year - b.year);
+      const sortedTimeline = [...activeTimeline].sort(
+        (a, b) => a.year - b.year,
+      );
       const songYear = session.currentSong.year;
       const activePlayerPlacement = session.activePlayerPlacement ?? 0;
 
@@ -1064,7 +1094,8 @@ export const gameRouter = createTRPCRouter({
       } else if (activePlayerPlacement === 0) {
         activePlayerCorrect = songYear <= sortedTimeline[0].year;
       } else if (activePlayerPlacement >= sortedTimeline.length) {
-        activePlayerCorrect = songYear >= sortedTimeline[sortedTimeline.length - 1].year;
+        activePlayerCorrect =
+          songYear >= sortedTimeline[sortedTimeline.length - 1].year;
       } else {
         const before = sortedTimeline[activePlayerPlacement - 1];
         const after = sortedTimeline[activePlayerPlacement];
@@ -1075,8 +1106,14 @@ export const gameRouter = createTRPCRouter({
       const guess = session.activePlayerGuess;
       let guessWasCorrect = false;
       if (guess?.guessedName && guess?.guessedArtist) {
-        const nameMatch = fuzzyMatch(guess.guessedName, session.currentSong.name);
-        const artistMatch = fuzzyMatch(guess.guessedArtist, session.currentSong.artist);
+        const nameMatch = fuzzyMatch(
+          guess.guessedName,
+          session.currentSong.name,
+        );
+        const artistMatch = fuzzyMatch(
+          guess.guessedArtist,
+          session.currentSong.artist,
+        );
         guessWasCorrect = nameMatch && artistMatch;
       }
 
@@ -1090,21 +1127,27 @@ export const gameRouter = createTRPCRouter({
 
       // Check steal attempts
       const stealAttempts = session.stealAttempts ?? [];
-      let winningStealer: { playerId: string; playerName: string } | null = null;
+      let winningStealer: { playerId: string; playerName: string } | null =
+        null;
 
       // Only process steals if active player was wrong
       if (!activePlayerCorrect && stealAttempts.length > 0) {
         // Sort by timestamp (first come first serve)
         const sortedAttempts = [...stealAttempts].sort(
-          (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+          (a, b) =>
+            new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
         );
 
         for (const attempt of sortedAttempts) {
-          const stealer = session.players.find((p) => p.id === attempt.playerId);
+          const stealer = session.players.find(
+            (p) => p.id === attempt.playerId,
+          );
           if (!stealer) continue;
 
           const stealerTimeline = stealer.timeline ?? [];
-          const sortedStealerTimeline = [...stealerTimeline].sort((a, b) => a.year - b.year);
+          const sortedStealerTimeline = [...stealerTimeline].sort(
+            (a, b) => a.year - b.year,
+          );
 
           // Validate stealer's placement against THEIR timeline
           let stealerCorrect = false;
@@ -1113,7 +1156,9 @@ export const gameRouter = createTRPCRouter({
           } else if (attempt.placementIndex === 0) {
             stealerCorrect = songYear <= sortedStealerTimeline[0].year;
           } else if (attempt.placementIndex >= sortedStealerTimeline.length) {
-            stealerCorrect = songYear >= sortedStealerTimeline[sortedStealerTimeline.length - 1].year;
+            stealerCorrect =
+              songYear >=
+              sortedStealerTimeline[sortedStealerTimeline.length - 1].year;
           } else {
             const before = sortedStealerTimeline[attempt.placementIndex - 1];
             const after = sortedStealerTimeline[attempt.placementIndex];
@@ -1121,7 +1166,10 @@ export const gameRouter = createTRPCRouter({
           }
 
           if (stealerCorrect) {
-            winningStealer = { playerId: attempt.playerId, playerName: attempt.playerName };
+            winningStealer = {
+              playerId: attempt.playerId,
+              playerName: attempt.playerName,
+            };
             break; // First correct stealer wins
           }
         }
@@ -1159,7 +1207,7 @@ export const gameRouter = createTRPCRouter({
       }
 
       // Add song to recipient's timeline
-      let gameEnded = false;
+      let _gameEnded = false;
       let winnerId: string | undefined;
       if (recipientId) {
         const recipient = session.players.find((p) => p.id === recipientId);
@@ -1180,7 +1228,7 @@ export const gameRouter = createTRPCRouter({
 
           // Check win condition
           if (newTimeline.length >= session.songsToWin) {
-            gameEnded = true;
+            _gameEnded = true;
             winnerId = recipientId;
 
             // Increment winner's wins count
@@ -1219,23 +1267,24 @@ export const gameRouter = createTRPCRouter({
       }
 
       // Advance to next turn
+      const turnOrderLength = session.turnOrder?.length ?? 1;
       const nextTurnIndex =
-        ((session.currentTurnIndex ?? 0) + 1) % session.turnOrder!.length;
+        ((session.currentTurnIndex ?? 0) + 1) % turnOrderLength;
       const isNewRound = nextTurnIndex === 0;
       const newRoundNumber = isNewRound
         ? (session.roundNumber ?? 1) + 1
-        : session.roundNumber ?? 1;
+        : (session.roundNumber ?? 1);
 
       // Draw next song
       const usedSongIds = new Set(session.usedSongIds ?? []);
       const availableSongs = PLACEHOLDER_SONGS.filter(
-        (s) => !usedSongIds.has(s.songId)
+        (s) => !usedSongIds.has(s.songId),
       );
 
       if (availableSongs.length === 0) {
         // Determine winner (player with most songs)
         const sortedPlayers = [...session.players].sort(
-          (a, b) => (b.timeline?.length ?? 0) - (a.timeline?.length ?? 0)
+          (a, b) => (b.timeline?.length ?? 0) - (a.timeline?.length ?? 0),
         );
         const songExhaustionWinner = sortedPlayers[0];
 
@@ -1275,7 +1324,8 @@ export const gameRouter = createTRPCRouter({
         };
       }
 
-      const nextSong = availableSongs[Math.floor(Math.random() * availableSongs.length)];
+      const nextSong =
+        availableSongs[Math.floor(Math.random() * availableSongs.length)];
       const newUsedSongIds = [...(session.usedSongIds ?? []), nextSong.songId];
 
       let newTurnOrder = session.turnOrder;
@@ -1312,7 +1362,7 @@ export const gameRouter = createTRPCRouter({
         stolenBy: winningStealer,
         recipientId,
         gameEnded: false,
-        nextPlayerId: newTurnOrder![nextTurnIndex],
+        nextPlayerId: newTurnOrder?.[nextTurnIndex],
         isNewRound,
         newRoundNumber,
         guessWasCorrect,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mockPlaylistTracks, mockSpotifyUser, mockPlaylist } from "../handlers";
+import { mockPlaylist, mockPlaylistTracks, mockSpotifyUser } from "../handlers";
 
 describe("Spotify API Mocks", () => {
   describe("GET /me", () => {
@@ -17,7 +17,7 @@ describe("Spotify API Mocks", () => {
   describe("GET /playlists/:playlistId", () => {
     it("returns mock playlist", async () => {
       const response = await fetch(
-        "https://api.spotify.com/v1/playlists/test-playlist-123"
+        "https://api.spotify.com/v1/playlists/test-playlist-123",
       );
       const data = await response.json();
 
@@ -30,7 +30,7 @@ describe("Spotify API Mocks", () => {
   describe("GET /playlists/:playlistId/tracks", () => {
     it("returns mock playlist tracks", async () => {
       const response = await fetch(
-        "https://api.spotify.com/v1/playlists/test-playlist-123/tracks"
+        "https://api.spotify.com/v1/playlists/test-playlist-123/tracks",
       );
       const data = await response.json();
 
@@ -41,7 +41,7 @@ describe("Spotify API Mocks", () => {
 
     it("supports pagination parameters", async () => {
       const response = await fetch(
-        "https://api.spotify.com/v1/playlists/test-playlist-123/tracks?offset=2&limit=2"
+        "https://api.spotify.com/v1/playlists/test-playlist-123/tracks?offset=2&limit=2",
       );
       const data = await response.json();
 
@@ -65,10 +65,13 @@ describe("Spotify API Mocks", () => {
 
   describe("PUT /me/player/play", () => {
     it("returns 204 for start playback", async () => {
-      const response = await fetch("https://api.spotify.com/v1/me/player/play", {
-        method: "PUT",
-        body: JSON.stringify({ uris: ["spotify:track:track1"] }),
-      });
+      const response = await fetch(
+        "https://api.spotify.com/v1/me/player/play",
+        {
+          method: "PUT",
+          body: JSON.stringify({ uris: ["spotify:track:track1"] }),
+        },
+      );
 
       expect(response.status).toBe(204);
     });
@@ -80,7 +83,7 @@ describe("Spotify API Mocks", () => {
         "https://api.spotify.com/v1/me/player/pause",
         {
           method: "PUT",
-        }
+        },
       );
 
       expect(response.status).toBe(204);

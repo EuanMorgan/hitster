@@ -1,11 +1,11 @@
 import { vi } from "vitest";
 import type {
-  User,
+  GameHistory,
   GameSession,
   Player,
-  Turn,
-  GameHistory,
   TimelineSong,
+  Turn,
+  User,
 } from "@/db/schema";
 
 // In-memory store for mock data
@@ -44,7 +44,9 @@ export function getMockGameHistories() {
 // Seed functions
 export function seedUser(userData: Partial<User> = {}): User {
   const user: User = {
-    id: userData.id ?? `user-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    id:
+      userData.id ??
+      `user-${Date.now()}-${Math.random().toString(36).slice(2)}`,
     name: userData.name ?? "Test User",
     email: userData.email ?? `test-${Date.now()}@example.com`,
     emailVerified: userData.emailVerified ?? false,
@@ -57,7 +59,7 @@ export function seedUser(userData: Partial<User> = {}): User {
 }
 
 export function seedGameSession(
-  sessionData: Partial<GameSession> = {}
+  sessionData: Partial<GameSession> = {},
 ): GameSession {
   const session: GameSession = {
     id: sessionData.id ?? crypto.randomUUID(),
@@ -132,7 +134,7 @@ export function seedTurn(turnData: Partial<Turn> = {}): Turn {
 }
 
 export function seedGameHistory(
-  historyData: Partial<GameHistory> = {}
+  historyData: Partial<GameHistory> = {},
 ): GameHistory {
   const history: GameHistory = {
     id: historyData.id ?? crypto.randomUUID(),
@@ -165,31 +167,31 @@ export function createMockDb() {
       user: {
         findMany: vi.fn(() => Promise.resolve(mockUsers)),
         findFirst: vi.fn(({ where }: { where?: unknown } = {}) =>
-          Promise.resolve(mockUsers[0] ?? null)
+          Promise.resolve(mockUsers[0] ?? null),
         ),
       },
       gameSessions: {
         findMany: vi.fn(() => Promise.resolve(mockGameSessions)),
         findFirst: vi.fn(({ where }: { where?: unknown } = {}) =>
-          Promise.resolve(mockGameSessions[0] ?? null)
+          Promise.resolve(mockGameSessions[0] ?? null),
         ),
       },
       players: {
         findMany: vi.fn(() => Promise.resolve(mockPlayers)),
         findFirst: vi.fn(({ where }: { where?: unknown } = {}) =>
-          Promise.resolve(mockPlayers[0] ?? null)
+          Promise.resolve(mockPlayers[0] ?? null),
         ),
       },
       turns: {
         findMany: vi.fn(() => Promise.resolve(mockTurns)),
         findFirst: vi.fn(({ where }: { where?: unknown } = {}) =>
-          Promise.resolve(mockTurns[0] ?? null)
+          Promise.resolve(mockTurns[0] ?? null),
         ),
       },
       gameHistory: {
         findMany: vi.fn(() => Promise.resolve(mockGameHistories)),
         findFirst: vi.fn(({ where }: { where?: unknown } = {}) =>
-          Promise.resolve(mockGameHistories[0] ?? null)
+          Promise.resolve(mockGameHistories[0] ?? null),
         ),
       },
     },
@@ -213,7 +215,7 @@ export function createMockDb() {
 
 // Helper to create a timeline song
 export function createTimelineSong(
-  overrides: Partial<TimelineSong> = {}
+  overrides: Partial<TimelineSong> = {},
 ): TimelineSong {
   return {
     songId: overrides.songId ?? `song-${Date.now()}`,

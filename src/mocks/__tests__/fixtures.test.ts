@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fixtures, avatarPresets } from "../fixtures";
+import { avatarPresets, fixtures } from "../fixtures";
 
 describe("Fixtures", () => {
   describe("users", () => {

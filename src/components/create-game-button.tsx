@@ -1,10 +1,10 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
-import { useTRPC } from "@/trpc/client";
-import { useSession } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { useSession } from "@/lib/auth-client";
+import { useTRPC } from "@/trpc/client";
 
 export function CreateGameButton() {
   const router = useRouter();
@@ -18,7 +18,7 @@ export function CreateGameButton() {
         localStorage.setItem("hitster_session_id", data.sessionId);
         router.push(`/lobby/${data.pin}`);
       },
-    })
+    }),
   );
 
   if (!session?.user) {

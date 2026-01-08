@@ -42,7 +42,7 @@ export function AvatarSelector({ value, onChange }: AvatarSelectorProps) {
             "flex h-12 w-12 items-center justify-center rounded-lg text-2xl transition-all hover:scale-110",
             value === avatar
               ? "bg-primary ring-2 ring-primary ring-offset-2"
-              : "bg-muted hover:bg-muted/80"
+              : "bg-muted hover:bg-muted/80",
           )}
         >
           {avatar}

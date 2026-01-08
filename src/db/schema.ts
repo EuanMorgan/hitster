@@ -1,5 +1,7 @@
+import { relations } from "drizzle-orm";
 import {
   boolean,
+  index,
   integer,
   jsonb,
   pgEnum,
@@ -8,9 +10,7 @@ import {
   timestamp,
   uuid,
   varchar,
-  index,
 } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
 
 // Better Auth tables
 export const user = pgTable("user", {
@@ -43,7 +43,7 @@ export const session = pgTable(
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
   },
-  (table) => [index("session_userId_idx").on(table.userId)]
+  (table) => [index("session_userId_idx").on(table.userId)],
 );
 
 export const account = pgTable(
@@ -68,7 +68,7 @@ export const account = pgTable(
       .$onUpdate(() => new Date())
       .notNull(),
   },
-  (table) => [index("account_userId_idx").on(table.userId)]
+  (table) => [index("account_userId_idx").on(table.userId)],
 );
 
 export const verification = pgTable(
@@ -84,7 +84,7 @@ export const verification = pgTable(
       .$onUpdate(() => new Date())
       .notNull(),
   },
-  (table) => [index("verification_identifier_idx").on(table.identifier)]
+  (table) => [index("verification_identifier_idx").on(table.identifier)],
 );
 
 // Better Auth relations
@@ -159,7 +159,9 @@ export const gameSessions = pgTable("game_sessions", {
   stealPhaseEndAt: timestamp("steal_phase_end_at"),
   activePlayerPlacement: integer("active_player_placement"),
   activePlayerGuess: jsonb("active_player_guess").$type<ActivePlayerGuess>(),
-  stealAttempts: jsonb("steal_attempts").$type<ActiveStealAttempt[]>().default([]),
+  stealAttempts: jsonb("steal_attempts")
+    .$type<ActiveStealAttempt[]>()
+    .default([]),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -218,15 +220,18 @@ export const gameHistory = pgTable("game_history", {
 });
 
 // Game relations
-export const gameSessionsRelations = relations(gameSessions, ({ one, many }) => ({
-  host: one(user, {
-    fields: [gameSessions.hostId],
-    references: [user.id],
+export const gameSessionsRelations = relations(
+  gameSessions,
+  ({ one, many }) => ({
+    host: one(user, {
+      fields: [gameSessions.hostId],
+      references: [user.id],
+    }),
+    players: many(players),
+    turns: many(turns),
+    history: one(gameHistory),
   }),
-  players: many(players),
-  turns: many(turns),
-  history: one(gameHistory),
-}));
+);
 
 export const playersRelations = relations(players, ({ one, many }) => ({
   session: one(gameSessions, {

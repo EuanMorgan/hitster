@@ -1,7 +1,9 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
+import { AvatarSelector } from "@/components/avatar-selector";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,9 +14,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { AvatarSelector } from "@/components/avatar-selector";
 import { useTRPC } from "@/trpc/client";
-import { useQuery, useMutation } from "@tanstack/react-query";
 
 type Step = "pin" | "details";
 
@@ -46,7 +46,7 @@ function JoinPageContent() {
       onError: (err) => {
         setError(err.message);
       },
-    })
+    }),
   );
 
   const handlePinSubmit = (e: React.FormEvent) => {
@@ -118,11 +118,14 @@ function JoinPageContent() {
                 )}
                 {pin.length === 4 && isPinValid && (
                   <p className="text-sm text-green-600">
-                    Game found! {pinValidation.playerCount}/{pinValidation.maxPlayers} players
+                    Game found! {pinValidation.playerCount}/
+                    {pinValidation.maxPlayers} players
                   </p>
                 )}
                 {pin.length === 4 && pinValidation?.valid === false && (
-                  <p className="text-sm text-destructive">{pinValidation.reason}</p>
+                  <p className="text-sm text-destructive">
+                    {pinValidation.reason}
+                  </p>
                 )}
               </div>
 

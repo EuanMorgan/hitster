@@ -1,11 +1,11 @@
 import type {
-  User,
   GameSession,
   Player,
-  Turn,
-  TimelineSong,
-  StealAttempt,
   PlayerStanding,
+  StealAttempt,
+  TimelineSong,
+  Turn,
+  User,
 } from "@/db/schema";
 
 // User fixtures
@@ -83,7 +83,12 @@ export const fixtures = {
       currentTurnIndex: 2,
       turnOrder: ["player-001", "player-002", "player-003"],
       usedSongIds: ["track1", "track2"],
-      currentSong: { songId: "track3", name: "Test Song", artist: "Test Artist", year: 1995 },
+      currentSong: {
+        songId: "track3",
+        name: "Test Song",
+        artist: "Test Artist",
+        year: 1995,
+      },
       turnStartedAt: new Date("2024-01-11T10:00:00Z"),
       roundNumber: 1,
       isStealPhase: false,

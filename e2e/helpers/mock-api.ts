@@ -25,8 +25,8 @@ export async function mockSpotifyApi(page: Page) {
   // Mock playlist tracks
   await page.route(`${SPOTIFY_API_BASE}/playlists/*/tracks*`, async (route) => {
     const url = new URL(route.request().url());
-    const offset = Number.parseInt(url.searchParams.get("offset") ?? "0");
-    const limit = Number.parseInt(url.searchParams.get("limit") ?? "100");
+    const offset = Number.parseInt(url.searchParams.get("offset") ?? "0", 10);
+    const limit = Number.parseInt(url.searchParams.get("limit") ?? "100", 10);
 
     const items = mockPlaylistTracks.slice(offset, offset + limit);
     await route.fulfill({
@@ -69,7 +69,10 @@ export async function mockSpotifyApi(page: Page) {
   });
 }
 
-export async function mockAuthenticatedUser(page: Page, user = mockSpotifyUser) {
+export async function mockAuthenticatedUser(
+  page: Page,
+  user = mockSpotifyUser,
+) {
   // Mock the auth session endpoint
   await page.route("**/api/auth/get-session*", async (route) => {
     await route.fulfill({
@@ -105,7 +108,7 @@ export async function mockUnauthenticated(page: Page) {
 export async function mockTrpcEndpoint<T>(
   page: Page,
   procedureName: string,
-  response: T
+  response: T,
 ) {
   await page.route(`**/api/trpc/${procedureName}*`, async (route) => {
     await route.fulfill({

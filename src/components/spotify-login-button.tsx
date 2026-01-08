@@ -1,8 +1,8 @@
 "use client";
 
-import { signIn } from "@/lib/auth-client";
-import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { signIn } from "@/lib/auth-client";
 
 export function SpotifyLoginButton() {
   const [isLoading, setIsLoading] = useState(false);
