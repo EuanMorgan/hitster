@@ -775,3 +775,38 @@ Active player can position song in their timeline (PRD gameplay item)
 - Current player indicator enhancements (PRD item #31)
 - Spotify Web Playback SDK integration (PRD item #20)
 - Host main display view (PRD display item)
+
+---
+
+## 2026-01-08: Current Player Indicator (Host Display) Complete
+
+### What was done:
+- Added `ActivePlayerTimeline` component for host display view
+- Shows active player's avatar, name, token count, and timeline prominently
+- Large song cards in timeline with year, song name, and artist
+- Timer display (countdown with color changes: green→amber→red)
+- Mystery song indicator when song is playing
+- Host display only appears when authenticated user is the game host
+- Uses `useSession` hook from Better Auth to detect host status
+- Display hidden when it's the host's own turn (they see the active player UI instead)
+
+### Files modified:
+- src/app/game/[pin]/page.tsx (added ActivePlayerTimeline component, useSession hook, isHost check)
+- plans/prd.json (marked PRD "Current player indicator shown clearly" as passing)
+
+### PRD steps completed:
+1. ✅ Active player highlighted in player list (already implemented)
+2. ✅ Active player's phone shows 'Your Turn' prominently (already implemented)
+3. ✅ Other players' phones show who is playing (already implemented)
+4. ✅ Host display shows active player's timeline large (NEW)
+
+### Notes:
+- Host display uses larger text/cards for TV/projector visibility
+- Timer shows countdown with visual warning colors
+- Empty timeline state shows dashed border placeholder
+- During steal phase, song info and timer are hidden (steal has its own UI)
+
+### Next priority:
+- Spotify Web Playback SDK integration (PRD gameplay item)
+- Party stats on results screen (PRD winning item)
+- Host can start rematch (PRD winning item)

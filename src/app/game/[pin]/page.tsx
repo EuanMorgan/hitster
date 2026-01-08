@@ -12,6 +12,7 @@ import {
 import { useTRPC } from "@/trpc/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { TimelineSong } from "@/db/schema";
+import { useSession } from "@/lib/auth-client";
 import { TimelineDropZone } from "@/components/timeline-drop-zone";
 import { StealPhase } from "@/components/steal-phase";
 
@@ -115,6 +116,131 @@ function PlayerCard({
   );
 }
 
+function ActivePlayerTimeline({
+  player,
+  currentSong,
+  turnStartedAt,
+  turnDuration,
+}: {
+  player: {
+    id: string;
+    name: string;
+    avatar: string;
+    tokens: number;
+    timeline: TimelineSong[] | null;
+  };
+  currentSong: { name: string; artist: string; year: number } | null;
+  turnStartedAt: string | null;
+  turnDuration: number;
+}) {
+  const sortedTimeline = [...(player.timeline ?? [])].sort(
+    (a, b) => a.year - b.year
+  );
+
+  // Calculate time remaining
+  const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!turnStartedAt) {
+      setTimeRemaining(null);
+      return;
+    }
+
+    const updateTimer = () => {
+      const elapsed = Math.floor(
+        (Date.now() - new Date(turnStartedAt).getTime()) / 1000
+      );
+      const remaining = Math.max(0, turnDuration - elapsed);
+      setTimeRemaining(remaining);
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [turnStartedAt, turnDuration]);
+
+  return (
+    <Card className="border-2 border-primary bg-primary/5">
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-5xl">{player.avatar}</span>
+            <div>
+              <CardTitle className="text-2xl">{player.name}&apos;s Turn</CardTitle>
+              <CardDescription className="flex items-center gap-4">
+                <span>
+                  <TokenDisplay count={player.tokens} />
+                </span>
+                <span>
+                  {player.timeline?.length ?? 0} songs in timeline
+                </span>
+              </CardDescription>
+            </div>
+          </div>
+          {timeRemaining !== null && (
+            <div
+              className={`text-4xl font-mono font-bold ${
+                timeRemaining <= 10
+                  ? "text-red-500 animate-pulse"
+                  : timeRemaining <= 20
+                    ? "text-amber-500"
+                    : "text-primary"
+              }`}
+            >
+              {timeRemaining}s
+            </div>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent>
+        {/* Current song indicator (placeholder - year hidden) */}
+        {currentSong && (
+          <div className="mb-4 p-4 bg-amber-100 dark:bg-amber-900/30 rounded-lg text-center">
+            <div className="text-sm text-muted-foreground mb-1">
+              Mystery Song Playing
+            </div>
+            <div className="text-3xl">🎵❓🎵</div>
+            <div className="text-xs text-muted-foreground mt-1">
+              Waiting for placement...
+            </div>
+          </div>
+        )}
+
+        {/* Timeline display - large cards */}
+        <div className="space-y-2">
+          <h4 className="text-sm font-medium text-muted-foreground">
+            Timeline ({sortedTimeline.length} songs)
+          </h4>
+          {sortedTimeline.length === 0 ? (
+            <div className="text-muted-foreground italic p-4 text-center border-2 border-dashed rounded-lg">
+              No songs in timeline yet
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-3">
+              {sortedTimeline.map((song) => (
+                <div
+                  key={song.songId}
+                  className="bg-card border-2 border-primary/30 rounded-xl px-4 py-3 text-center min-w-[120px] shadow-sm"
+                >
+                  <div className="font-bold text-2xl text-primary">
+                    {song.year}
+                  </div>
+                  <div className="text-sm font-medium truncate max-w-[150px]">
+                    {song.name}
+                  </div>
+                  <div className="text-xs text-muted-foreground truncate max-w-[150px]">
+                    {song.artist}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function TurnResultOverlay({
   result,
   onClose,
@@ -213,6 +339,7 @@ export default function GamePage() {
   const pin = (params.pin as string).toUpperCase();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { data: authSession } = useSession();
   const [showShuffleAnimation, setShowShuffleAnimation] = useState(true);
   const [turnResult, setTurnResult] = useState<{
     activePlayerCorrect: boolean;
@@ -491,6 +618,8 @@ export default function GamePage() {
   const hasAlreadyStolen = (session?.stealAttempts ?? []).some(
     (a) => a.playerId === currentPlayerId
   );
+  // Check if current authenticated user is the host
+  const isHost = authSession?.user?.id === session?.hostId;
 
   return (
     <div className="min-h-screen p-4">
@@ -558,6 +687,20 @@ export default function GamePage() {
             </CardContent>
           </Card>
         )}
+
+        {/* Host Display - Shows active player's timeline prominently */}
+        {!showShuffleAnimation &&
+          !showRoundShuffleAnimation &&
+          isHost &&
+          currentPlayer &&
+          !isMyTurn && (
+            <ActivePlayerTimeline
+              player={currentPlayer}
+              currentSong={isStealPhase ? null : session?.currentSong ?? null}
+              turnStartedAt={isStealPhase ? null : session?.turnStartedAt ?? null}
+              turnDuration={session?.turnDuration ?? 45}
+            />
+          )}
 
         {/* Steal Phase */}
         {!showShuffleAnimation &&

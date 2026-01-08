@@ -450,7 +450,7 @@
       "Other players' phones show who is playing",
       "Host display shows active player's timeline large"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "turns",
