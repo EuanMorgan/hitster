@@ -254,7 +254,7 @@
       "If duration set to 30s, song stops at exactly 30s and playback state updates",
       "Countdown timer visible during playback"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "gameplay",
@@ -519,7 +519,7 @@
       "Fetch tracks via Spotify API",
       "Store track pool for game session"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "playlist",
@@ -530,7 +530,7 @@
       "Show warning if playlist has fewer than 100 tracks",
       "Load tracks from custom playlist"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "playlist",
@@ -540,7 +540,7 @@
       "Never repeat a song in same game",
       "Remove used songs from pool"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "playlist",
@@ -551,7 +551,7 @@
       "Notify players of fallback",
       "Continue game"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "playlist",
@@ -562,7 +562,7 @@
       "Declare winner based on current standings",
       "Show appropriate message"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "reconnection",
@@ -622,7 +622,7 @@
       "Preference stored in localStorage, survives page refresh",
       "On first visit, follows prefers-color-scheme media query"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "statistics",
@@ -768,7 +768,7 @@
       "Control play/pause/seek",
       "On playback error, show toast 'Playback failed - check Spotify Premium status', log error to console"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "spotify",
