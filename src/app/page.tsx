@@ -7,25 +7,31 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Greeting } from "@/components/greeting";
+import { trpc, HydrateClient } from "@/trpc/server";
 
-export default function Home() {
+export default async function Home() {
+  void trpc.hello.prefetch({ name: "Hitster Player" });
+
   return (
-    <div className="flex min-h-screen items-center justify-center p-8">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Hitster</CardTitle>
-          <CardDescription>
-            A multiplayer music timeline game
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          <Input placeholder="Enter game PIN" />
-          <div className="flex gap-2">
-            <Button variant="default">Join Game</Button>
-            <Button variant="secondary">Create Game</Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+    <HydrateClient>
+      <div className="flex min-h-screen items-center justify-center p-8">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Hitster</CardTitle>
+            <CardDescription>
+              <Greeting />
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            <Input placeholder="Enter game PIN" />
+            <div className="flex gap-2">
+              <Button variant="default">Join Game</Button>
+              <Button variant="secondary">Create Game</Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </HydrateClient>
   );
 }

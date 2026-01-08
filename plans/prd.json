@@ -1,0 +1,814 @@
+[
+  {
+    "category": "setup",
+    "description": "Initialize shadcn/ui component library",
+    "steps": [
+      "Run npx shadcn@latest init",
+      "Configure tailwind.config with shadcn presets",
+      "Set up components.json with correct paths",
+      "Add base shadcn components (button, card, input, form)",
+      "Verify components render correctly"
+    ],
+    "passes": true
+  },
+  {
+    "category": "setup",
+    "description": "Configure Vitest for unit and integration testing",
+    "steps": [
+      "Install vitest and @testing-library/react",
+      "Create vitest.config.ts with Next.js compatibility",
+      "Add test script to package.json",
+      "Create sample test to verify setup",
+      "Verify bun test runs successfully"
+    ],
+    "passes": true
+  },
+  {
+    "category": "setup",
+    "description": "Configure Playwright for E2E testing",
+    "steps": [
+      "Install @playwright/test",
+      "Create playwright.config.ts",
+      "Add e2e test script to package.json",
+      "Create sample E2E test for home page",
+      "Verify playwright test runs successfully"
+    ],
+    "passes": true
+  },
+  {
+    "category": "setup",
+    "description": "Configure test mocking infrastructure",
+    "steps": [
+      "Install msw (Mock Service Worker) for API mocking",
+      "Create mocks/handlers.ts for Spotify API mocks",
+      "Create mocks/server.ts for test server setup",
+      "Create test utilities for database mocking with drizzle",
+      "Add mock data fixtures for players, games, songs",
+      "Verify mocks work in both Vitest and Playwright"
+    ],
+    "passes": false
+  },
+  {
+    "category": "setup",
+    "description": "Set up PostgreSQL with Docker and Drizzle ORM",
+    "steps": [
+      "Create docker-compose.yml with Postgres service",
+      "Install drizzle-orm and drizzle-kit",
+      "Create db/schema.ts with initial schema",
+      "Create db/index.ts for database connection",
+      "Add db:push and db:studio scripts to package.json",
+      "Verify database connection works"
+    ],
+    "passes": true
+  },
+  {
+    "category": "setup",
+    "description": "Configure tRPC with TanStack React Query for RSC",
+    "steps": [
+      "Install @trpc/server @trpc/client @trpc/tanstack-react-query @tanstack/react-query zod server-only",
+      "Create src/trpc/init.ts - initialize tRPC with createTRPCContext (cached via React cache), createTRPCRouter, createCallerFactory, baseProcedure exports",
+      "Create src/trpc/routers/_app.ts - define appRouter using createTRPCRouter, export type AppRouter",
+      "Create src/app/api/trpc/[trpc]/route.ts - fetchRequestHandler with createTRPCContext and appRouter, export GET and POST handlers",
+      "Create src/trpc/query-client.ts - makeQueryClient factory with staleTime config and dehydrate options for pending queries",
+      "Create src/trpc/client.tsx ('use client') - createTRPCContext<AppRouter>() exports TRPCProvider and useTRPC, getQueryClient singleton for browser, TRPCReactProvider component wrapping QueryClientProvider and TRPCProvider",
+      "Create src/trpc/server.tsx ('server-only') - createTRPCOptionsProxy with ctx/router/queryClient, cached getQueryClient, export trpc proxy and caller",
+      "Add TRPCReactProvider to app/layout.tsx wrapping children",
+      "Add @tanstack/react-query-devtools in TRPCReactProvider (dev only)",
+      "Create sample procedure and verify type-safe query works in client component"
+    ],
+    "passes": true
+  },
+  {
+    "category": "setup",
+    "description": "Configure tRPC RSC prefetching patterns",
+    "steps": [
+      "In server components: use getQueryClient() and prefetchQuery(trpc.procedure.queryOptions({...})) for prefetching",
+      "Wrap client components with HydrationBoundary passing dehydrate(queryClient) as state prop",
+      "In client components: use useTRPC() hook to get trpc proxy, useQuery(trpc.procedure.queryOptions({...})) for queries",
+      "For suspense: use useSuspenseQuery with same pattern, wrap in Suspense boundary",
+      "For direct server data: use caller.procedure({...}) for server-only data fetching without client hydration",
+      "Document prefetch vs fetchQuery tradeoffs (streaming vs blocking)",
+      "Verify prefetched data hydrates correctly in client components"
+    ],
+    "passes": true
+  },
+  {
+    "category": "setup",
+    "description": "Configure type-safe environment variables with T3 Env",
+    "steps": [
+      "Install @t3-oss/env-nextjs and zod",
+      "Create src/env.ts with client and server env schemas",
+      "Define all required env vars (Spotify, DB, Auth, Pushover)",
+      "Add env validation to next.config.ts",
+      "Update .env.example with all required variables",
+      "Verify build fails on missing env vars"
+    ],
+    "passes": true
+  },
+  {
+    "category": "setup",
+    "description": "Configure Better Auth with Spotify provider",
+    "steps": [
+      "Install better-auth",
+      "Create lib/auth.ts with Spotify provider config",
+      "Create app/api/auth/[...all]/route.ts handler",
+      "Add required Spotify OAuth scopes",
+      "Create auth client for frontend",
+      "Add .env.example with required variables"
+    ],
+    "passes": false
+  },
+  {
+    "category": "authentication",
+    "description": "Host can log in with Spotify OAuth",
+    "steps": [
+      "Navigate to home page",
+      "Click 'Login with Spotify' button",
+      "Complete Spotify OAuth flow with required scopes (streaming, user-read-email, user-read-private, playlist-read-private)",
+      "Redirect back to app with authenticated session",
+      "Verify host account created/updated in database",
+      "Verify Spotify access token stored securely"
+    ],
+    "passes": false
+  },
+  {
+    "category": "authentication",
+    "description": "Host can log out",
+    "steps": [
+      "Click logout button from authenticated state",
+      "Session destroyed",
+      "Redirect to home page",
+      "Verify protected routes inaccessible"
+    ],
+    "passes": false
+  },
+  {
+    "category": "authentication",
+    "description": "Non-host players join without authentication",
+    "steps": [
+      "Navigate to join page",
+      "Enter game PIN code",
+      "Enter display name",
+      "Select avatar from presets",
+      "Join game room without Spotify login"
+    ],
+    "passes": false
+  },
+  {
+    "category": "lobby",
+    "description": "Host can create a new game session",
+    "steps": [
+      "Navigate to dashboard (authenticated)",
+      "Click 'Create Game' button",
+      "Game session created with unique 4-character alphanumeric PIN",
+      "Host redirected to lobby as first player",
+      "PIN code and QR code displayed for sharing"
+    ],
+    "passes": false
+  },
+  {
+    "category": "lobby",
+    "description": "Host can configure game settings before starting",
+    "steps": [
+      "Open settings panel in lobby",
+      "Configure songs to win (default: 10, range: 5-20)",
+      "Configure song play duration (default: 30s, range: 15-60s)",
+      "Configure turn duration (default: 45s, range: 30-90s)",
+      "Configure steal window duration (default: 10s, range: 5-20s)",
+      "Configure max players (default: 10, range: 1-20)",
+      "Configure custom Spotify playlist URL (optional, default provided)",
+      "Settings saved and synced to all players in lobby"
+    ],
+    "passes": false
+  },
+  {
+    "category": "lobby",
+    "description": "Players can join game via PIN code",
+    "steps": [
+      "Navigate to join page",
+      "Enter 4-character PIN code",
+      "Validate PIN exists and game not in progress",
+      "Enter display name (required, unique in session)",
+      "Select avatar from emoji presets",
+      "Join lobby, appear in player list for all participants",
+      "Receive real-time updates via subscription"
+    ],
+    "passes": false
+  },
+  {
+    "category": "lobby",
+    "description": "Lobby shows all connected players in real-time",
+    "steps": [
+      "Display list of all players with avatars and names",
+      "Show host indicator badge",
+      "Real-time updates when players join/leave",
+      "Show player count vs max players"
+    ],
+    "passes": false
+  },
+  {
+    "category": "lobby",
+    "description": "Host can start the game",
+    "steps": [
+      "Start button visible only to host",
+      "Click start button",
+      "Game state transitions to 'playing'",
+      "All players redirected to game view",
+      "Each player assigned one random song from playlist to timeline",
+      "Turn order randomized",
+      "First player's turn begins"
+    ],
+    "passes": false
+  },
+  {
+    "category": "lobby",
+    "description": "Players cannot join during active game",
+    "steps": [
+      "Attempt to join game with valid PIN while game in progress",
+      "Show error message 'Game in progress'",
+      "Redirect to home or show waiting screen"
+    ],
+    "passes": false
+  },
+  {
+    "category": "gameplay",
+    "description": "Game initializes correctly for all players",
+    "steps": [
+      "Each player receives 2 tokens",
+      "Each player receives 1 random song in timeline (with year visible)",
+      "Turn order displayed with shuffle animation",
+      "Current player highlighted",
+      "Song plays automatically for current player's turn"
+    ],
+    "passes": false
+  },
+  {
+    "category": "gameplay",
+    "description": "Song plays via Spotify Web Playback SDK on host device",
+    "steps": [
+      "Initialize Spotify Web Playback SDK on host client",
+      "Transfer playback to web player",
+      "Play song from beginning",
+      "No song metadata displayed (title, artist hidden)",
+      "Visual audio waveform or progress indicator shown",
+      "Song stops after configured duration (default 30s)",
+      "Countdown timer visible during playback"
+    ],
+    "passes": false
+  },
+  {
+    "category": "gameplay",
+    "description": "Active player can position song in their timeline",
+    "steps": [
+      "New song card appears at leftmost position in timeline",
+      "Player can drag song to any position between existing songs",
+      "Visual drop zones indicate valid positions",
+      "Timeline shows existing songs with years visible",
+      "Position updates in real-time as player drags",
+      "Turn timer countdown visible"
+    ],
+    "passes": false
+  },
+  {
+    "category": "gameplay",
+    "description": "Active player can optionally guess song name and artist",
+    "steps": [
+      "Text input fields for song name and artist (optional)",
+      "Fields remain editable until turn submitted",
+      "Fuzzy matching for validation (handles & vs 'and', minor typos)",
+      "Correct guess awards 1 bonus token"
+    ],
+    "passes": false
+  },
+  {
+    "category": "gameplay",
+    "description": "Active player's turn auto-submits when timer expires",
+    "steps": [
+      "Turn timer counts down from configured duration",
+      "Visual and audio warning at 10 seconds remaining",
+      "When timer reaches 0, current position is locked",
+      "Turn automatically submitted with current state"
+    ],
+    "passes": false
+  },
+  {
+    "category": "gameplay",
+    "description": "Active player can manually confirm turn early",
+    "steps": [
+      "Confirm button always visible during turn",
+      "Click confirm to lock in position and optional guess",
+      "Turn ends, steal phase begins"
+    ],
+    "passes": false
+  },
+  {
+    "category": "gameplay",
+    "description": "Correct placement adds song to player's timeline",
+    "steps": [
+      "Validate song year against adjacent songs in timeline",
+      "If year is between adjacent songs (or at correct boundary), placement correct",
+      "Song revealed with title, artist, year",
+      "Success animation plays",
+      "Song permanently added to timeline"
+    ],
+    "passes": false
+  },
+  {
+    "category": "gameplay",
+    "description": "Incorrect placement discards song",
+    "steps": [
+      "Validate song year against placement",
+      "If year doesn't fit position, placement incorrect",
+      "Song revealed with title, artist, year",
+      "Show correct position indicator",
+      "Failure animation plays",
+      "Song discarded (not added to timeline)"
+    ],
+    "passes": false
+  },
+  {
+    "category": "stealing",
+    "description": "Steal phase begins after active player confirms",
+    "steps": [
+      "Steal phase timer starts (default 10s)",
+      "Song continues playing from where it stopped",
+      "Visual countdown indicator on all screens",
+      "Active player sees their submission, can reflect on choice",
+      "Other players can attempt to steal"
+    ],
+    "passes": false
+  },
+  {
+    "category": "stealing",
+    "description": "Players can spend token to attempt steal",
+    "steps": [
+      "Other players see active player's timeline",
+      "Click 'Steal' button (costs 1 token)",
+      "Drag song to position they think is correct",
+      "Submit steal attempt",
+      "Token deducted immediately"
+    ],
+    "passes": false
+  },
+  {
+    "category": "stealing",
+    "description": "Steal positions are first-come-first-serve",
+    "steps": [
+      "When player places steal at a position, that position is locked",
+      "Other players cannot place steal at same position",
+      "Visual indicator shows occupied positions",
+      "Multiple players can steal at different positions"
+    ],
+    "passes": false
+  },
+  {
+    "category": "stealing",
+    "description": "Successful steal transfers song to stealer",
+    "steps": [
+      "If stealer's position is correct AND original player was wrong",
+      "Song added to stealer's timeline instead",
+      "Original player gets nothing",
+      "Success animation for stealer"
+    ],
+    "passes": false
+  },
+  {
+    "category": "stealing",
+    "description": "Failed steal loses token only",
+    "steps": [
+      "If stealer's position is incorrect",
+      "Token already deducted, no refund",
+      "No other penalty",
+      "Song discarded if original player also wrong"
+    ],
+    "passes": false
+  },
+  {
+    "category": "tokens",
+    "description": "Players start with 2 tokens",
+    "steps": [
+      "Game initialization gives each player 2 tokens",
+      "Token count displayed on player's UI",
+      "Token count visible to all players"
+    ],
+    "passes": false
+  },
+  {
+    "category": "tokens",
+    "description": "Active player can spend 1 token to skip song",
+    "steps": [
+      "Skip button visible during active player's turn",
+      "Button disabled if player has 0 tokens",
+      "Click skip, confirm dialog appears",
+      "Token deducted, current song discarded",
+      "New random song drawn and played",
+      "Turn timer resets"
+    ],
+    "passes": false
+  },
+  {
+    "category": "tokens",
+    "description": "Active player can spend 3 tokens for free song",
+    "steps": [
+      "Free song button visible during turn",
+      "Button disabled if player has fewer than 3 tokens",
+      "Click button, confirm dialog appears",
+      "3 tokens deducted",
+      "Random song added to timeline at correct position automatically",
+      "Turn continues normally with original song"
+    ],
+    "passes": false
+  },
+  {
+    "category": "tokens",
+    "description": "Correct song/artist guess awards 1 token",
+    "steps": [
+      "Player enters song name and artist during turn",
+      "Fuzzy matching validates guess",
+      "If both correct, award 1 token",
+      "Visual feedback for successful guess"
+    ],
+    "passes": false
+  },
+  {
+    "category": "turns",
+    "description": "Turn order shuffles each round",
+    "steps": [
+      "Round = each player has had one turn",
+      "At start of new round, shuffle turn order",
+      "Shuffle animation shown on all screens",
+      "New order displayed before first turn of round"
+    ],
+    "passes": false
+  },
+  {
+    "category": "turns",
+    "description": "Current player indicator shown clearly",
+    "steps": [
+      "Active player highlighted in player list",
+      "Active player's phone shows 'Your Turn' prominently",
+      "Other players' phones show who is playing",
+      "Host display shows active player's timeline large"
+    ],
+    "passes": false
+  },
+  {
+    "category": "turns",
+    "description": "Turn progresses to next player after completion",
+    "steps": [
+      "After steal phase ends",
+      "Reveal results (correct/incorrect, any steals)",
+      "Brief pause for results",
+      "Advance to next player in order",
+      "New song drawn and plays"
+    ],
+    "passes": false
+  },
+  {
+    "category": "winning",
+    "description": "Game ends when player reaches target songs",
+    "steps": [
+      "Check timeline count after each song added",
+      "When player reaches configured target (default 10)",
+      "Game immediately ends",
+      "Winner announcement with celebration animation",
+      "Transition to results screen"
+    ],
+    "passes": false
+  },
+  {
+    "category": "winning",
+    "description": "Results screen shows game leaderboard",
+    "steps": [
+      "Display all players ranked by timeline size",
+      "Show winner prominently",
+      "Display songs in each player's timeline",
+      "Show token counts",
+      "Show accuracy stats (correct placements vs total)"
+    ],
+    "passes": false
+  },
+  {
+    "category": "winning",
+    "description": "Results screen shows party stats",
+    "steps": [
+      "Display wins per player across party session",
+      "Show games played count",
+      "Show party MVP (most wins)"
+    ],
+    "passes": false
+  },
+  {
+    "category": "winning",
+    "description": "Host can start rematch",
+    "steps": [
+      "Rematch button visible only to host",
+      "New players can join during results screen",
+      "Click rematch to start new game",
+      "Party stats preserved",
+      "Game stats reset",
+      "Return to lobby briefly then start"
+    ],
+    "passes": false
+  },
+  {
+    "category": "playlist",
+    "description": "Default playlist loaded if none specified",
+    "steps": [
+      "Default playlist: https://open.spotify.com/playlist/0Mpj1KwRmY2pHzmj7mfbdh",
+      "Fetch tracks via Spotify API",
+      "Store track pool for game session"
+    ],
+    "passes": false
+  },
+  {
+    "category": "playlist",
+    "description": "Host can specify custom playlist",
+    "steps": [
+      "Paste Spotify playlist URL in settings",
+      "Validate playlist exists and is accessible",
+      "Show warning if playlist has fewer than 100 tracks",
+      "Load tracks from custom playlist"
+    ],
+    "passes": false
+  },
+  {
+    "category": "playlist",
+    "description": "Songs used only once per game",
+    "steps": [
+      "Track used songs in game state",
+      "Never repeat a song in same game",
+      "Remove used songs from pool"
+    ],
+    "passes": false
+  },
+  {
+    "category": "playlist",
+    "description": "Fallback to default if custom playlist exhausted",
+    "steps": [
+      "If custom playlist runs out of songs",
+      "Switch to default playlist",
+      "Notify players of fallback",
+      "Continue game"
+    ],
+    "passes": false
+  },
+  {
+    "category": "playlist",
+    "description": "Handle total song exhaustion gracefully",
+    "steps": [
+      "If both playlists exhausted (edge case)",
+      "End game early",
+      "Declare winner based on current standings",
+      "Show appropriate message"
+    ],
+    "passes": false
+  },
+  {
+    "category": "reconnection",
+    "description": "Disconnected players can rejoin",
+    "steps": [
+      "Player loses connection",
+      "Show disconnected indicator to others",
+      "Player navigates back to join page",
+      "Enter same PIN and name",
+      "Restore to previous game state",
+      "Resume participation"
+    ],
+    "passes": false
+  },
+  {
+    "category": "reconnection",
+    "description": "Host disconnection handled gracefully",
+    "steps": [
+      "If host disconnects during game",
+      "Pause game state",
+      "Show waiting indicator",
+      "Host can rejoin and resume",
+      "Playback resumes on host device"
+    ],
+    "passes": false
+  },
+  {
+    "category": "display",
+    "description": "Host main display shows current game state",
+    "steps": [
+      "Large view of active player's timeline",
+      "Song cards with years clearly visible",
+      "Drag position highlighted during turn",
+      "Timer prominently displayed",
+      "Small progress indicators for all players (song counts)"
+    ],
+    "passes": false
+  },
+  {
+    "category": "display",
+    "description": "Player phone view optimized for mobile",
+    "steps": [
+      "Responsive layout for phone screens",
+      "Touch-friendly drag and drop",
+      "Timeline scrollable horizontally",
+      "Large touch targets for buttons",
+      "Clear token and timer display"
+    ],
+    "passes": false
+  },
+  {
+    "category": "display",
+    "description": "Theme toggle for light/dark mode",
+    "steps": [
+      "Toggle in settings/header",
+      "Follow shadcn theming patterns",
+      "Persist preference",
+      "System preference detection"
+    ],
+    "passes": false
+  },
+  {
+    "category": "statistics",
+    "description": "Full game data stored for host",
+    "steps": [
+      "Store complete game history in database",
+      "Track each turn, placement, steal attempt",
+      "Store all player data and results",
+      "Link to host account"
+    ],
+    "passes": false
+  },
+  {
+    "category": "statistics",
+    "description": "Host dashboard shows game history",
+    "steps": [
+      "List of past games with dates",
+      "Click to view detailed game stats",
+      "Aggregate stats across all games",
+      "Visual charts/graphs for stats"
+    ],
+    "passes": false
+  },
+  {
+    "category": "statistics",
+    "description": "Detailed stats per game",
+    "steps": [
+      "Winner and final standings",
+      "Each player's accuracy percentage",
+      "Tokens earned and spent per player",
+      "Average placement time",
+      "Songs guessed correctly",
+      "Steal attempts and success rate"
+    ],
+    "passes": false
+  },
+  {
+    "category": "ui",
+    "description": "Skeleton loaders for async content",
+    "steps": [
+      "Show skeleton placeholders while loading",
+      "Use React Suspense boundaries",
+      "Smooth transitions when content loads"
+    ],
+    "passes": false
+  },
+  {
+    "category": "ui",
+    "description": "Avatar selection with emoji presets",
+    "steps": [
+      "Grid of emoji avatar options",
+      "Click to select",
+      "Visual selection indicator",
+      "Minimum 20 avatar options"
+    ],
+    "passes": false
+  },
+  {
+    "category": "ui",
+    "description": "QR code for easy game joining",
+    "steps": [
+      "Generate QR code with join URL + PIN",
+      "Display alongside PIN in lobby",
+      "Scannable on mobile devices"
+    ],
+    "passes": false
+  },
+  {
+    "category": "ui",
+    "description": "Countdown timers with visual feedback",
+    "steps": [
+      "Circular or bar progress for timers",
+      "Color changes as time runs low",
+      "Final seconds pulse/flash animation"
+    ],
+    "passes": false
+  },
+  {
+    "category": "ui",
+    "description": "Drag and drop timeline interaction",
+    "steps": [
+      "Smooth drag animations",
+      "Clear drop zone indicators",
+      "Haptic feedback on mobile if available",
+      "Snap-to-position behavior"
+    ],
+    "passes": false
+  },
+  {
+    "category": "ui",
+    "description": "Turn shuffle animation",
+    "steps": [
+      "Visual player order cards",
+      "Shuffle animation when order randomizes",
+      "Settle into new positions",
+      "Highlight first player"
+    ],
+    "passes": false
+  },
+  {
+    "category": "database",
+    "description": "Database schema for game data",
+    "steps": [
+      "Users table (hosts with Spotify tokens)",
+      "GameSessions table (PIN, settings, state)",
+      "Players table (name, avatar, session link)",
+      "GameHistory table (full game data JSON)",
+      "Turns table (each turn details)"
+    ],
+    "passes": false
+  },
+  {
+    "category": "api",
+    "description": "tRPC subscriptions for real-time",
+    "steps": [
+      "Configure WebSocket or SSE transport",
+      "Subscription for lobby updates",
+      "Subscription for game state changes",
+      "Subscription for turn/steal events",
+      "Fallback to Socket.io if needed"
+    ],
+    "passes": false
+  },
+  {
+    "category": "spotify",
+    "description": "Spotify OAuth with required scopes",
+    "steps": [
+      "Configure Better Auth Spotify provider",
+      "Request scopes: streaming, user-read-email, user-read-private, playlist-read-private",
+      "Store and refresh access tokens",
+      "Handle token expiration"
+    ],
+    "passes": false
+  },
+  {
+    "category": "spotify",
+    "description": "Spotify Web Playback SDK integration",
+    "steps": [
+      "Initialize SDK on host client",
+      "Create player instance",
+      "Transfer playback to web player",
+      "Control play/pause/seek",
+      "Handle playback errors"
+    ],
+    "passes": false
+  },
+  {
+    "category": "spotify",
+    "description": "Fetch playlist tracks",
+    "steps": [
+      "Call Spotify API for playlist tracks",
+      "Extract track ID, name, artist, release year",
+      "Handle pagination for large playlists",
+      "Cache playlist data for session"
+    ],
+    "passes": false
+  },
+  {
+    "category": "spotify",
+    "description": "Hide song metadata during playback",
+    "steps": [
+      "Do not display track name or artist during turn",
+      "Do not show album art",
+      "Only reveal after placement confirmed",
+      "Ensure Web Playback SDK doesn't expose metadata to DOM"
+    ],
+    "passes": false
+  },
+  {
+    "category": "deployment",
+    "description": "Vercel-ready configuration",
+    "steps": [
+      "Environment variables configured",
+      "Build outputs optimized",
+      "Edge functions where appropriate"
+    ],
+    "passes": false
+  },
+  {
+    "category": "deployment",
+    "description": "Docker support for self-hosting",
+    "steps": [
+      "Dockerfile for production build",
+      "Docker compose for full stack",
+      "Environment variable documentation"
+    ],
+    "passes": false
+  }
+]
