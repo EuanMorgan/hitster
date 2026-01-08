@@ -59,3 +59,34 @@ Configure Vitest for unit/integration testing (PRD item #2)
 
 ### Next priority:
 Configure Playwright for E2E testing (PRD item #3)
+
+---
+
+## 2026-01-08: Playwright E2E Testing Setup Complete
+
+### What was done:
+- Installed @playwright/test 1.57.0
+- Installed Chromium browser for Playwright
+- Created playwright.config.ts with Next.js webServer integration
+- Added e2e test scripts to package.json (test:e2e, test:e2e:ui)
+- Created sample E2E tests for home page (3 tests)
+- Verified all E2E tests pass via `bun run test:e2e`
+- Verified typecheck passes, unit tests pass
+
+### Files created/modified:
+- playwright.config.ts (Playwright configuration)
+- e2e/home.spec.ts (sample E2E tests)
+- package.json (added e2e scripts)
+
+### Dependencies added:
+- @playwright/test
+
+### Notes:
+- Use `bun run test:e2e` to run E2E tests
+- Use `bun run test:e2e:ui` for interactive UI mode
+- Config auto-starts dev server if not running
+- Tests use Chromium only (can add Firefox/Safari later)
+- HTML reporter generates to playwright-report/
+
+### Next priority:
+Configure test mocking infrastructure (PRD item #4)
