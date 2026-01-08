@@ -231,6 +231,15 @@ function ActivePlayerTimeline({
       : timerPercentage <= 50
         ? "text-amber-500"
         : "text-green-500";
+  const barColorClass =
+    timerPercentage <= 25
+      ? "bg-red-500"
+      : timerPercentage <= 50
+        ? "bg-amber-500"
+        : "bg-green-500";
+  // Pulse at 1Hz during last 5 seconds
+  const shouldPulse =
+    timeRemaining !== null && timeRemaining <= 5 && timeRemaining > 0;
 
   return (
     <Card className="border-2 border-primary bg-primary/5 relative">
@@ -239,7 +248,7 @@ function ActivePlayerTimeline({
         <div className="absolute top-4 right-4 flex flex-col items-center">
           <div
             className={`text-5xl md:text-6xl font-mono font-bold ${timerColorClass} ${
-              timerPercentage <= 25 ? "animate-pulse" : ""
+              shouldPulse ? "animate-[pulse_1s_ease-in-out_infinite]" : ""
             }`}
             style={{ minWidth: "80px", textAlign: "center" }}
           >
@@ -248,13 +257,7 @@ function ActivePlayerTimeline({
           {/* Progress bar */}
           <div className="w-20 h-2 bg-muted rounded-full mt-2 overflow-hidden">
             <div
-              className={`h-full transition-all duration-1000 ${
-                timerPercentage <= 25
-                  ? "bg-red-500"
-                  : timerPercentage <= 50
-                    ? "bg-amber-500"
-                    : "bg-green-500"
-              }`}
+              className={`h-full transition-all duration-1000 ${barColorClass}`}
               style={{ width: `${timerPercentage}%` }}
             />
           </div>
@@ -996,6 +999,7 @@ export default function GamePage() {
               activePlayerPlacement={session.activePlayerPlacement ?? 0}
               stealAttempts={session.stealAttempts ?? []}
               stealPhaseEndAt={session.stealPhaseEndAt}
+              stealWindowDuration={session.stealWindowDuration ?? 10}
               myTokens={myPlayer.tokens}
               isActivePlayer={isMyTurn}
               hasAlreadyStolen={hasAlreadyStolen}

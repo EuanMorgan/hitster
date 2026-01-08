@@ -377,3 +377,23 @@ Files changed:
 - src/components/steal-phase.tsx (responsive sizing, touch targets)
 - src/app/game/[pin]/page.tsx (responsive cards, headers, player list)
 - plans/prd.json (marked display #32 as passes: true)
+
+## 2026-01-08: Implemented countdown timer visual feedback
+
+PRD items: ui #4 (Countdown timers with visual feedback)
+
+Changes:
+- TurnTimer: percentage-based colors (green>50%, amber 25-50%, red≤25%), 1Hz pulse at last 5s
+- StealTimer: added stealWindowDuration prop for percentage calc, same color scheme + pulse
+- ActivePlayerTimeline timer: changed from ≤25% pulse to last 5s pulse
+
+All 3 PRD steps verified:
+1. ✅ Bar progress for timers - all timers have progress bars
+2. ✅ Timer green >50%, yellow 25-50%, red <25% - implemented in all 3 timer components
+3. ✅ Last 5 seconds: timer pulses at 1Hz - uses animate-[pulse_1s_ease-in-out_infinite]
+
+Files changed:
+- src/components/timeline-drop-zone.tsx (TurnTimer color+pulse logic)
+- src/components/steal-phase.tsx (StealTimer color+pulse+progress bar, new prop)
+- src/app/game/[pin]/page.tsx (ActivePlayerTimeline timer pulse, pass stealWindowDuration)
+- plans/prd.json (marked ui #4 as passes: true)

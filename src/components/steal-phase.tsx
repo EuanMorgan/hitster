@@ -30,6 +30,7 @@ interface StealPhaseProps {
   activePlayerPlacement: number;
   stealAttempts: ActiveStealAttempt[];
   stealPhaseEndAt: string;
+  stealWindowDuration: number;
   myTokens: number;
   isActivePlayer: boolean;
   hasAlreadyStolen: boolean;
@@ -145,12 +146,14 @@ function TimelineSongCard({ song }: { song: TimelineSong }) {
 
 function StealTimer({
   stealPhaseEndAt,
+  stealWindowDuration,
   onTimeUp,
 }: {
   stealPhaseEndAt: string;
+  stealWindowDuration: number;
   onTimeUp: () => void;
 }) {
-  const [timeLeft, setTimeLeft] = useState(10);
+  const [timeLeft, setTimeLeft] = useState(stealWindowDuration);
   const [hasTriggered, setHasTriggered] = useState(false);
 
   useEffect(() => {
@@ -171,7 +174,22 @@ function StealTimer({
     return () => clearInterval(interval);
   }, [stealPhaseEndAt, onTimeUp, hasTriggered]);
 
-  const isLow = timeLeft <= 3;
+  const percentage = (timeLeft / stealWindowDuration) * 100;
+  // Color based on percentage: green >50%, amber 25-50%, red <25%
+  const colorClass =
+    percentage <= 25
+      ? "text-red-500"
+      : percentage <= 50
+        ? "text-amber-500"
+        : "text-green-500";
+  const barColorClass =
+    percentage <= 25
+      ? "bg-red-500"
+      : percentage <= 50
+        ? "bg-amber-500"
+        : "bg-green-500";
+  // Pulse at 1Hz during last 5 seconds
+  const shouldPulse = timeLeft <= 5 && timeLeft > 0;
 
   return (
     <div className="flex flex-col items-center gap-1.5 sm:gap-2">
@@ -179,11 +197,17 @@ function StealTimer({
         🎯 STEAL PHASE
       </div>
       <div
-        className={`text-2xl sm:text-3xl font-mono font-bold ${
-          isLow ? "text-red-500 animate-pulse" : "text-amber-500"
+        className={`text-2xl sm:text-3xl font-mono font-bold ${colorClass} ${
+          shouldPulse ? "animate-[pulse_1s_ease-in-out_infinite]" : ""
         }`}
       >
         {timeLeft}s
+      </div>
+      <div className="w-32 h-2 bg-muted rounded-full overflow-hidden">
+        <div
+          className={`h-full transition-all duration-100 ${barColorClass}`}
+          style={{ width: `${percentage}%` }}
+        />
       </div>
     </div>
   );
@@ -196,6 +220,7 @@ export function StealPhase({
   activePlayerPlacement,
   stealAttempts,
   stealPhaseEndAt,
+  stealWindowDuration,
   myTokens,
   isActivePlayer,
   hasAlreadyStolen,
@@ -269,7 +294,11 @@ export function StealPhase({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <StealTimer stealPhaseEndAt={stealPhaseEndAt} onTimeUp={handleTimeUp} />
+        <StealTimer
+          stealPhaseEndAt={stealPhaseEndAt}
+          stealWindowDuration={stealWindowDuration}
+          onTimeUp={handleTimeUp}
+        />
 
         <div className="text-center text-sm text-muted-foreground">
           {activePlayerName} placed the song.{" "}

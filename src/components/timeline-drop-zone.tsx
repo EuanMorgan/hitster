@@ -176,27 +176,39 @@ function TurnTimer({
   }, []);
 
   const percentage = (timeLeft / turnDuration) * 100;
-  const isLow = timeLeft <= 10;
+  // Color based on percentage: green >50%, amber 25-50%, red <25%
+  const colorClass =
+    percentage <= 25
+      ? "text-red-500"
+      : percentage <= 50
+        ? "text-amber-500"
+        : "text-green-500";
+  const barColorClass =
+    percentage <= 25
+      ? "bg-red-500"
+      : percentage <= 50
+        ? "bg-amber-500"
+        : "bg-green-500";
+  // Pulse at 1Hz during last 5 seconds
+  const shouldPulse = timeLeft <= 5 && timeLeft > 0;
 
   return (
     <div className="flex flex-col items-center gap-2">
       <div
-        className={`text-3xl sm:text-4xl font-mono font-bold ${
-          isLow ? "text-red-500 animate-pulse" : "text-foreground"
+        className={`text-3xl sm:text-4xl font-mono font-bold ${colorClass} ${
+          shouldPulse ? "animate-[pulse_1s_ease-in-out_infinite]" : ""
         }`}
       >
         {timeLeft}s
       </div>
-      {isLow && timeLeft > 0 && (
+      {timeLeft <= 5 && timeLeft > 0 && (
         <div className="text-xs sm:text-sm text-red-500 font-medium animate-bounce">
           ⚠️ Time running out!
         </div>
       )}
       <div className="w-full max-w-xs h-2 bg-muted rounded-full overflow-hidden">
         <div
-          className={`h-full transition-all duration-1000 ${
-            isLow ? "bg-red-500" : "bg-primary"
-          }`}
+          className={`h-full transition-all duration-1000 ${barColorClass}`}
           style={{ width: `${percentage}%` }}
         />
       </div>

@@ -698,7 +698,7 @@
       "Timer green >50%, yellow 25-50%, red <25%",
       "Last 5 seconds: timer pulses at 1Hz"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "ui",
