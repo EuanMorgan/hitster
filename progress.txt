@@ -932,3 +932,45 @@ Active player can position song in their timeline (PRD gameplay item)
 
 ### Next priority:
 - Playlist loading features (PRD items #36-40)
+
+---
+
+## 2026-01-08: Spotify Playlist Loading Complete
+
+### What was done:
+- Added playlistSongs and usingFallbackPlaylist fields to game_sessions schema
+- Added PlaylistSong type for storing loaded playlist tracks with uri field
+- startGame now loads playlist from Spotify API (custom URL or default playlist)
+- Default playlist ID: 0Mpj1KwRmY2pHzmj7mfbdh
+- Warns if playlist has <100 tracks
+- Falls back to default playlist if custom playlist fails to load
+- Updated skipSong, getFreeSong, resolveStealPhase to use session's playlistSongs
+- All song drawing operations now include fallback to PLACEHOLDER_SONGS when playlist exhausted
+- Total song exhaustion ends game, declares winner by timeline count
+- Song uri field propagated through all mutations for Spotify playback
+
+### Files modified:
+- src/db/schema.ts (PlaylistSong type, playlistSongs/usingFallbackPlaylist fields)
+- src/trpc/routers/game.ts (playlist loading in startGame, fallback logic, uri propagation)
+- src/mocks/fixtures.ts (updated with new schema fields)
+- src/mocks/db.ts (updated seedGameSession, added createPlaylistSong helper)
+- plans/prd.json (marked PRD items #36-40 as passing)
+
+### PRD items marked as passing:
+- "Default playlist loaded if none specified" (#36)
+- "Host can specify custom playlist" (#37)
+- "Songs used only once per game" (#38)
+- "Fallback to default if custom playlist exhausted" (#39)
+- "Handle total song exhaustion gracefully" (#40)
+
+### Notes:
+- extractPlaylistId helper parses Spotify URLs and URIs
+- Token refresh handled before playlist fetch
+- Playlist songs stored in session for consistent song pool during game
+- Falls back to PLACEHOLDER_SONGS if Spotify API unavailable
+- Schema change requires db:push
+
+### Next priority:
+- Reconnection handling (PRD items #43-44)
+- Theme toggle (PRD item #47)
+- Host/Player display optimization (PRD items #45-46)

@@ -136,6 +136,14 @@ export type ActivePlayerGuess = {
   guessedArtist: string | null;
 };
 
+export type PlaylistSong = {
+  songId: string;
+  name: string;
+  artist: string;
+  year: number;
+  uri: string;
+};
+
 export const gameSessions = pgTable("game_sessions", {
   id: uuid("id").primaryKey().defaultRandom(),
   pin: varchar("pin", { length: 4 }).notNull().unique(),
@@ -163,6 +171,9 @@ export const gameSessions = pgTable("game_sessions", {
   stealAttempts: jsonb("steal_attempts")
     .$type<ActiveStealAttempt[]>()
     .default([]),
+  // Loaded playlist songs for the game
+  playlistSongs: jsonb("playlist_songs").$type<PlaylistSong[]>(),
+  usingFallbackPlaylist: boolean("using_fallback_playlist").default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

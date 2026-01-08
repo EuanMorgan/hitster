@@ -3,13 +3,16 @@ import { and, eq, ne } from "drizzle-orm";
 import { z } from "zod/v4";
 import {
   type ActiveStealAttempt,
+  account,
   type CurrentTurnSong,
   gameSessions,
   type Player,
+  type PlaylistSong,
   players,
   type TimelineSong,
   turns,
 } from "@/db/schema";
+import { env } from "@/env";
 import { baseProcedure, createTRPCRouter, protectedProcedure } from "../init";
 
 function shuffleArray<T>(array: T[]): T[] {
@@ -74,8 +77,117 @@ function fuzzyMatch(guess: string, actual: string, tolerance = 0.2): boolean {
   return maxLength > 0 && distance / maxLength <= tolerance;
 }
 
-// Placeholder songs with real Spotify URIs until playlist loading is implemented
-const PLACEHOLDER_SONGS = [
+// Default playlist to use when none specified or as fallback
+const DEFAULT_PLAYLIST_ID = "0Mpj1KwRmY2pHzmj7mfbdh";
+const SPOTIFY_API_BASE = "https://api.spotify.com/v1";
+
+// Refresh the Spotify access token using the refresh token
+async function refreshSpotifyToken(refreshToken: string): Promise<{
+  accessToken: string;
+  expiresAt: Date;
+}> {
+  const response = await fetch("https://accounts.spotify.com/api/token", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      Authorization: `Basic ${Buffer.from(
+        `${env.SPOTIFY_CLIENT_ID}:${env.SPOTIFY_CLIENT_SECRET}`,
+      ).toString("base64")}`,
+    },
+    body: new URLSearchParams({
+      grant_type: "refresh_token",
+      refresh_token: refreshToken,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to refresh Spotify token");
+  }
+
+  const data = await response.json();
+  const expiresAt = new Date(Date.now() + data.expires_in * 1000);
+
+  return {
+    accessToken: data.access_token,
+    expiresAt,
+  };
+}
+
+// Fetch playlist tracks from Spotify API
+async function fetchPlaylistTracks(
+  playlistId: string,
+  accessToken: string,
+): Promise<PlaylistSong[]> {
+  const tracks: PlaylistSong[] = [];
+  let currentUrl: string | null =
+    `${SPOTIFY_API_BASE}/playlists/${playlistId}/tracks?limit=100`;
+
+  while (currentUrl) {
+    const response: Response = await fetch(currentUrl, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        throw new Error("Playlist not found");
+      }
+      throw new Error("Failed to fetch playlist tracks from Spotify");
+    }
+
+    const data: {
+      items: Array<{
+        track?: {
+          id?: string;
+          name?: string;
+          uri?: string;
+          album?: { release_date?: string };
+          artists?: Array<{ name: string }>;
+        };
+      }>;
+      next: string | null;
+    } = await response.json();
+
+    for (const item of data.items) {
+      if (!item.track) continue;
+
+      const track = item.track;
+      const releaseDate = track.album?.release_date || "";
+      const year = Number.parseInt(releaseDate.split("-")[0], 10);
+
+      if (!Number.isNaN(year) && track.id && track.name && track.uri) {
+        tracks.push({
+          songId: track.id,
+          name: track.name,
+          artist: track.artists?.map((a) => a.name).join(", ") || "Unknown",
+          year,
+          uri: track.uri,
+        });
+      }
+    }
+
+    currentUrl = data.next;
+  }
+
+  return tracks;
+}
+
+// Extract playlist ID from Spotify URL
+function extractPlaylistId(url: string): string | null {
+  const patterns = [
+    /spotify\.com\/playlist\/([a-zA-Z0-9]+)/,
+    /spotify:playlist:([a-zA-Z0-9]+)/,
+  ];
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) return match[1];
+  }
+  return null;
+}
+
+// Fallback placeholder songs (used when Spotify API unavailable)
+const PLACEHOLDER_SONGS: PlaylistSong[] = [
   {
     songId: "7tFiyTwD0nx5a1eklYtX2J",
     name: "Bohemian Rhapsody",
@@ -593,12 +705,88 @@ export const gameRouter = createTRPCRouter({
         });
       }
 
+      // Load playlist songs from Spotify
+      let playlistSongs: PlaylistSong[] = [];
+      let playlistWarning: string | null = null;
+
+      // Get host's Spotify access token
+      const spotifyAccount = await ctx.db.query.account.findFirst({
+        where: eq(account.userId, ctx.user.id),
+      });
+
+      if (spotifyAccount?.accessToken) {
+        let accessToken = spotifyAccount.accessToken;
+
+        // Check if token needs refresh
+        const expiresAt = spotifyAccount.accessTokenExpiresAt;
+        const isExpiringSoon =
+          expiresAt && expiresAt.getTime() < Date.now() + 5 * 60 * 1000;
+
+        if (isExpiringSoon && spotifyAccount.refreshToken) {
+          try {
+            const { accessToken: newToken, expiresAt: newExpiresAt } =
+              await refreshSpotifyToken(spotifyAccount.refreshToken);
+            accessToken = newToken;
+
+            await ctx.db
+              .update(account)
+              .set({
+                accessToken: newToken,
+                accessTokenExpiresAt: newExpiresAt,
+              })
+              .where(eq(account.id, spotifyAccount.id));
+          } catch {
+            // Fall back to placeholder if token refresh fails
+            console.error(
+              "Failed to refresh Spotify token, using placeholders",
+            );
+          }
+        }
+
+        // Determine which playlist to load
+        const playlistId = session.playlistUrl
+          ? extractPlaylistId(session.playlistUrl)
+          : DEFAULT_PLAYLIST_ID;
+
+        if (playlistId) {
+          try {
+            playlistSongs = await fetchPlaylistTracks(playlistId, accessToken);
+
+            // Warn if fewer than 100 tracks
+            if (playlistSongs.length < 100 && playlistSongs.length > 0) {
+              playlistWarning = `Playlist has only ${playlistSongs.length} tracks (recommended: 100+)`;
+            }
+          } catch (error) {
+            console.error("Failed to fetch playlist:", error);
+            // If custom playlist fails, try default
+            if (session.playlistUrl && playlistId !== DEFAULT_PLAYLIST_ID) {
+              try {
+                playlistSongs = await fetchPlaylistTracks(
+                  DEFAULT_PLAYLIST_ID,
+                  accessToken,
+                );
+                playlistWarning =
+                  "Custom playlist failed, using default playlist";
+              } catch {
+                console.error("Failed to fetch default playlist too");
+              }
+            }
+          }
+        }
+      }
+
+      // Fall back to placeholder songs if no Spotify songs loaded
+      if (playlistSongs.length === 0) {
+        playlistSongs = PLACEHOLDER_SONGS;
+        playlistWarning = "Using offline song library";
+      }
+
       // Shuffle turn order
       const playerIds = connectedPlayers.map((p: Player) => p.id);
       const turnOrder = shuffleArray(playerIds);
 
       // Shuffle available songs and assign one to each player
-      const shuffledSongs = shuffleArray(PLACEHOLDER_SONGS);
+      const shuffledSongs = shuffleArray(playlistSongs);
       const usedSongIds: string[] = [];
 
       for (let i = 0; i < connectedPlayers.length; i++) {
@@ -610,6 +798,7 @@ export const gameRouter = createTRPCRouter({
           name: song.name,
           artist: song.artist,
           year: song.year,
+          uri: song.uri,
           addedAt: new Date().toISOString(),
         };
 
@@ -629,10 +818,11 @@ export const gameRouter = createTRPCRouter({
         name: firstTurnSong.name,
         artist: firstTurnSong.artist,
         year: firstTurnSong.year,
+        uri: firstTurnSong.uri,
       };
       usedSongIds.push(firstTurnSong.songId);
 
-      // Update game session state
+      // Update game session state with loaded playlist
       await ctx.db
         .update(gameSessions)
         .set({
@@ -643,6 +833,8 @@ export const gameRouter = createTRPCRouter({
           currentSong,
           turnStartedAt: new Date(),
           roundNumber: 1,
+          playlistSongs: shuffledSongs, // Store shuffled songs for the game
+          usingFallbackPlaylist: playlistSongs === PLACEHOLDER_SONGS,
           updatedAt: new Date(),
         })
         .where(eq(gameSessions.id, session.id));
@@ -651,6 +843,8 @@ export const gameRouter = createTRPCRouter({
         success: true,
         turnOrder,
         firstPlayerId: turnOrder[0],
+        playlistWarning,
+        totalSongs: playlistSongs.length,
       };
     }),
 
@@ -937,13 +1131,28 @@ export const gameRouter = createTRPCRouter({
         .set({ tokens: player.tokens - 1 })
         .where(eq(players.id, input.playerId));
 
-      // Draw a new song
+      // Draw a new song from the session's loaded playlist
       const usedSongIds = new Set(session.usedSongIds ?? []);
       usedSongIds.add(session.currentSong.songId); // Mark current song as used
 
-      const availableSongs = PLACEHOLDER_SONGS.filter(
-        (s) => !usedSongIds.has(s.songId),
-      );
+      // Use stored playlist songs, fall back to PLACEHOLDER_SONGS
+      const songPool = session.playlistSongs ?? PLACEHOLDER_SONGS;
+      let availableSongs = songPool.filter((s) => !usedSongIds.has(s.songId));
+
+      // If custom playlist exhausted, try fallback to default (placeholder) songs
+      if (availableSongs.length === 0 && !session.usingFallbackPlaylist) {
+        const fallbackAvailable = PLACEHOLDER_SONGS.filter(
+          (s) => !usedSongIds.has(s.songId),
+        );
+        if (fallbackAvailable.length > 0) {
+          availableSongs = fallbackAvailable;
+          // Update session to use fallback
+          await ctx.db
+            .update(gameSessions)
+            .set({ usingFallbackPlaylist: true })
+            .where(eq(gameSessions.id, session.id));
+        }
+      }
 
       if (availableSongs.length === 0) {
         // No more songs - end game
@@ -975,6 +1184,7 @@ export const gameRouter = createTRPCRouter({
             name: nextSong.name,
             artist: nextSong.artist,
             year: nextSong.year,
+            uri: nextSong.uri,
           },
           usedSongIds: [...usedSongIds],
           turnStartedAt: new Date(),
@@ -1052,11 +1262,24 @@ export const gameRouter = createTRPCRouter({
         });
       }
 
-      // Draw a random unused song
+      // Draw a random unused song from session's playlist
       const usedSongIds = new Set(session.usedSongIds ?? []);
-      const availableSongs = PLACEHOLDER_SONGS.filter(
-        (s) => !usedSongIds.has(s.songId),
-      );
+      const songPool = session.playlistSongs ?? PLACEHOLDER_SONGS;
+      let availableSongs = songPool.filter((s) => !usedSongIds.has(s.songId));
+
+      // If custom playlist exhausted, try fallback to default songs
+      if (availableSongs.length === 0 && !session.usingFallbackPlaylist) {
+        const fallbackAvailable = PLACEHOLDER_SONGS.filter(
+          (s) => !usedSongIds.has(s.songId),
+        );
+        if (fallbackAvailable.length > 0) {
+          availableSongs = fallbackAvailable;
+          await ctx.db
+            .update(gameSessions)
+            .set({ usingFallbackPlaylist: true })
+            .where(eq(gameSessions.id, session.id));
+        }
+      }
 
       if (availableSongs.length === 0) {
         throw new TRPCError({
@@ -1074,6 +1297,7 @@ export const gameRouter = createTRPCRouter({
         name: freeSong.name,
         artist: freeSong.artist,
         year: freeSong.year,
+        uri: freeSong.uri,
         addedAt: new Date().toISOString(),
       };
       const newTimeline = [...(player.timeline ?? []), newTimelineSong];
@@ -1327,6 +1551,7 @@ export const gameRouter = createTRPCRouter({
             name: session.currentSong.name,
             artist: session.currentSong.artist,
             year: session.currentSong.year,
+            uri: session.currentSong.uri,
             addedAt: new Date().toISOString(),
           };
           const newTimeline = [...(recipient.timeline ?? []), newSong];
@@ -1385,11 +1610,22 @@ export const gameRouter = createTRPCRouter({
         ? (session.roundNumber ?? 1) + 1
         : (session.roundNumber ?? 1);
 
-      // Draw next song
+      // Draw next song from session's playlist
       const usedSongIds = new Set(session.usedSongIds ?? []);
-      const availableSongs = PLACEHOLDER_SONGS.filter(
-        (s) => !usedSongIds.has(s.songId),
-      );
+      const songPool = session.playlistSongs ?? PLACEHOLDER_SONGS;
+      let availableSongs = songPool.filter((s) => !usedSongIds.has(s.songId));
+      let switchedToFallback = false;
+
+      // If custom playlist exhausted, try fallback to default songs
+      if (availableSongs.length === 0 && !session.usingFallbackPlaylist) {
+        const fallbackAvailable = PLACEHOLDER_SONGS.filter(
+          (s) => !usedSongIds.has(s.songId),
+        );
+        if (fallbackAvailable.length > 0) {
+          availableSongs = fallbackAvailable;
+          switchedToFallback = true;
+        }
+      }
 
       if (availableSongs.length === 0) {
         // Determine winner (player with most songs)
@@ -1454,6 +1690,7 @@ export const gameRouter = createTRPCRouter({
             name: nextSong.name,
             artist: nextSong.artist,
             year: nextSong.year,
+            uri: nextSong.uri,
           },
           usedSongIds: newUsedSongIds,
           turnStartedAt: new Date(),
@@ -1462,6 +1699,9 @@ export const gameRouter = createTRPCRouter({
           activePlayerPlacement: null,
           activePlayerGuess: null,
           stealAttempts: [],
+          usingFallbackPlaylist: switchedToFallback
+            ? true
+            : session.usingFallbackPlaylist,
           updatedAt: new Date(),
         })
         .where(eq(gameSessions.id, session.id));

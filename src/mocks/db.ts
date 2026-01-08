@@ -3,6 +3,7 @@ import type {
   GameHistory,
   GameSession,
   Player,
+  PlaylistSong,
   TimelineSong,
   Turn,
   User,
@@ -83,6 +84,8 @@ export function seedGameSession(
     activePlayerPlacement: sessionData.activePlayerPlacement ?? null,
     activePlayerGuess: sessionData.activePlayerGuess ?? null,
     stealAttempts: sessionData.stealAttempts ?? [],
+    playlistSongs: sessionData.playlistSongs ?? null,
+    usingFallbackPlaylist: sessionData.usingFallbackPlaylist ?? false,
     createdAt: sessionData.createdAt ?? new Date(),
     updatedAt: sessionData.updatedAt ?? new Date(),
   };
@@ -223,5 +226,22 @@ export function createTimelineSong(
     artist: overrides.artist ?? "Test Artist",
     year: overrides.year ?? 2000,
     addedAt: overrides.addedAt ?? new Date().toISOString(),
+    uri:
+      overrides.uri ??
+      `spotify:track:${overrides.songId ?? `song-${Date.now()}`}`,
+  };
+}
+
+// Helper to create a playlist song
+export function createPlaylistSong(
+  overrides: Partial<PlaylistSong> = {},
+): PlaylistSong {
+  const songId = overrides.songId ?? `song-${Date.now()}`;
+  return {
+    songId,
+    name: overrides.name ?? "Test Song",
+    artist: overrides.artist ?? "Test Artist",
+    year: overrides.year ?? 2000,
+    uri: overrides.uri ?? `spotify:track:${songId}`,
   };
 }
