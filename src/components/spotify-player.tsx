@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { signIn } from "@/lib/auth-client";
 import { useTRPC } from "@/trpc/client";
 
 interface SpotifyPlayerProps {
@@ -23,6 +24,13 @@ declare global {
   }
 }
 
+function isReauthRequired(error: unknown): boolean {
+  if (error && typeof error === "object" && "message" in error) {
+    return (error as { message: string }).message === "SPOTIFY_REAUTH_REQUIRED";
+  }
+  return false;
+}
+
 export function SpotifyPlayer({
   isHost,
   trackUri,
@@ -40,14 +48,30 @@ export function SpotifyPlayer({
   const [isReady, setIsReady] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [needsReauth, setNeedsReauth] = useState(false);
   const [currentPosition, setCurrentPosition] = useState(0);
   const positionIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const playbackStartTimeRef = useRef<number | null>(null);
 
   // Get access token from server
-  const { data: tokenData, error: tokenError } = useQuery(
-    trpc.spotify.getAccessToken.queryOptions(),
-  );
+  const {
+    data: tokenData,
+    error: tokenError,
+    refetch: refetchToken,
+  } = useQuery(trpc.spotify.getAccessToken.queryOptions());
+
+  // Handle re-auth redirect
+  const handleReauth = useCallback(() => {
+    setNeedsReauth(true);
+    signIn.social({ provider: "spotify", callbackURL: window.location.href });
+  }, []);
+
+  // Check token error for reauth requirement
+  useEffect(() => {
+    if (tokenError && isReauthRequired(tokenError)) {
+      handleReauth();
+    }
+  }, [tokenError, handleReauth]);
 
   // Play track mutation
   const playTrackMutation = useMutation(
@@ -77,8 +101,14 @@ export function SpotifyPlayer({
     window.onSpotifyWebPlaybackSDKReady = () => {
       const player = new window.Spotify.Player({
         name: "Hitster Game",
-        getOAuthToken: (cb) => {
-          cb(tokenData.accessToken);
+        getOAuthToken: async (cb) => {
+          // Fetch fresh token on each call (SDK calls this when token expires)
+          const result = await refetchToken();
+          if (result.data?.accessToken) {
+            cb(result.data.accessToken);
+          } else if (result.error && isReauthRequired(result.error)) {
+            handleReauth();
+          }
         },
         volume: 0.5,
       });
@@ -90,8 +120,10 @@ export function SpotifyPlayer({
       });
 
       player.addListener("authentication_error", ({ message }) => {
+        // SDK auth error - try to get fresh token, redirect to reauth if fails
         setError(`Authentication error: ${message}`);
         onPlaybackError?.(message);
+        handleReauth();
       });
 
       player.addListener("account_error", ({ message }) => {
@@ -152,8 +184,10 @@ export function SpotifyPlayer({
     onDeviceReady,
     onPlaybackError,
     onPlaybackStarted,
-    onPlaybackStopped, // Transfer playback to this device
+    onPlaybackStopped,
     transferMutation.mutate,
+    refetchToken,
+    handleReauth,
   ]);
 
   // Track position when paused to enable resume
@@ -175,8 +209,12 @@ export function SpotifyPlayer({
             setIsPlaying(true);
           },
           onError: (err) => {
-            setError(err.message);
-            onPlaybackError?.(err.message);
+            if (isReauthRequired(err)) {
+              handleReauth();
+            } else {
+              setError(err.message);
+              onPlaybackError?.(err.message);
+            }
           },
         },
       );
@@ -192,9 +230,10 @@ export function SpotifyPlayer({
     trackUri,
     isPlaying,
     currentPosition,
-    onPlaybackError, // Pause playback
-    pauseMutation.mutate, // Start playback
+    onPlaybackError,
+    pauseMutation.mutate,
     playTrackMutation.mutate,
+    handleReauth,
   ]);
 
   // Track position and auto-stop after duration
@@ -240,9 +279,9 @@ export function SpotifyPlayer({
     }
   });
 
-  // Handle token errors
+  // Handle non-reauth token errors
   useEffect(() => {
-    if (tokenError) {
+    if (tokenError && !isReauthRequired(tokenError)) {
       setError("Failed to get Spotify access token. Please re-authenticate.");
       onPlaybackError?.("Token error");
     }
@@ -259,7 +298,12 @@ export function SpotifyPlayer({
 
   return (
     <div className="bg-zinc-900 rounded-lg p-4 text-white">
-      {error ? (
+      {needsReauth ? (
+        <div className="flex items-center gap-2 text-amber-400">
+          <div className="animate-spin h-4 w-4 border-2 border-amber-500 border-t-transparent rounded-full" />
+          <span>Redirecting to Spotify login...</span>
+        </div>
+      ) : error ? (
         <div className="text-red-400 text-sm">
           ⚠️ {error}
           <p className="text-xs text-zinc-400 mt-1">

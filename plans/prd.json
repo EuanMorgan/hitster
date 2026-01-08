@@ -756,7 +756,7 @@
       "Store and refresh access tokens",
       "When token expires, auto-refresh using refresh_token. If refresh fails, redirect to re-auth"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "spotify",

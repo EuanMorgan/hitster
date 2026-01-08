@@ -28,8 +28,8 @@ async function refreshSpotifyToken(refreshToken: string): Promise<{
 
   if (!response.ok) {
     throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Failed to refresh Spotify token",
+      code: "UNAUTHORIZED",
+      message: "SPOTIFY_REAUTH_REQUIRED",
     });
   }
 
@@ -42,50 +42,57 @@ async function refreshSpotifyToken(refreshToken: string): Promise<{
   };
 }
 
+// Helper to get valid access token, refreshing if needed
+async function getValidAccessToken(
+  db: typeof import("@/db").db,
+  userId: string,
+): Promise<string> {
+  const spotifyAccount = await db.query.account.findFirst({
+    where: eq(account.userId, userId),
+  });
+
+  if (!spotifyAccount?.accessToken) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "SPOTIFY_REAUTH_REQUIRED",
+    });
+  }
+
+  const expiresAt = spotifyAccount.accessTokenExpiresAt;
+  const isExpiringSoon =
+    expiresAt && expiresAt.getTime() < Date.now() + 5 * 60 * 1000;
+
+  if (isExpiringSoon) {
+    if (!spotifyAccount.refreshToken) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "SPOTIFY_REAUTH_REQUIRED",
+      });
+    }
+
+    const { accessToken, expiresAt: newExpiresAt } = await refreshSpotifyToken(
+      spotifyAccount.refreshToken,
+    );
+
+    await db
+      .update(account)
+      .set({
+        accessToken,
+        accessTokenExpiresAt: newExpiresAt,
+      })
+      .where(eq(account.id, spotifyAccount.id));
+
+    return accessToken;
+  }
+
+  return spotifyAccount.accessToken;
+}
+
 export const spotifyRouter = createTRPCRouter({
   // Get access token for Spotify Web Playback SDK
   getAccessToken: protectedProcedure.query(async ({ ctx }) => {
-    const spotifyAccount = await ctx.db.query.account.findFirst({
-      where: eq(account.userId, ctx.user.id),
-    });
-
-    if (!spotifyAccount) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "No Spotify account linked",
-      });
-    }
-
-    if (!spotifyAccount.accessToken) {
-      throw new TRPCError({
-        code: "UNAUTHORIZED",
-        message: "Spotify access token not found. Please re-authenticate.",
-      });
-    }
-
-    // Check if token is expired or will expire soon (within 5 minutes)
-    const expiresAt = spotifyAccount.accessTokenExpiresAt;
-    const isExpiringSoon =
-      expiresAt && expiresAt.getTime() < Date.now() + 5 * 60 * 1000;
-
-    if (isExpiringSoon && spotifyAccount.refreshToken) {
-      // Refresh the token
-      const { accessToken, expiresAt: newExpiresAt } =
-        await refreshSpotifyToken(spotifyAccount.refreshToken);
-
-      // Update the token in the database
-      await ctx.db
-        .update(account)
-        .set({
-          accessToken,
-          accessTokenExpiresAt: newExpiresAt,
-        })
-        .where(eq(account.id, spotifyAccount.id));
-
-      return { accessToken };
-    }
-
-    return { accessToken: spotifyAccount.accessToken };
+    const accessToken = await getValidAccessToken(ctx.db, ctx.user.id);
+    return { accessToken };
   }),
 
   // Fetch playlist tracks from Spotify API
@@ -96,38 +103,7 @@ export const spotifyRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      // Get access token first
-      const spotifyAccount = await ctx.db.query.account.findFirst({
-        where: eq(account.userId, ctx.user.id),
-      });
-
-      if (!spotifyAccount?.accessToken) {
-        throw new TRPCError({
-          code: "UNAUTHORIZED",
-          message: "Spotify access token not found",
-        });
-      }
-
-      let accessToken = spotifyAccount.accessToken;
-
-      // Check if token needs refresh
-      const expiresAt = spotifyAccount.accessTokenExpiresAt;
-      const isExpiringSoon =
-        expiresAt && expiresAt.getTime() < Date.now() + 5 * 60 * 1000;
-
-      if (isExpiringSoon && spotifyAccount.refreshToken) {
-        const { accessToken: newToken, expiresAt: newExpiresAt } =
-          await refreshSpotifyToken(spotifyAccount.refreshToken);
-        accessToken = newToken;
-
-        await ctx.db
-          .update(account)
-          .set({
-            accessToken: newToken,
-            accessTokenExpiresAt: newExpiresAt,
-          })
-          .where(eq(account.id, spotifyAccount.id));
-      }
+      const accessToken = await getValidAccessToken(ctx.db, ctx.user.id);
 
       // Fetch all tracks from the playlist (handling pagination)
       const tracks: Array<{
@@ -210,23 +186,14 @@ export const spotifyRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const spotifyAccount = await ctx.db.query.account.findFirst({
-        where: eq(account.userId, ctx.user.id),
-      });
-
-      if (!spotifyAccount?.accessToken) {
-        throw new TRPCError({
-          code: "UNAUTHORIZED",
-          message: "Spotify access token not found",
-        });
-      }
+      const accessToken = await getValidAccessToken(ctx.db, ctx.user.id);
 
       const response = await fetch(
         `${SPOTIFY_API_BASE}/me/player/play?device_id=${input.deviceId}`,
         {
           method: "PUT",
           headers: {
-            Authorization: `Bearer ${spotifyAccount.accessToken}`,
+            Authorization: `Bearer ${accessToken}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
@@ -256,23 +223,14 @@ export const spotifyRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const spotifyAccount = await ctx.db.query.account.findFirst({
-        where: eq(account.userId, ctx.user.id),
-      });
-
-      if (!spotifyAccount?.accessToken) {
-        throw new TRPCError({
-          code: "UNAUTHORIZED",
-          message: "Spotify access token not found",
-        });
-      }
+      const accessToken = await getValidAccessToken(ctx.db, ctx.user.id);
 
       const response = await fetch(
         `${SPOTIFY_API_BASE}/me/player/pause?device_id=${input.deviceId}`,
         {
           method: "PUT",
           headers: {
-            Authorization: `Bearer ${spotifyAccount.accessToken}`,
+            Authorization: `Bearer ${accessToken}`,
           },
         },
       );
@@ -296,21 +254,12 @@ export const spotifyRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const spotifyAccount = await ctx.db.query.account.findFirst({
-        where: eq(account.userId, ctx.user.id),
-      });
-
-      if (!spotifyAccount?.accessToken) {
-        throw new TRPCError({
-          code: "UNAUTHORIZED",
-          message: "Spotify access token not found",
-        });
-      }
+      const accessToken = await getValidAccessToken(ctx.db, ctx.user.id);
 
       const response = await fetch(`${SPOTIFY_API_BASE}/me/player`, {
         method: "PUT",
         headers: {
-          Authorization: `Bearer ${spotifyAccount.accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({

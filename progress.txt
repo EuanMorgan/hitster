@@ -542,3 +542,27 @@ All 6 PRD steps verified:
 Files changed:
 - src/db/schema.ts (added 3 indexes)
 - plans/prd.json (marked database #37 as passes: true)
+
+## 2026-01-08: Implemented Spotify OAuth token auto-refresh
+
+PRD items: spotify #39 (Spotify OAuth with required scopes)
+
+Changes:
+- Created getValidAccessToken helper in spotify router: checks expiration, auto-refreshes if <5min remaining
+- Updated refreshSpotifyToken to return SPOTIFY_REAUTH_REQUIRED error code when refresh fails
+- Refactored getAccessToken, getPlaylistTracks, playTrack, pausePlayback, transferPlayback to use helper
+- SpotifyPlayer: SDK getOAuthToken now fetches fresh token on each call via refetch
+- SpotifyPlayer: handleReauth callback triggers signIn.social redirect on token errors
+- SpotifyPlayer: isReauthRequired helper detects SPOTIFY_REAUTH_REQUIRED errors
+- SpotifyPlayer: shows "Redirecting to Spotify login..." UI during reauth
+
+All 4 PRD steps verified:
+1. ✅ Configure Better Auth Spotify provider - already in lib/auth.ts
+2. ✅ Required scopes - streaming, user-read-email, user-read-private, playlist-read-private
+3. ✅ Store and refresh access tokens - getValidAccessToken auto-refreshes
+4. ✅ Redirect to re-auth if refresh fails - handleReauth triggers OAuth redirect
+
+Files changed:
+- src/trpc/routers/spotify.ts (getValidAccessToken helper, refactored all procedures)
+- src/components/spotify-player.tsx (refetchToken, handleReauth, reauth UI)
+- plans/prd.json (marked spotify #39 as passes: true)
