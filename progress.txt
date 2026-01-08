@@ -846,3 +846,43 @@ Active player can position song in their timeline (PRD gameplay item)
 ### Next priority:
 - Party stats on results screen (PRD winning item #35)
 - Spotify Web Playback SDK integration (PRD gameplay item #20)
+
+---
+
+## 2026-01-08: Party Stats on Results Screen Complete
+
+### What was done:
+- Added `wins` field to players table schema to track wins across games
+- Updated `resolveStealPhase` to increment winner's wins when game ends (both win condition and song exhaustion)
+- Updated `getFreeSong` to increment winner's wins when free song causes win
+- Updated `getSession` query to return `wins` field for each player
+- Updated results screen with party stats section showing:
+  - Party MVP (player with most wins)
+  - Total games played count
+  - Win count per player in a grid layout
+- Party stats only display when at least one game has been completed
+- `startRematch` preserves wins but resets tokens/timeline (already worked correctly)
+- Updated mock fixtures (fixtures.ts, db.ts) with wins field
+
+### Files modified:
+- src/db/schema.ts (added wins field to players table)
+- src/trpc/routers/game.ts (wins increment in resolveStealPhase, getFreeSong; wins in getSession)
+- src/app/game/[pin]/page.tsx (party stats UI in results screen)
+- src/mocks/fixtures.ts (added wins field)
+- src/mocks/db.ts (added wins field to seedPlayer)
+- plans/prd.json (marked PRD #35 "Party stats", #50 "Avatar selection", #51 "QR code" as passing)
+
+### PRD items marked as passing:
+- "Results screen shows party stats" (PRD #35) - new implementation
+- "Avatar selection with emoji presets" (PRD #50) - was already implemented
+- "QR code for easy game joining" (PRD #51) - was already implemented
+
+### Notes:
+- Schema change requires `bun run db:push` when DB is running
+- Party MVP shown with purple highlight and trophy count
+- Games played derived from max wins count across all players
+- Win tracking persists across rematches until players leave session
+
+### Next priority:
+- Spotify Web Playback SDK integration (PRD gameplay item #20)
+- Playlist loading features (PRD items #36-40)

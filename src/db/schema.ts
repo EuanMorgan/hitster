@@ -174,6 +174,7 @@ export const players = pgTable("players", {
   avatar: varchar("avatar", { length: 10 }).notNull(),
   tokens: integer("tokens").notNull().default(2),
   timeline: jsonb("timeline").$type<TimelineSong[]>().default([]),
+  wins: integer("wins").notNull().default(0),
   isHost: boolean("is_host").notNull().default(false),
   isConnected: boolean("is_connected").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),

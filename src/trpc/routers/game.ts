@@ -306,6 +306,7 @@ export const gameRouter = createTRPCRouter({
           isHost: p.isHost,
           tokens: p.tokens,
           timeline: p.timeline,
+          wins: p.wins,
         })),
       };
     }),
@@ -962,6 +963,12 @@ export const gameRouter = createTRPCRouter({
 
       // Check win condition
       if (newTimeline.length >= session.songsToWin) {
+        // Increment winner's wins count (player already has tokens - 3 set, wins is separate)
+        await ctx.db
+          .update(players)
+          .set({ wins: player.wins + 1 })
+          .where(eq(players.id, input.playerId));
+
         await ctx.db
           .update(gameSessions)
           .set({
@@ -1175,6 +1182,13 @@ export const gameRouter = createTRPCRouter({
           if (newTimeline.length >= session.songsToWin) {
             gameEnded = true;
             winnerId = recipientId;
+
+            // Increment winner's wins count
+            await ctx.db
+              .update(players)
+              .set({ wins: recipient.wins + 1 })
+              .where(eq(players.id, recipientId));
+
             await ctx.db
               .update(gameSessions)
               .set({
@@ -1219,6 +1233,20 @@ export const gameRouter = createTRPCRouter({
       );
 
       if (availableSongs.length === 0) {
+        // Determine winner (player with most songs)
+        const sortedPlayers = [...session.players].sort(
+          (a, b) => (b.timeline?.length ?? 0) - (a.timeline?.length ?? 0)
+        );
+        const songExhaustionWinner = sortedPlayers[0];
+
+        // Increment winner's wins count
+        if (songExhaustionWinner) {
+          await ctx.db
+            .update(players)
+            .set({ wins: songExhaustionWinner.wins + 1 })
+            .where(eq(players.id, songExhaustionWinner.id));
+        }
+
         await ctx.db
           .update(gameSessions)
           .set({
@@ -1239,6 +1267,7 @@ export const gameRouter = createTRPCRouter({
           stolenBy: winningStealer,
           recipientId,
           gameEnded: true,
+          winnerId: songExhaustionWinner?.id,
           reason: "No more songs available",
           guessWasCorrect,
           guessedName: guess?.guessedName ?? null,

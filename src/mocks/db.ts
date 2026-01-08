@@ -98,6 +98,7 @@ export function seedPlayer(playerData: Partial<Player> = {}): Player {
     avatar: playerData.avatar ?? "🎮",
     tokens: playerData.tokens ?? 2,
     timeline: playerData.timeline ?? [],
+    wins: playerData.wins ?? 0,
     isHost: playerData.isHost ?? false,
     isConnected: playerData.isConnected ?? true,
     createdAt: playerData.createdAt ?? new Date(),

@@ -552,6 +552,14 @@ export default function GamePage() {
     );
     const winner = sortedPlayers[0];
 
+    // Party stats
+    const totalGamesPlayed = Math.max(...session.players.map((p) => p.wins ?? 0), 1);
+    const sortedByWins = [...session.players].sort(
+      (a, b) => (b.wins ?? 0) - (a.wins ?? 0)
+    );
+    const partyMVP = sortedByWins[0];
+    const hasPartyStats = session.players.some((p) => (p.wins ?? 0) > 0);
+
     const handleRematch = () => {
       startRematchMutation.mutate({ pin });
     };
@@ -579,45 +587,91 @@ export default function GamePage() {
               </div>
             )}
           </CardHeader>
-          <CardContent>
-            <h3 className="font-semibold mb-3 text-center">Final Standings</h3>
-            <div className="space-y-3">
-              {sortedPlayers.map((player, idx) => (
-                <div
-                  key={player.id}
-                  className={`flex items-center gap-3 p-3 rounded-lg transition-all ${
-                    idx === 0
-                      ? "bg-yellow-100 dark:bg-yellow-900/30 border-2 border-yellow-400"
-                      : idx === 1
-                        ? "bg-gray-100 dark:bg-gray-800/50 border border-gray-300"
-                        : idx === 2
-                          ? "bg-amber-50 dark:bg-amber-900/20 border border-amber-300"
-                          : "bg-muted"
-                  }`}
-                >
-                  <span className="text-2xl min-w-[32px] text-center">
-                    {idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `#${idx + 1}`}
-                  </span>
-                  <span className="text-2xl">{player.avatar}</span>
-                  <div className="flex-1">
-                    <span className="font-medium">{player.name}</span>
-                    {player.isHost && (
-                      <span className="ml-2 text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded">
-                        Host
-                      </span>
-                    )}
+          <CardContent className="space-y-6">
+            <div>
+              <h3 className="font-semibold mb-3 text-center">Final Standings</h3>
+              <div className="space-y-3">
+                {sortedPlayers.map((player, idx) => (
+                  <div
+                    key={player.id}
+                    className={`flex items-center gap-3 p-3 rounded-lg transition-all ${
+                      idx === 0
+                        ? "bg-yellow-100 dark:bg-yellow-900/30 border-2 border-yellow-400"
+                        : idx === 1
+                          ? "bg-gray-100 dark:bg-gray-800/50 border border-gray-300"
+                          : idx === 2
+                            ? "bg-amber-50 dark:bg-amber-900/20 border border-amber-300"
+                            : "bg-muted"
+                    }`}
+                  >
+                    <span className="text-2xl min-w-[32px] text-center">
+                      {idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `#${idx + 1}`}
+                    </span>
+                    <span className="text-2xl">{player.avatar}</span>
+                    <div className="flex-1">
+                      <span className="font-medium">{player.name}</span>
+                      {player.isHost && (
+                        <span className="ml-2 text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded">
+                          Host
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <div className="font-bold">{player.timeline?.length ?? 0}</div>
+                      <div className="text-xs text-muted-foreground">songs</div>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <div className="font-bold">{player.timeline?.length ?? 0}</div>
-                    <div className="text-xs text-muted-foreground">songs</div>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
+
+            {/* Party Stats */}
+            {hasPartyStats && (
+              <div className="border-t pt-4">
+                <h3 className="font-semibold mb-3 text-center flex items-center justify-center gap-2">
+                  <span>🎊</span>
+                  <span>Party Stats</span>
+                  <span>🎊</span>
+                </h3>
+
+                {/* Party MVP */}
+                {partyMVP && (partyMVP.wins ?? 0) > 0 && (
+                  <div className="mb-3 p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg text-center border border-purple-300">
+                    <div className="text-xs text-muted-foreground mb-1">Party MVP</div>
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="text-2xl">{partyMVP.avatar}</span>
+                      <span className="font-bold">{partyMVP.name}</span>
+                      <span className="text-purple-600 dark:text-purple-400">
+                        ({partyMVP.wins} {partyMVP.wins === 1 ? "win" : "wins"})
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* All players' wins */}
+                <div className="text-sm text-center text-muted-foreground mb-2">
+                  Games played: {totalGamesPlayed}
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {sortedByWins.map((player) => (
+                    <div
+                      key={player.id}
+                      className="flex items-center gap-2 p-2 bg-muted/50 rounded text-sm"
+                    >
+                      <span>{player.avatar}</span>
+                      <span className="flex-1 truncate">{player.name}</span>
+                      <span className="font-bold text-purple-600 dark:text-purple-400">
+                        {player.wins ?? 0}🏆
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Rematch button for host */}
             {isHost && (
-              <div className="mt-6">
+              <div>
                 <Button
                   onClick={handleRematch}
                   disabled={startRematchMutation.isPending}
@@ -633,7 +687,7 @@ export default function GamePage() {
             )}
 
             {!isHost && (
-              <div className="mt-6 text-center text-sm text-muted-foreground">
+              <div className="text-center text-sm text-muted-foreground">
                 Waiting for host to start a rematch...
               </div>
             )}

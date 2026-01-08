@@ -496,7 +496,7 @@
       "Show games played count",
       "Show party MVP (most wins)"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "winning",
@@ -678,7 +678,7 @@
       "Visual selection indicator",
       "Minimum 20 avatar options"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "ui",
@@ -688,7 +688,7 @@
       "Display alongside PIN in lobby",
       "Scannable on mobile devices"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "ui",
