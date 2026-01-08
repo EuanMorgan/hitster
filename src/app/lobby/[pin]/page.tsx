@@ -22,7 +22,10 @@ export default function LobbyPage() {
   const trpc = useTRPC();
   const { data: authSession } = useSession();
 
-  const sessionQuery = useQuery(trpc.game.getSession.queryOptions({ pin }));
+  const sessionQuery = useQuery({
+    ...trpc.game.getSession.queryOptions({ pin }),
+    refetchInterval: 2000,
+  });
 
   if (sessionQuery.isLoading) {
     return (

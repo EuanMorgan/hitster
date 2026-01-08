@@ -193,7 +193,7 @@
       "Join lobby, appear in player list for all participants",
       "Receive real-time updates via subscription"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "lobby",
@@ -204,7 +204,7 @@
       "Real-time updates when players join/leave",
       "Show player count vs max players"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "lobby",

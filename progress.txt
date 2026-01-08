@@ -403,3 +403,23 @@ Host can configure game settings before starting (PRD item #14)
 
 ### Next priority:
 Players can join game via PIN code - enhance with real-time updates (PRD item #15)
+
+---
+
+## 2026-01-08: Real-Time Lobby Updates Complete
+
+### What was done:
+- Added polling (2 second interval) to lobby page for real-time player list updates
+- Players joining/leaving now appear within 2 seconds without page refresh
+- Uses TanStack React Query's refetchInterval feature
+
+### Files modified:
+- src/app/lobby/[pin]/page.tsx (added refetchInterval: 2000 to session query)
+
+### Notes:
+- Polling approach chosen over WebSocket subscriptions for simplicity
+- 2 second interval balances responsiveness with server load
+- Future enhancement: migrate to tRPC subscriptions for true real-time
+
+### Next priority:
+Host can start the game (PRD item #17)
