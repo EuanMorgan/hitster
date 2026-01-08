@@ -1,5 +1,7 @@
 set -e
 
+trap './plans/notify.sh "Ralph errored"' ERR
+
 if [ -z "$1" ]; then
     echo "Usage: $0 <iterations>"
     exit 1
