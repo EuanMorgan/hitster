@@ -16,3 +16,25 @@ Files changed:
 - vitest.setup.ts
 - e2e/home.spec.ts
 - plans/prd.json
+
+## 2026-01-08: Verified Spotify OAuth login
+
+PRD items: authentication #1 (Host can log in with Spotify OAuth)
+
+Verification:
+- Started dev server, navigated to home page
+- Clicked "Login with Spotify" button
+- Confirmed redirect to Spotify OAuth with correct scopes (streaming, user-read-email, user-read-private, playlist-read-private)
+- Callback URL correctly configured: /api/auth/callback/spotify
+- PKCE code challenge in place for security
+
+No code changes needed - feature was already implemented:
+- src/lib/auth.ts: Better Auth with Spotify provider
+- src/lib/auth-client.ts: signIn/signOut/useSession exports
+- src/components/user-menu.tsx: Login button + session display
+- src/components/spotify-login-button.tsx: Spotify OAuth trigger
+- src/app/api/auth/[...all]/route.ts: Auth API handler
+- src/db/schema.ts: user/session/account tables
+
+Files changed:
+- plans/prd.json (marked authentication #1 as passes: true)
