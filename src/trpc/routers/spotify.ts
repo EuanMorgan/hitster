@@ -220,37 +220,6 @@ export const spotifyRouter = createTRPCRouter({
       return { success: true };
     }),
 
-  // Pause playback
-  pausePlayback: protectedProcedure
-    .input(
-      z.object({
-        deviceId: z.string(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      const accessToken = await getValidAccessToken(ctx.db, ctx.user.id);
-
-      const response = await fetch(
-        `${SPOTIFY_API_BASE}/me/player/pause?device_id=${input.deviceId}`,
-        {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        },
-      );
-
-      // 204 is success, 403 might mean already paused
-      if (!response.ok && response.status !== 204 && response.status !== 403) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to pause playback",
-        });
-      }
-
-      return { success: true };
-    }),
-
   // Transfer playback to a device
   transferPlayback: protectedProcedure
     .input(
