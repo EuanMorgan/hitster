@@ -1374,3 +1374,27 @@ Key decisions:
 Files changed:
 - src/app/game/[pin]/page.tsx (removed duplicate timeline, added player sort, fixed turn numbers)
 - plans/prd.json (marked ui #77 as passes: true)
+
+## 2026-01-09: Loading skeleton polish
+
+PRD items: ui-polish #69 (Loading skeleton polish)
+
+Changes:
+- Skeleton component: replaced animate-pulse with shimmer animation (left-to-right gradient sweep)
+- Added @keyframes shimmer to globals.css
+- Added animate-in fade-in-0 duration-200 to all content containers for consistent crossfade
+
+Implementation:
+- Skeleton uses ::before pseudo-element with gradient (transparent → white/10 → transparent)
+- Gradient sweeps from -100% to +100% translateX over 1.5s infinite loop
+- Content containers match skeleton containers with same animation class
+
+Files changed:
+- src/components/ui/skeleton.tsx (shimmer animation via ::before gradient)
+- src/app/globals.css (added @keyframes shimmer)
+- src/app/lobby/[pin]/page.tsx (animate-in on content Card)
+- src/app/game/[pin]/page.tsx (animate-in on content container)
+- src/app/join/page.tsx (animate-in on content Card)
+- src/app/dashboard/page.tsx (animate-in on content container)
+- src/app/dashboard/game/[id]/page.tsx (animate-in on skeleton + content containers)
+- plans/prd.json (marked ui-polish #69 as passes: true)

@@ -1198,7 +1198,7 @@ export default function GamePage() {
     session?.state === "playing" && session?.hostIsConnected === false;
 
   return (
-    <div className="min-h-screen p-4 overflow-x-hidden">
+    <div className="min-h-screen p-4 overflow-x-hidden animate-in fade-in-0 duration-200">
       {turnResult && (
         <TurnResultOverlay
           result={turnResult}

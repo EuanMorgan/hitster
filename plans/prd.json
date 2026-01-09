@@ -1157,7 +1157,7 @@
       "Skeleton to content: crossfade transition 200ms",
       "DONE: Loading states feel smooth, no layout shift on load"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "ui-polish",

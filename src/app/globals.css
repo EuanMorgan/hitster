@@ -123,6 +123,13 @@
   }
 }
 
+/* Skeleton shimmer animation */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
 /* Custom toast styling - left border accent */
 [data-sonner-toaster] [data-sonner-toast] {
   --toast-border-radius: 0.5rem;
