@@ -207,6 +207,9 @@ export default function GamePage() {
           yearLookupStatus={session?.yearLookupStatus}
           yearLookupProgress={session?.yearLookupProgress}
           yearLookupTotal={session?.yearLookupTotal}
+          isHost={isHost}
+          onEndGame={() => mutations.endGame.mutate({ pin })}
+          isEndingGame={mutations.endGame.isPending}
         />
 
         {isHost && session?.state === "playing" && (

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ActiveGamesCard } from "@/components/active-games-card";
 import { CreateGameButton } from "@/components/create-game-button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,7 @@ export default async function Home() {
               </Button>
               <CreateGameButton />
             </div>
+            <ActiveGamesCard />
           </CardContent>
           <CardFooter className="border-t pt-6">
             <div className="w-full">

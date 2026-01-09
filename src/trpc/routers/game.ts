@@ -2843,6 +2843,89 @@ export const gameRouter = createTRPCRouter({
       };
     }),
 
+  endGame: protectedProcedure
+    .input(z.object({ pin: z.string().length(4) }))
+    .mutation(async ({ ctx, input }) => {
+      const pin = input.pin.toUpperCase();
+
+      const session = await ctx.db.query.gameSessions.findFirst({
+        where: eq(gameSessions.pin, pin),
+        with: { players: true },
+      });
+
+      if (!session) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Game not found" });
+      }
+
+      if (session.hostId !== ctx.user.id) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only the host can end the game",
+        });
+      }
+
+      if (session.state !== "playing") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Game must be in progress to end it",
+        });
+      }
+
+      // Determine winner: player with most songs in timeline
+      const sortedByTimeline = [...session.players].sort(
+        (a, b) => (b.timeline?.length ?? 0) - (a.timeline?.length ?? 0),
+      );
+      const winnerId = sortedByTimeline[0]?.id ?? null;
+
+      // Update game state to finished
+      await ctx.db
+        .update(gameSessions)
+        .set({
+          state: "finished",
+          currentSong: null,
+          stealPhase: null,
+          stealDecidePhaseEndAt: null,
+          stealPlacePhaseEndAt: null,
+          decidedStealers: [],
+          playerSkips: [],
+          activePlayerPlacement: null,
+          activePlayerGuess: null,
+          stealAttempts: [],
+          isStealPhase: false,
+          stealPhaseEndAt: null,
+          updatedAt: new Date(),
+        })
+        .where(eq(gameSessions.id, session.id));
+
+      await storeGameHistory(ctx.db, session.id, winnerId);
+      emitSessionUpdate(pin);
+
+      return { success: true, winnerId };
+    }),
+
+  getActiveGames: protectedProcedure.query(async ({ ctx }) => {
+    const userId = ctx.user.id;
+
+    const activeGames = await ctx.db.query.gameSessions.findMany({
+      where: and(
+        eq(gameSessions.hostId, userId),
+        ne(gameSessions.state, "finished"),
+      ),
+      with: { players: true },
+      orderBy: [desc(gameSessions.createdAt)],
+    });
+
+    return activeGames.map((game) => ({
+      id: game.id,
+      pin: game.pin,
+      state: game.state,
+      playerCount: game.players.length,
+      songsToWin: game.songsToWin,
+      createdAt: game.createdAt.toISOString(),
+      roundNumber: game.roundNumber ?? 0,
+    }));
+  }),
+
   startRematch: protectedProcedure
     .input(z.object({ pin: z.string().length(4) }))
     .mutation(async ({ ctx, input }) => {

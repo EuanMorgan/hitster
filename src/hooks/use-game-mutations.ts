@@ -122,6 +122,11 @@ export function useGameMutations({
     },
   });
 
+  const endGame = useMutation({
+    ...trpc.game.endGame.mutationOptions(),
+    onSuccess: invalidateSession,
+  });
+
   return {
     confirmTurn,
     submitSteal,
@@ -132,5 +137,6 @@ export function useGameMutations({
     skipSong,
     getFreeSong,
     startRematch,
+    endGame,
   };
 }
