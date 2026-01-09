@@ -10,6 +10,7 @@ export const env = createEnv({
     BETTER_AUTH_SECRET: z.string().min(32),
     SPOTIFY_CLIENT_ID: z.string().min(1),
     SPOTIFY_CLIENT_SECRET: z.string().min(1),
+    CRON_SECRET: z.string().min(1),
   },
   client: {
     NEXT_PUBLIC_APP_URL: z.url(),

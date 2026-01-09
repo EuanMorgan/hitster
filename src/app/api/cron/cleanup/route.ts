@@ -1,12 +1,13 @@
 import { and, lt, ne } from "drizzle-orm";
 import { db } from "@/db";
 import { gameSessions } from "@/db/schema";
+import { env } from "@/env";
 
 const STALE_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
 
 export async function POST(req: Request) {
   const auth = req.headers.get("authorization");
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (auth !== `Bearer ${env.CRON_SECRET}`) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
