@@ -952,7 +952,7 @@
       "Max-width on token container prevents overflow",
       "DONE: Player with 10 tokens shows '🪙 x10', no horizontal scroll on 320px viewport"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "ui",
@@ -965,7 +965,7 @@
       "Remove -mx-2 negative margins or contain them properly",
       "DONE: No horizontal scrollbar on 320px iPhone SE viewport in DevTools"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "ui",

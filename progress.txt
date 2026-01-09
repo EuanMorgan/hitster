@@ -966,3 +966,19 @@ Files changed:
 - src/components/timeline-drop-zone.tsx (added playbackStartedAt prop, updated TurnTimer logic)
 - src/app/game/[pin]/page.tsx (added playbackStartedAt state, callbacks, prop passing)
 - plans/prd.json (marked gameplay #51 as passes: true)
+
+## 2026-01-09: Fixed mobile horizontal scroll + token display
+
+PRD items: ui #57 (Token display compact format), ui #58 (Fix mobile horizontal scroll)
+
+Changes:
+- Main game container: added overflow-x-hidden to prevent horizontal scroll
+- TimelineDisplay: removed -mx-2 negative margin that caused overflow
+- TokenDisplay: changed from repeated emoji to compact "🪙x{count}" format
+- PlayerCard name: added max-w-[120px]/sm:max-w-[180px] + truncate for long names
+
+Key decision: Compact token format shows "🪙{count}" on mobile (<640px) and "🪙 x{count}" on desktop. Single emoji + count prevents overflow with many tokens.
+
+Files changed:
+- src/app/game/[pin]/page.tsx (overflow-x-hidden, TokenDisplay compact, TimelineDisplay no -mx-2, name max-width)
+- plans/prd.json (marked ui #57, #58 as passes: true)

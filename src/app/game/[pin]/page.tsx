@@ -97,16 +97,17 @@ function GameSkeleton() {
 }
 
 function TokenDisplay({ count }: { count: number }) {
+  if (count === 0) {
+    return <span className="text-muted-foreground text-sm">No tokens</span>;
+  }
+
   return (
-    <div className="flex items-center gap-1">
-      {Array.from({ length: count }).map((_, i) => (
-        <span key={i} className="text-yellow-500">
-          🪙
-        </span>
-      ))}
-      {count === 0 && (
-        <span className="text-muted-foreground text-sm">No tokens</span>
-      )}
+    <div className="flex items-center gap-0.5">
+      <span className="text-yellow-500">🪙</span>
+      <span className="text-sm font-medium">
+        <span className="hidden sm:inline">x</span>
+        {count}
+      </span>
     </div>
   );
 }
@@ -121,7 +122,7 @@ function TimelineDisplay({ timeline }: { timeline: TimelineSong[] }) {
   const sortedTimeline = [...timeline].sort((a, b) => a.year - b.year);
 
   return (
-    <div className="overflow-x-auto -mx-2 px-2">
+    <div className="overflow-x-auto">
       <div className="flex gap-1.5 sm:gap-2 min-w-min pb-2">
         {sortedTimeline.map((song) => (
           <div
@@ -180,7 +181,7 @@ function PlayerCard({
           </span>
           <div className="min-w-0">
             <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-              <span className="font-semibold text-sm sm:text-base truncate">
+              <span className="font-semibold text-sm sm:text-base truncate max-w-[120px] sm:max-w-[180px]">
                 {player.name}
               </span>
               {player.isHost && (
@@ -987,7 +988,7 @@ export default function GamePage() {
     session?.state === "playing" && session?.hostIsConnected === false;
 
   return (
-    <div className="min-h-screen p-4">
+    <div className="min-h-screen p-4 overflow-x-hidden">
       {turnResult && (
         <TurnResultOverlay
           result={turnResult}
