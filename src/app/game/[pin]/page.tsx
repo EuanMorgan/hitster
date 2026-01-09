@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { SpotifyPlayer } from "@/components/spotify-player";
+import { StealDecidePhase } from "@/components/steal-decide-phase";
 import { StealPhase } from "@/components/steal-phase";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { TimelineDropZone } from "@/components/timeline-drop-zone";
@@ -678,6 +679,41 @@ export default function GamePage() {
     },
   });
 
+  const decideToStealMutation = useMutation({
+    ...trpc.game.decideToSteal.mutationOptions(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: trpc.game.getSession.queryKey({ pin }),
+      });
+    },
+  });
+
+  const skipStealMutation = useMutation({
+    ...trpc.game.skipSteal.mutationOptions(),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({
+        queryKey: trpc.game.getSession.queryKey({ pin }),
+      });
+      // If all players skipped, immediately resolve
+      if (data.allSkipped) {
+        resolveStealPhaseMutation.mutate({ pin });
+      }
+    },
+  });
+
+  const transitionToPlacePhaseMutation = useMutation({
+    ...trpc.game.transitionToPlacePhase.mutationOptions(),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({
+        queryKey: trpc.game.getSession.queryKey({ pin }),
+      });
+      // If no one decided to steal, immediately resolve
+      if (data.skippedToResolve) {
+        resolveStealPhaseMutation.mutate({ pin });
+      }
+    },
+  });
+
   const resolveStealPhaseMutation = useMutation({
     ...trpc.game.resolveStealPhase.mutationOptions(),
     onSuccess: (data) => {
@@ -835,6 +871,22 @@ export default function GamePage() {
     if (resolveStealPhaseMutation.isPending) return;
     resolveStealPhaseMutation.mutate({ pin });
   }, [resolveStealPhaseMutation, pin]);
+
+  const handleDecideToSteal = useCallback(() => {
+    if (!currentPlayerId || decideToStealMutation.isPending) return;
+    decideToStealMutation.mutate({ pin, playerId: currentPlayerId });
+  }, [decideToStealMutation, pin, currentPlayerId]);
+
+  const handleSkipSteal = useCallback(() => {
+    if (!currentPlayerId || skipStealMutation.isPending) return;
+    skipStealMutation.mutate({ pin, playerId: currentPlayerId });
+  }, [skipStealMutation, pin, currentPlayerId]);
+
+  const handleDecidePhaseTimeUp = useCallback(() => {
+    // Transition from decide phase to place phase (or resolve if no stealers)
+    if (transitionToPlacePhaseMutation.isPending) return;
+    transitionToPlacePhaseMutation.mutate({ pin });
+  }, [transitionToPlacePhaseMutation, pin]);
 
   const handleCloseResult = useCallback(() => {
     // Check if new round started - show shuffle animation
@@ -1114,10 +1166,26 @@ export default function GamePage() {
     (p) => p.id === session.currentPlayerId,
   );
   const myPlayer = session?.players.find((p) => p.id === currentPlayerId);
-  const isStealPhase = session?.isStealPhase ?? false;
+
+  // Two-phase steal system
+  const stealPhase = session?.stealPhase ?? null;
+  const isDecidePhase = stealPhase === "decide";
+  const isPlacePhase = stealPhase === "place";
+  const isStealPhase = stealPhase !== null;
+  const decidedStealers = session?.decidedStealers ?? [];
+  const playerSkips = session?.playerSkips ?? [];
+  const hasDecided =
+    decidedStealers.includes(currentPlayerId ?? "") ||
+    playerSkips.includes(currentPlayerId ?? "");
   const hasAlreadyStolen = (session?.stealAttempts ?? []).some(
     (a) => a.playerId === currentPlayerId,
   );
+  // Total eligible = all non-active players
+  const totalEligible =
+    (session?.players.length ?? 0) - 1 > 0
+      ? (session?.players.length ?? 0) - 1
+      : 0;
+  const decidedCount = decidedStealers.length + playerSkips.length;
 
   // Check if host is disconnected during gameplay
   const hostDisconnected =
@@ -1275,12 +1343,36 @@ export default function GamePage() {
             </>
           )}
 
-        {/* Steal Phase */}
+        {/* Steal Decide Phase - Players choose Steal or Skip */}
         {!showShuffleAnimation &&
           !showRoundShuffleAnimation &&
-          isStealPhase &&
+          isDecidePhase &&
+          session?.stealDecidePhaseEndAt &&
+          currentPlayer &&
+          myPlayer && (
+            <StealDecidePhase
+              activePlayerName={currentPlayer.name}
+              stealDecidePhaseEndAt={session.stealDecidePhaseEndAt}
+              stealWindowDuration={session.stealWindowDuration ?? 10}
+              myTokens={myPlayer.tokens}
+              isActivePlayer={isMyTurn}
+              hasDecided={hasDecided}
+              decidedCount={decidedCount}
+              totalEligible={totalEligible}
+              onDecideSteal={handleDecideToSteal}
+              onSkipSteal={handleSkipSteal}
+              onTimeUp={handleDecidePhaseTimeUp}
+              isDeciding={decideToStealMutation.isPending}
+              isSkipping={skipStealMutation.isPending}
+            />
+          )}
+
+        {/* Steal Place Phase - Stealers place their guesses */}
+        {!showShuffleAnimation &&
+          !showRoundShuffleAnimation &&
+          isPlacePhase &&
           session?.currentSong &&
-          session?.stealPhaseEndAt &&
+          session?.stealPlacePhaseEndAt &&
           currentPlayer &&
           myPlayer && (
             <StealPhase
@@ -1289,14 +1381,19 @@ export default function GamePage() {
               activePlayerName={currentPlayer.name}
               activePlayerPlacement={session.activePlayerPlacement ?? 0}
               stealAttempts={session.stealAttempts ?? []}
-              stealPhaseEndAt={session.stealPhaseEndAt}
-              stealWindowDuration={session.stealWindowDuration ?? 10}
+              stealPhaseEndAt={session.stealPlacePhaseEndAt}
+              stealWindowDuration={(session.stealWindowDuration ?? 10) * 2}
               myTokens={myPlayer.tokens}
               isActivePlayer={isMyTurn}
               hasAlreadyStolen={hasAlreadyStolen}
               onSubmitSteal={handleSubmitSteal}
               onResolve={handleResolveStealPhase}
               isSubmitting={submitStealMutation.isPending}
+              decidedStealers={decidedStealers}
+              canStealAsLateJoiner={
+                !isMyTurn && !hasDecided && myPlayer.tokens >= 1
+              }
+              currentPlayerId={currentPlayerId ?? undefined}
             />
           )}
 

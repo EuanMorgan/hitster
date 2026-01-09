@@ -37,6 +37,9 @@ interface StealPhaseProps {
   onSubmitSteal: (placementIndex: number) => void;
   onResolve: () => void;
   isSubmitting: boolean;
+  decidedStealers?: string[];
+  canStealAsLateJoiner?: boolean;
+  currentPlayerId?: string;
 }
 
 function StealDropZone({
@@ -230,13 +233,22 @@ export function StealPhase({
   onSubmitSteal,
   onResolve,
   isSubmitting,
+  decidedStealers = [],
+  canStealAsLateJoiner = false,
+  currentPlayerId,
 }: StealPhaseProps) {
   const [placementIndex, setPlacementIndex] = useState<number | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
 
   const sortedTimeline = [...myTimeline].sort((a, b) => a.year - b.year);
 
-  const canSteal = !isActivePlayer && !hasAlreadyStolen && myTokens >= 1;
+  // In place phase, can steal if: already committed in decide phase OR late-joiner with tokens
+  const committedInDecidePhase =
+    currentPlayerId && decidedStealers.includes(currentPlayerId);
+  const canSteal =
+    !isActivePlayer &&
+    !hasAlreadyStolen &&
+    (committedInDecidePhase || canStealAsLateJoiner);
 
   const handleTimeUp = useCallback(() => {
     onResolve();

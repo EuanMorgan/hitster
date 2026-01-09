@@ -1221,3 +1221,42 @@ Files changed:
 - src/components/ui/button.tsx (variants, sizes, loading prop)
 - src/components/ui/__tests__/button.test.tsx (loading tests)
 - plans/prd.json (marked ui-polish #66 as passes: true)
+
+## 2026-01-09: Implemented two-phase steal system
+
+PRD items: stealing #46-50 (Two-phase steal: schema, backend, decide UI, place UI, skip functionality)
+
+Changes:
+- Added stealPhaseEnum ("decide" | "place") to schema
+- Added new fields: stealDecidePhaseEndAt, stealPlacePhaseEndAt, decidedStealers, playerSkips
+- Modified confirmTurn to start decide phase instead of legacy single-phase
+- Added decideToSteal mutation: deducts token immediately, adds to decidedStealers
+- Added skipSteal mutation: adds to playerSkips, resolves immediately if all skipped
+- Added transitionToPlacePhase mutation: called when decide ends, starts place phase
+- Modified submitSteal to only work in place phase, allows late-joiners with tokens
+- Created StealDecidePhase component: Steal/Skip buttons, timer, progress indicator
+- Updated StealPhase component: supports decidedStealers, canStealAsLateJoiner props
+- Updated game page: two-phase rendering (decide vs place), new computed values
+
+Key decisions:
+- Token deducted in decide phase (not place phase) to commit players
+- Late-joiners can still steal in place phase by paying token then
+- If all players skip in decide phase, immediately resolve (no place phase needed)
+- Keep legacy isStealPhase and stealPhaseEndAt for backwards compatibility
+
+All 5 PRD items verified:
+1. ✅ Schema changes - stealPhase enum, 4 new fields, db:push successful
+2. ✅ Backend mutations - confirmTurn, decideToSteal, skipSteal, transitionToPlacePhase, submitSteal modified
+3. ✅ Decide phase UI - StealDecidePhase with timer, Steal/Skip buttons, progress indicator
+4. ✅ Place phase UI - StealPhase with decidedStealers, canStealAsLateJoiner support
+5. ✅ Skip functionality - immediate resolve if all skip, visual indicator of progress
+
+Files changed:
+- src/db/schema.ts (stealPhaseEnum, new session fields)
+- src/trpc/routers/game.ts (decideToSteal, skipSteal, transitionToPlacePhase mutations)
+- src/components/steal-decide-phase.tsx (new - decide phase component)
+- src/components/steal-phase.tsx (decidedStealers, canStealAsLateJoiner, currentPlayerId props)
+- src/app/game/[pin]/page.tsx (two-phase rendering, computed values, mutations)
+- src/mocks/db.ts (new fields in seedGameSession)
+- src/mocks/fixtures.ts (new fields in all session fixtures)
+- plans/prd.json (marked stealing #46-50 as passes: true)

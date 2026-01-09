@@ -649,10 +649,24 @@ export const gameRouter = createTRPCRouter({
           : null,
         turnStartedAt: session.turnStartedAt?.toISOString() ?? null,
         roundNumber: session.roundNumber ?? 1,
-        isStealPhase: session.isStealPhase ?? false,
-        stealPhaseEndAt: session.stealPhaseEndAt?.toISOString() ?? null,
+        // Two-phase steal fields
+        stealPhase: session.stealPhase ?? null,
+        stealDecidePhaseEndAt:
+          session.stealDecidePhaseEndAt?.toISOString() ?? null,
+        stealPlacePhaseEndAt:
+          session.stealPlacePhaseEndAt?.toISOString() ?? null,
+        decidedStealers: session.decidedStealers ?? [],
+        playerSkips: session.playerSkips ?? [],
         activePlayerPlacement: session.activePlayerPlacement ?? null,
         stealAttempts: session.stealAttempts ?? [],
+        // Legacy fields for backwards compatibility
+        isStealPhase: session.stealPhase !== null,
+        stealPhaseEndAt:
+          session.stealPhase === "decide"
+            ? (session.stealDecidePhaseEndAt?.toISOString() ?? null)
+            : session.stealPhase === "place"
+              ? (session.stealPlacePhaseEndAt?.toISOString() ?? null)
+              : null,
         playerStats: session.state === "finished" ? playerStats : null,
         gamesPlayed: session.gamesPlayed ?? 0,
         hostIsConnected,
@@ -1069,7 +1083,7 @@ export const gameRouter = createTRPCRouter({
         });
       }
 
-      if (session.isStealPhase) {
+      if (session.stealPhase !== null) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Cannot confirm turn during steal phase",
@@ -1109,8 +1123,8 @@ export const gameRouter = createTRPCRouter({
         guessCorrect = nameMatch && artistMatch;
       }
 
-      // Start steal phase instead of immediately resolving
-      const stealPhaseEndAt = new Date(
+      // Start two-phase steal: begin with 'decide' phase (10s)
+      const decidePhaseEndAt = new Date(
         Date.now() + session.stealWindowDuration * 1000,
       );
 
@@ -1118,11 +1132,17 @@ export const gameRouter = createTRPCRouter({
       await ctx.db
         .update(gameSessions)
         .set({
-          isStealPhase: true,
-          stealPhaseEndAt,
+          stealPhase: "decide",
+          stealDecidePhaseEndAt: decidePhaseEndAt,
+          stealPlacePhaseEndAt: null,
+          decidedStealers: [],
+          playerSkips: [],
           activePlayerPlacement: input.placementIndex,
           activePlayerGuess: { guessedName, guessedArtist },
           stealAttempts: [],
+          // Legacy fields
+          isStealPhase: true,
+          stealPhaseEndAt: decidePhaseEndAt,
           updatedAt: new Date(),
         })
         .where(eq(gameSessions.id, session.id));
@@ -1131,19 +1151,20 @@ export const gameRouter = createTRPCRouter({
 
       return {
         stealPhaseStarted: true,
-        stealPhaseEndAt: stealPhaseEndAt.toISOString(),
+        stealPhase: "decide" as const,
+        stealDecidePhaseEndAt: decidePhaseEndAt.toISOString(),
         guessedName,
         guessedArtist,
         guessCorrect,
       };
     }),
 
-  submitSteal: baseProcedure
+  // Decide phase: player clicks "Steal" button to commit to stealing
+  decideToSteal: baseProcedure
     .input(
       z.object({
         pin: z.string().length(4),
         playerId: z.string().uuid(),
-        placementIndex: z.number().int().min(0),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -1162,18 +1183,21 @@ export const gameRouter = createTRPCRouter({
         throw new TRPCError({ code: "NOT_FOUND", message: "Game not found" });
       }
 
-      if (session.state !== "playing" || !session.isStealPhase) {
+      if (session.state !== "playing" || session.stealPhase !== "decide") {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Not in steal phase",
+          message: "Not in decide phase",
         });
       }
 
-      // Check if steal phase has expired
-      if (session.stealPhaseEndAt && new Date() > session.stealPhaseEndAt) {
+      // Check if decide phase has expired
+      if (
+        session.stealDecidePhaseEndAt &&
+        new Date() > session.stealDecidePhaseEndAt
+      ) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Steal phase has ended",
+          message: "Decide phase has ended",
         });
       }
 
@@ -1199,17 +1223,270 @@ export const gameRouter = createTRPCRouter({
       if (player.tokens < 1) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Not enough tokens",
+          message: "Not enough tokens to steal",
         });
       }
 
-      // Check if player already submitted a steal
+      // Check if player already decided
+      const decidedStealers = session.decidedStealers ?? [];
+      const playerSkips = session.playerSkips ?? [];
+      if (
+        decidedStealers.includes(input.playerId) ||
+        playerSkips.includes(input.playerId)
+      ) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "You already made your decision",
+        });
+      }
+
+      // Deduct token immediately when deciding to steal
+      await ctx.db
+        .update(players)
+        .set({ tokens: player.tokens - 1 })
+        .where(eq(players.id, input.playerId));
+
+      // Add to decided stealers
+      await ctx.db
+        .update(gameSessions)
+        .set({
+          decidedStealers: [...decidedStealers, input.playerId],
+          updatedAt: new Date(),
+        })
+        .where(eq(gameSessions.id, session.id));
+
+      emitSessionUpdate(pin);
+
+      return { success: true, tokenDeducted: true };
+    }),
+
+  // Decide phase: player clicks "Skip" button
+  skipSteal: baseProcedure
+    .input(
+      z.object({
+        pin: z.string().length(4),
+        playerId: z.string().uuid(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const pin = input.pin.toUpperCase();
+
+      const session = await ctx.db.query.gameSessions.findFirst({
+        where: eq(gameSessions.pin, pin),
+        with: {
+          players: {
+            where: eq(players.isConnected, true),
+          },
+        },
+      });
+
+      if (!session) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Game not found" });
+      }
+
+      if (session.state !== "playing" || session.stealPhase !== "decide") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Not in decide phase",
+        });
+      }
+
+      const currentPlayerId =
+        session.turnOrder && session.currentTurnIndex !== null
+          ? session.turnOrder[session.currentTurnIndex]
+          : null;
+
+      // Active player doesn't need to skip (they're not eligible)
+      if (input.playerId === currentPlayerId) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Active player cannot skip steal",
+        });
+      }
+
+      const player = session.players.find((p) => p.id === input.playerId);
+      if (!player) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Player not found" });
+      }
+
+      // Check if player already decided
+      const decidedStealers = session.decidedStealers ?? [];
+      const playerSkips = session.playerSkips ?? [];
+      if (
+        decidedStealers.includes(input.playerId) ||
+        playerSkips.includes(input.playerId)
+      ) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "You already made your decision",
+        });
+      }
+
+      // Add to skips
+      const newPlayerSkips = [...playerSkips, input.playerId];
+      await ctx.db
+        .update(gameSessions)
+        .set({
+          playerSkips: newPlayerSkips,
+          updatedAt: new Date(),
+        })
+        .where(eq(gameSessions.id, session.id));
+
+      emitSessionUpdate(pin);
+
+      // Check if all eligible players have decided (skip or steal)
+      const eligiblePlayers = session.players.filter(
+        (p) => p.id !== currentPlayerId,
+      );
+      const totalDecided = decidedStealers.length + newPlayerSkips.length;
+
+      // If all eligible skipped, we can resolve immediately
+      if (totalDecided >= eligiblePlayers.length) {
+        // All players have decided - if nobody chose to steal, skip to resolve
+        if (decidedStealers.length === 0) {
+          return { success: true, allSkipped: true };
+        }
+      }
+
+      return { success: true, allSkipped: false };
+    }),
+
+  // Transition from decide phase to place phase
+  transitionToPlacePhase: baseProcedure
+    .input(z.object({ pin: z.string().length(4) }))
+    .mutation(async ({ ctx, input }) => {
+      const pin = input.pin.toUpperCase();
+
+      const session = await ctx.db.query.gameSessions.findFirst({
+        where: eq(gameSessions.pin, pin),
+      });
+
+      if (!session) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Game not found" });
+      }
+
+      if (session.state !== "playing" || session.stealPhase !== "decide") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Not in decide phase",
+        });
+      }
+
+      const decidedStealers = session.decidedStealers ?? [];
+
+      // If no one decided to steal, skip place phase entirely
+      if (decidedStealers.length === 0) {
+        return { skippedToResolve: true };
+      }
+
+      // Start place phase (20s)
+      const placePhaseEndAt = new Date(Date.now() + 20 * 1000);
+
+      await ctx.db
+        .update(gameSessions)
+        .set({
+          stealPhase: "place",
+          stealPlacePhaseEndAt: placePhaseEndAt,
+          // Legacy field
+          stealPhaseEndAt: placePhaseEndAt,
+          updatedAt: new Date(),
+        })
+        .where(eq(gameSessions.id, session.id));
+
+      emitSessionUpdate(pin);
+
+      return {
+        skippedToResolve: false,
+        stealPlacePhaseEndAt: placePhaseEndAt.toISOString(),
+      };
+    }),
+
+  // Place phase: player submits their steal placement
+  submitSteal: baseProcedure
+    .input(
+      z.object({
+        pin: z.string().length(4),
+        playerId: z.string().uuid(),
+        placementIndex: z.number().int().min(0),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const pin = input.pin.toUpperCase();
+
+      const session = await ctx.db.query.gameSessions.findFirst({
+        where: eq(gameSessions.pin, pin),
+        with: {
+          players: {
+            where: eq(players.isConnected, true),
+          },
+        },
+      });
+
+      if (!session) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Game not found" });
+      }
+
+      // Must be in place phase
+      if (session.state !== "playing" || session.stealPhase !== "place") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Not in place phase",
+        });
+      }
+
+      // Check if place phase has expired
+      if (
+        session.stealPlacePhaseEndAt &&
+        new Date() > session.stealPlacePhaseEndAt
+      ) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Place phase has ended",
+        });
+      }
+
+      const currentPlayerId =
+        session.turnOrder && session.currentTurnIndex !== null
+          ? session.turnOrder[session.currentTurnIndex]
+          : null;
+
+      // Active player cannot steal
+      if (input.playerId === currentPlayerId) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Active player cannot steal",
+        });
+      }
+
+      const player = session.players.find((p) => p.id === input.playerId);
+      if (!player) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Player not found" });
+      }
+
+      const decidedStealers = session.decidedStealers ?? [];
       const existingAttempts = session.stealAttempts ?? [];
+
+      // Check if player already submitted a placement
       if (existingAttempts.some((a) => a.playerId === input.playerId)) {
         throw new TRPCError({
           code: "CONFLICT",
-          message: "You already submitted a steal attempt",
+          message: "You already submitted a steal placement",
         });
+      }
+
+      // Late joiner in place phase - they need to have tokens and pay now
+      if (!decidedStealers.includes(input.playerId)) {
+        if (player.tokens < 1) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Not enough tokens to steal",
+          });
+        }
+        // Deduct token for late joiner
+        await ctx.db
+          .update(players)
+          .set({ tokens: player.tokens - 1 })
+          .where(eq(players.id, input.playerId));
       }
 
       // Check if position is already taken
@@ -1221,12 +1498,6 @@ export const gameRouter = createTRPCRouter({
           message: "This position is already taken by another steal attempt",
         });
       }
-
-      // Deduct token
-      await ctx.db
-        .update(players)
-        .set({ tokens: player.tokens - 1 })
-        .where(eq(players.id, input.playerId));
 
       // Add steal attempt
       const newAttempt: ActiveStealAttempt = {
@@ -1246,7 +1517,7 @@ export const gameRouter = createTRPCRouter({
 
       emitSessionUpdate(pin);
 
-      return { success: true, tokenDeducted: true };
+      return { success: true };
     }),
 
   skipSong: baseProcedure
@@ -1279,7 +1550,7 @@ export const gameRouter = createTRPCRouter({
         });
       }
 
-      if (session.isStealPhase) {
+      if (session.stealPhase !== null) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Cannot skip during steal phase",
@@ -1445,7 +1716,7 @@ export const gameRouter = createTRPCRouter({
         });
       }
 
-      if (session.isStealPhase) {
+      if (session.stealPhase !== null) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Cannot get free song during steal phase",
@@ -1604,7 +1875,7 @@ export const gameRouter = createTRPCRouter({
         throw new TRPCError({ code: "NOT_FOUND", message: "Game not found" });
       }
 
-      if (session.state !== "playing" || !session.isStealPhase) {
+      if (session.state !== "playing" || session.stealPhase === null) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Not in steal phase",
@@ -1796,11 +2067,16 @@ export const gameRouter = createTRPCRouter({
               .set({
                 state: "finished",
                 currentSong: null,
-                isStealPhase: false,
-                stealPhaseEndAt: null,
+                stealPhase: null,
+                stealDecidePhaseEndAt: null,
+                stealPlacePhaseEndAt: null,
+                decidedStealers: [],
+                playerSkips: [],
                 activePlayerPlacement: null,
                 activePlayerGuess: null,
                 stealAttempts: [],
+                isStealPhase: false,
+                stealPhaseEndAt: null,
                 updatedAt: new Date(),
               })
               .where(eq(gameSessions.id, session.id));
@@ -1871,11 +2147,16 @@ export const gameRouter = createTRPCRouter({
           .set({
             state: "finished",
             currentSong: null,
-            isStealPhase: false,
-            stealPhaseEndAt: null,
+            stealPhase: null,
+            stealDecidePhaseEndAt: null,
+            stealPlacePhaseEndAt: null,
+            decidedStealers: [],
+            playerSkips: [],
             activePlayerPlacement: null,
             activePlayerGuess: null,
             stealAttempts: [],
+            isStealPhase: false,
+            stealPhaseEndAt: null,
             updatedAt: new Date(),
           })
           .where(eq(gameSessions.id, session.id));
@@ -1927,11 +2208,16 @@ export const gameRouter = createTRPCRouter({
           },
           usedSongIds: newUsedSongIds,
           turnStartedAt: new Date(),
-          isStealPhase: false,
-          stealPhaseEndAt: null,
+          stealPhase: null,
+          stealDecidePhaseEndAt: null,
+          stealPlacePhaseEndAt: null,
+          decidedStealers: [],
+          playerSkips: [],
           activePlayerPlacement: null,
           activePlayerGuess: null,
           stealAttempts: [],
+          isStealPhase: false,
+          stealPhaseEndAt: null,
           usingFallbackPlaylist: switchedToFallback
             ? true
             : session.usingFallbackPlaylist,
@@ -2012,11 +2298,16 @@ export const gameRouter = createTRPCRouter({
           currentSong: null,
           turnStartedAt: null,
           roundNumber: 1,
-          isStealPhase: false,
-          stealPhaseEndAt: null,
+          stealPhase: null,
+          stealDecidePhaseEndAt: null,
+          stealPlacePhaseEndAt: null,
+          decidedStealers: [],
+          playerSkips: [],
           activePlayerPlacement: null,
           activePlayerGuess: null,
           stealAttempts: [],
+          isStealPhase: false,
+          stealPhaseEndAt: null,
           updatedAt: new Date(),
         })
         .where(eq(gameSessions.id, session.id));

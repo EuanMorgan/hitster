@@ -121,6 +121,8 @@ export const gameStateEnum = pgEnum("game_state", [
   "finished",
 ]);
 
+export const stealPhaseEnum = pgEnum("steal_phase", ["decide", "place"]);
+
 export type CurrentTurnSong = {
   songId: string;
   name: string;
@@ -176,14 +178,20 @@ export const gameSessions = pgTable(
     currentSong: jsonb("current_song").$type<CurrentTurnSong | null>(),
     turnStartedAt: timestamp("turn_started_at"),
     roundNumber: integer("round_number").default(1),
-    // Steal phase tracking
-    isStealPhase: boolean("is_steal_phase").default(false),
-    stealPhaseEndAt: timestamp("steal_phase_end_at"),
+    // Two-phase steal tracking
+    stealPhase: stealPhaseEnum("steal_phase"), // null = not in steal, 'decide' or 'place'
+    stealDecidePhaseEndAt: timestamp("steal_decide_phase_end_at"),
+    stealPlacePhaseEndAt: timestamp("steal_place_phase_end_at"),
+    decidedStealers: jsonb("decided_stealers").$type<string[]>().default([]), // playerIds who clicked Steal in decide phase
+    playerSkips: jsonb("player_skips").$type<string[]>().default([]), // playerIds who clicked Skip
     activePlayerPlacement: integer("active_player_placement"),
     activePlayerGuess: jsonb("active_player_guess").$type<ActivePlayerGuess>(),
     stealAttempts: jsonb("steal_attempts")
       .$type<ActiveStealAttempt[]>()
       .default([]),
+    // Legacy field - kept for backwards compatibility during migration
+    isStealPhase: boolean("is_steal_phase").default(false),
+    stealPhaseEndAt: timestamp("steal_phase_end_at"),
     // Loaded playlist songs for the game
     playlistSongs: jsonb("playlist_songs").$type<PlaylistSong[]>(),
     usingFallbackPlaylist: boolean("using_fallback_playlist").default(false),

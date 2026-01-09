@@ -824,7 +824,7 @@
       "Run db:push and verify schema updates",
       "DONE: npm run typecheck passes with new fields"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "stealing",
@@ -839,7 +839,7 @@
       "If all eligible players skip, immediately call resolveStealPhase and advance turn",
       "DONE: Can complete full steal flow via API calls"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "stealing",
@@ -853,7 +853,7 @@
       "Active player sees their timeline with placed song highlighted (glowing border)",
       "DONE: Non-active player can click Steal or Skip, see timer, see active player's timeline"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "stealing",
@@ -868,7 +868,7 @@
       "Auto-submit placement when timer expires",
       "DONE: Stealer can drag into active player's timeline, see other stealers' positions"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "stealing",
@@ -881,7 +881,7 @@
       "Skip button disabled after clicking, shows checkmark",
       "DONE: If all 3 non-active players skip, steal phase ends within 1 second"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "gameplay",
