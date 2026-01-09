@@ -3,6 +3,8 @@
 import { useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 
+type MatchType = "exact" | "fuzzy" | false;
+
 export interface TurnResult {
   activePlayerCorrect: boolean;
   song: { name: string; artist: string; year: number };
@@ -15,6 +17,8 @@ export interface TurnResult {
   guessWasCorrect?: boolean;
   nameCorrect?: boolean;
   artistCorrect?: boolean;
+  nameMatchType?: MatchType;
+  artistMatchType?: MatchType;
   guessedName?: string | null;
   guessedArtist?: string | null;
 }
@@ -31,7 +35,6 @@ export function TurnResultOverlay({
   winnerName,
 }: TurnResultOverlayProps) {
   useEffect(() => {
-    // Longer timeout if game ended to enjoy celebration, 5s for normal results
     const timer = setTimeout(onClose, result.gameEnded ? 6000 : 5000);
     return () => clearTimeout(timer);
   }, [onClose, result.gameEnded]);
@@ -39,12 +42,18 @@ export function TurnResultOverlay({
   const wasStolen = !!result.stolenBy;
   const songLost = !result.activePlayerCorrect && !wasStolen;
 
+  const hasFuzzyMatch =
+    result.nameMatchType === "fuzzy" || result.artistMatchType === "fuzzy";
+  const allExactMatches =
+    result.guessWasCorrect &&
+    result.nameMatchType === "exact" &&
+    result.artistMatchType === "exact";
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <Card className="w-full max-w-md mx-4 animate-in zoom-in-95">
         <CardContent className="py-8 text-center">
           {result.gameEnded ? (
-            // Winner celebration
             <>
               <div className="text-6xl mb-4 animate-bounce">🏆</div>
               <div className="text-3xl font-bold mb-2 text-yellow-500">
@@ -73,7 +82,6 @@ export function TurnResultOverlay({
               </div>
             </>
           ) : (
-            // Normal turn result
             <>
               <div className="text-6xl mb-4">
                 {result.activePlayerCorrect ? "✅" : wasStolen ? "🎯" : "❌"}
@@ -95,62 +103,85 @@ export function TurnResultOverlay({
               <div className="text-2xl font-bold text-primary mt-2">
                 {result.song.year}
               </div>
-              {/* Show guess result if a guess was made */}
-              {(result.guessedName || result.guessedArtist) && (
-                <div className="mt-4 p-3 rounded-lg bg-muted/50 text-left">
-                  {/* Title with token bonus animation */}
-                  <div className="text-base font-medium mb-3 text-center">
-                    {result.guessWasCorrect ? (
-                      <span className="inline-flex items-center gap-2">
-                        🎯 Correct guess!
-                        <span className="inline-block animate-[scale_0.3s_ease-out] text-lg">
-                          +1 🪙
-                        </span>
-                      </span>
-                    ) : (
-                      "Your Guess"
-                    )}
-                  </div>
-                  {/* Name comparison */}
-                  {result.guessedName && (
-                    <div className="mb-2">
-                      <div
-                        className={`text-base px-2 py-1 rounded ${
-                          result.nameCorrect
-                            ? "bg-green-500/20 text-green-700 dark:text-green-400"
-                            : "bg-red-500/20 text-red-700 dark:text-red-400"
-                        }`}
-                      >
-                        Your guess: {result.guessedName}
-                      </div>
-                      {!result.nameCorrect && (
-                        <div className="text-base text-muted-foreground mt-1 px-2">
-                          Actual: {result.song.name}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  {/* Artist comparison */}
-                  {result.guessedArtist && (
-                    <div>
-                      <div
-                        className={`text-base px-2 py-1 rounded ${
-                          result.artistCorrect
-                            ? "bg-green-500/20 text-green-700 dark:text-green-400"
-                            : "bg-red-500/20 text-red-700 dark:text-red-400"
-                        }`}
-                      >
-                        Your guess: {result.guessedArtist}
-                      </div>
-                      {!result.artistCorrect && (
-                        <div className="text-base text-muted-foreground mt-1 px-2">
-                          Actual: {result.song.artist}
-                        </div>
-                      )}
-                    </div>
-                  )}
+
+              {/* Token badge for exact matches - no comparison needed */}
+              {allExactMatches && (
+                <div className="mt-4 inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-green-500/20 text-green-700 dark:text-green-400">
+                  <span>🎯</span>
+                  <span className="font-medium">+1</span>
+                  <span className="text-lg">🪙</span>
                 </div>
               )}
+
+              {/* Close enough section for fuzzy matches */}
+              {result.guessWasCorrect && hasFuzzyMatch && (
+                <div className="mt-4 p-3 rounded-lg bg-muted/50 text-left">
+                  <div className="text-base font-medium mb-3 text-center text-green-700 dark:text-green-400">
+                    Close enough! +1 🪙
+                  </div>
+                  {result.nameMatchType === "fuzzy" && result.guessedName && (
+                    <div className="text-sm text-muted-foreground mb-1">
+                      "{result.guessedName}" → {result.song.name}
+                    </div>
+                  )}
+                  {result.artistMatchType === "fuzzy" &&
+                    result.guessedArtist && (
+                      <div className="text-sm text-muted-foreground">
+                        "{result.guessedArtist}" → {result.song.artist}
+                      </div>
+                    )}
+                </div>
+              )}
+
+              {/* Failed guess section */}
+              {!result.guessWasCorrect &&
+                (result.guessedName || result.guessedArtist) && (
+                  <div className="mt-4 p-3 rounded-lg bg-muted/50 text-left">
+                    <div className="text-base font-medium mb-2 text-center text-muted-foreground">
+                      Bonus Guess
+                    </div>
+                    {result.guessedName && (
+                      <div className="text-sm mb-1">
+                        <span
+                          className={
+                            result.nameCorrect
+                              ? "text-green-600 dark:text-green-400"
+                              : "text-red-600 dark:text-red-400"
+                          }
+                        >
+                          {result.nameCorrect ? "✓" : "✗"} Title:{" "}
+                          {result.guessedName}
+                        </span>
+                        {!result.nameCorrect && (
+                          <span className="text-muted-foreground">
+                            {" "}
+                            (was: {result.song.name})
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    {result.guessedArtist && (
+                      <div className="text-sm">
+                        <span
+                          className={
+                            result.artistCorrect
+                              ? "text-green-600 dark:text-green-400"
+                              : "text-red-600 dark:text-red-400"
+                          }
+                        >
+                          {result.artistCorrect ? "✓" : "✗"} Artist:{" "}
+                          {result.guessedArtist}
+                        </span>
+                        {!result.artistCorrect && (
+                          <span className="text-muted-foreground">
+                            {" "}
+                            (was: {result.song.artist})
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
             </>
           )}
         </CardContent>

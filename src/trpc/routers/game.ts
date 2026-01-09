@@ -83,6 +83,30 @@ function fuzzyMatch(guess: string, actual: string, tolerance = 0.2): boolean {
   return maxLength > 0 && distance / maxLength <= tolerance;
 }
 
+type MatchType = "exact" | "fuzzy" | false;
+
+function getMatchType(
+  guess: string,
+  actual: string,
+  tolerance = 0.2,
+): MatchType {
+  const normalizedGuess = normalizeString(guess);
+  const normalizedActual = normalizeString(actual);
+
+  if (normalizedGuess === normalizedActual) return "exact";
+  if (
+    normalizedActual.includes(normalizedGuess) ||
+    normalizedGuess.includes(normalizedActual)
+  )
+    return "exact";
+
+  const distance = levenshteinDistance(normalizedGuess, normalizedActual);
+  const maxLength = Math.max(normalizedGuess.length, normalizedActual.length);
+  if (maxLength > 0 && distance / maxLength <= tolerance) return "fuzzy";
+
+  return false;
+}
+
 // Get local network IP for dev mode QR codes
 function getLocalNetworkIP(): string | null {
   const nets = networkInterfaces();
@@ -613,13 +637,17 @@ async function resolveTurnCore(params: ResolveTurnParams) {
   let guessWasCorrect = false;
   let nameCorrect = false;
   let artistCorrect = false;
+  let nameMatchType: MatchType = false;
+  let artistMatchType: MatchType = false;
   if (guess?.guessedName || guess?.guessedArtist) {
-    nameCorrect = guess?.guessedName
-      ? fuzzyMatch(guess.guessedName, currentSong.name)
+    nameMatchType = guess?.guessedName
+      ? getMatchType(guess.guessedName, currentSong.name)
       : false;
-    artistCorrect = guess?.guessedArtist
-      ? fuzzyMatch(guess.guessedArtist, currentSong.artist)
+    artistMatchType = guess?.guessedArtist
+      ? getMatchType(guess.guessedArtist, currentSong.artist)
       : false;
+    nameCorrect = !!nameMatchType;
+    artistCorrect = !!artistMatchType;
     guessWasCorrect = nameCorrect && artistCorrect;
   }
 
@@ -748,6 +776,8 @@ async function resolveTurnCore(params: ResolveTurnParams) {
           guessWasCorrect,
           nameCorrect,
           artistCorrect,
+          nameMatchType,
+          artistMatchType,
           guessedName: guess?.guessedName ?? null,
           guessedArtist: guess?.guessedArtist ?? null,
           displayedAt: new Date().toISOString(),
@@ -786,6 +816,8 @@ async function resolveTurnCore(params: ResolveTurnParams) {
           guessWasCorrect,
           nameCorrect,
           artistCorrect,
+          nameMatchType,
+          artistMatchType,
           guessedName: guess?.guessedName ?? null,
           guessedArtist: guess?.guessedArtist ?? null,
         };
@@ -845,6 +877,8 @@ async function resolveTurnCore(params: ResolveTurnParams) {
       guessWasCorrect,
       nameCorrect,
       artistCorrect,
+      nameMatchType,
+      artistMatchType,
       guessedName: guess?.guessedName ?? null,
       guessedArtist: guess?.guessedArtist ?? null,
       displayedAt: new Date().toISOString(),
@@ -888,6 +922,8 @@ async function resolveTurnCore(params: ResolveTurnParams) {
       guessWasCorrect,
       nameCorrect,
       artistCorrect,
+      nameMatchType,
+      artistMatchType,
       guessedName: guess?.guessedName ?? null,
       guessedArtist: guess?.guessedArtist ?? null,
     };
@@ -912,6 +948,8 @@ async function resolveTurnCore(params: ResolveTurnParams) {
     guessWasCorrect,
     nameCorrect,
     artistCorrect,
+    nameMatchType,
+    artistMatchType,
     guessedName: guess?.guessedName ?? null,
     guessedArtist: guess?.guessedArtist ?? null,
     displayedAt: new Date().toISOString(),
@@ -963,6 +1001,8 @@ async function resolveTurnCore(params: ResolveTurnParams) {
     guessWasCorrect,
     nameCorrect,
     artistCorrect,
+    nameMatchType,
+    artistMatchType,
     guessedName: guess?.guessedName ?? null,
     guessedArtist: guess?.guessedArtist ?? null,
   };
@@ -2613,13 +2653,17 @@ export const gameRouter = createTRPCRouter({
       let guessWasCorrect = false;
       let nameCorrect = false;
       let artistCorrect = false;
+      let nameMatchType: MatchType = false;
+      let artistMatchType: MatchType = false;
       if (guess?.guessedName || guess?.guessedArtist) {
-        nameCorrect = guess?.guessedName
-          ? fuzzyMatch(guess.guessedName, session.currentSong.name)
+        nameMatchType = guess?.guessedName
+          ? getMatchType(guess.guessedName, session.currentSong.name)
           : false;
-        artistCorrect = guess?.guessedArtist
-          ? fuzzyMatch(guess.guessedArtist, session.currentSong.artist)
+        artistMatchType = guess?.guessedArtist
+          ? getMatchType(guess.guessedArtist, session.currentSong.artist)
           : false;
+        nameCorrect = !!nameMatchType;
+        artistCorrect = !!artistMatchType;
         guessWasCorrect = nameCorrect && artistCorrect;
       }
 
@@ -2758,6 +2802,8 @@ export const gameRouter = createTRPCRouter({
               guessWasCorrect,
               nameCorrect,
               artistCorrect,
+              nameMatchType,
+              artistMatchType,
               guessedName: guess?.guessedName ?? null,
               guessedArtist: guess?.guessedArtist ?? null,
               displayedAt: new Date().toISOString(),
@@ -2796,6 +2842,8 @@ export const gameRouter = createTRPCRouter({
               guessWasCorrect,
               nameCorrect,
               artistCorrect,
+              nameMatchType,
+              artistMatchType,
               guessedName: guess?.guessedName ?? null,
               guessedArtist: guess?.guessedArtist ?? null,
             };
@@ -2858,6 +2906,8 @@ export const gameRouter = createTRPCRouter({
           guessWasCorrect,
           nameCorrect,
           artistCorrect,
+          nameMatchType,
+          artistMatchType,
           guessedName: guess?.guessedName ?? null,
           guessedArtist: guess?.guessedArtist ?? null,
           displayedAt: new Date().toISOString(),
@@ -2901,6 +2951,8 @@ export const gameRouter = createTRPCRouter({
           guessWasCorrect,
           nameCorrect,
           artistCorrect,
+          nameMatchType,
+          artistMatchType,
           guessedName: guess?.guessedName ?? null,
           guessedArtist: guess?.guessedArtist ?? null,
         };
@@ -2925,6 +2977,8 @@ export const gameRouter = createTRPCRouter({
         guessWasCorrect,
         nameCorrect,
         artistCorrect,
+        nameMatchType,
+        artistMatchType,
         guessedName: guess?.guessedName ?? null,
         guessedArtist: guess?.guessedArtist ?? null,
         displayedAt: new Date().toISOString(),
@@ -2976,6 +3030,8 @@ export const gameRouter = createTRPCRouter({
         guessWasCorrect,
         nameCorrect,
         artistCorrect,
+        nameMatchType,
+        artistMatchType,
         guessedName: guess?.guessedName ?? null,
         guessedArtist: guess?.guessedArtist ?? null,
       };
