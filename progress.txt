@@ -1611,3 +1611,19 @@ Files changed:
 - src/components/game/turn-result-overlay.tsx (new - 160 lines)
 - src/app/game/[pin]/page.tsx (import update, removed inline component, simplified state type)
 - plans/prd.json (marked refactor #95 as passes: true)
+
+## 2026-01-09: Extract PlayerProgressBar to separate component file
+
+PRD items: refactor #96 (Extract PlayerProgressBar to separate component file)
+
+Changes:
+- Created src/components/game/player-progress-bar.tsx with PlayerProgressBar component
+- Defined explicit Player and PlayerProgressBarProps interfaces
+- Removed inline PlayerProgressBar from game page (~55 lines extracted)
+- Updated game page to import PlayerProgressBar
+- Game page reduced from ~1268 to ~1213 lines
+
+Files changed:
+- src/components/game/player-progress-bar.tsx (new - 58 lines)
+- src/app/game/[pin]/page.tsx (import update, removed inline component)
+- plans/prd.json (marked refactor #96 as passes: true)

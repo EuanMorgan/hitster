@@ -1439,7 +1439,7 @@
       "Update game page to import PlayerProgressBar",
       "DONE: PlayerProgressBar in separate file (~55 lines extracted)"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "refactor",
