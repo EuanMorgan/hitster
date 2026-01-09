@@ -210,8 +210,6 @@ export const gameSessions = pgTable(
     yearLookupTotal: integer("year_lookup_total").default(0),
     // Party stats tracking (persists across rematches)
     gamesPlayed: integer("games_played").notNull().default(0),
-    // Settings
-    shuffleTurns: boolean("shuffle_turns").notNull().default(false),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },

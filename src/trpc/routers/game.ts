@@ -30,10 +30,6 @@ function shuffleArray<T>(array: T[]): T[] {
   return shuffled;
 }
 
-function isSoloGame(players: { id: string }[]): boolean {
-  return players.length === 1;
-}
-
 // Normalize string for fuzzy matching
 function normalizeString(str: string): string {
   return str
@@ -570,11 +566,12 @@ type ResolveTurnParams = {
     currentSong: CurrentTurnSong | null;
     usedSongIds: string[] | null;
     playlistSongs: PlaylistSong[] | null;
-    shuffleTurns: boolean;
     usingFallbackPlaylist: boolean | null;
     players: Player[];
   };
-  dbClient: Parameters<Parameters<typeof baseProcedure.query>[0]>[0]["ctx"]["db"];
+  dbClient: Parameters<
+    Parameters<typeof baseProcedure.query>[0]
+  >[0]["ctx"]["db"];
   activePlayer: Player;
   activePlayerPlacement: number;
   guess: { guessedName: string | null; guessedArtist: string | null } | null;
@@ -582,7 +579,14 @@ type ResolveTurnParams = {
 };
 
 async function resolveTurnCore(params: ResolveTurnParams) {
-  const { session, dbClient, activePlayer, activePlayerPlacement, guess, stealAttempts } = params;
+  const {
+    session,
+    dbClient,
+    activePlayer,
+    activePlayerPlacement,
+    guess,
+    stealAttempts,
+  } = params;
   const pin = session.pin;
   const currentSong = session.currentSong!;
   const songYear = currentSong.year;
@@ -597,7 +601,8 @@ async function resolveTurnCore(params: ResolveTurnParams) {
   } else if (activePlayerPlacement === 0) {
     activePlayerCorrect = songYear <= sortedTimeline[0].year;
   } else if (activePlayerPlacement >= sortedTimeline.length) {
-    activePlayerCorrect = songYear >= sortedTimeline[sortedTimeline.length - 1].year;
+    activePlayerCorrect =
+      songYear >= sortedTimeline[sortedTimeline.length - 1].year;
   } else {
     const before = sortedTimeline[activePlayerPlacement - 1];
     const after = sortedTimeline[activePlayerPlacement];
@@ -609,8 +614,12 @@ async function resolveTurnCore(params: ResolveTurnParams) {
   let nameCorrect = false;
   let artistCorrect = false;
   if (guess?.guessedName || guess?.guessedArtist) {
-    nameCorrect = guess?.guessedName ? fuzzyMatch(guess.guessedName, currentSong.name) : false;
-    artistCorrect = guess?.guessedArtist ? fuzzyMatch(guess.guessedArtist, currentSong.artist) : false;
+    nameCorrect = guess?.guessedName
+      ? fuzzyMatch(guess.guessedName, currentSong.name)
+      : false;
+    artistCorrect = guess?.guessedArtist
+      ? fuzzyMatch(guess.guessedArtist, currentSong.artist)
+      : false;
     guessWasCorrect = nameCorrect && artistCorrect;
   }
 
@@ -627,7 +636,8 @@ async function resolveTurnCore(params: ResolveTurnParams) {
 
   if (!activePlayerCorrect && stealAttempts.length > 0) {
     const sortedAttempts = [...stealAttempts].sort(
-      (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+      (a, b) =>
+        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
     );
 
     for (const attempt of sortedAttempts) {
@@ -635,7 +645,9 @@ async function resolveTurnCore(params: ResolveTurnParams) {
       if (!stealer) continue;
 
       const stealerTimeline = stealer.timeline ?? [];
-      const sortedStealerTimeline = [...stealerTimeline].sort((a, b) => a.year - b.year);
+      const sortedStealerTimeline = [...stealerTimeline].sort(
+        (a, b) => a.year - b.year,
+      );
 
       let stealerCorrect = false;
       if (sortedStealerTimeline.length === 0) {
@@ -643,7 +655,9 @@ async function resolveTurnCore(params: ResolveTurnParams) {
       } else if (attempt.placementIndex === 0) {
         stealerCorrect = songYear <= sortedStealerTimeline[0].year;
       } else if (attempt.placementIndex >= sortedStealerTimeline.length) {
-        stealerCorrect = songYear >= sortedStealerTimeline[sortedStealerTimeline.length - 1].year;
+        stealerCorrect =
+          songYear >=
+          sortedStealerTimeline[sortedStealerTimeline.length - 1].year;
       } else {
         const before = sortedStealerTimeline[attempt.placementIndex - 1];
         const after = sortedStealerTimeline[attempt.placementIndex];
@@ -651,7 +665,10 @@ async function resolveTurnCore(params: ResolveTurnParams) {
       }
 
       if (stealerCorrect) {
-        winningStealer = { playerId: attempt.playerId, playerName: attempt.playerName };
+        winningStealer = {
+          playerId: attempt.playerId,
+          playerName: attempt.playerName,
+        };
         break;
       }
     }
@@ -703,7 +720,10 @@ async function resolveTurnCore(params: ResolveTurnParams) {
       };
       const newTimeline = [...(recipient.timeline ?? []), newSong];
 
-      await dbClient.update(players).set({ timeline: newTimeline }).where(eq(players.id, recipientId));
+      await dbClient
+        .update(players)
+        .set({ timeline: newTimeline })
+        .where(eq(players.id, recipientId));
 
       // Check win condition
       if (newTimeline.length >= session.songsToWin) {
@@ -757,7 +777,9 @@ async function resolveTurnCore(params: ResolveTurnParams) {
   const turnOrderLength = session.turnOrder?.length ?? 1;
   const nextTurnIndex = ((session.currentTurnIndex ?? 0) + 1) % turnOrderLength;
   const isNewRound = nextTurnIndex === 0;
-  const newRoundNumber = isNewRound ? (session.roundNumber ?? 1) + 1 : (session.roundNumber ?? 1);
+  const newRoundNumber = isNewRound
+    ? (session.roundNumber ?? 1) + 1
+    : (session.roundNumber ?? 1);
 
   // Draw next song
   const usedSongIds = new Set(session.usedSongIds ?? []);
@@ -766,7 +788,9 @@ async function resolveTurnCore(params: ResolveTurnParams) {
   let switchedToFallback = false;
 
   if (availableSongs.length === 0 && !session.usingFallbackPlaylist) {
-    const fallbackAvailable = PLACEHOLDER_SONGS.filter((s) => !usedSongIds.has(s.songId));
+    const fallbackAvailable = PLACEHOLDER_SONGS.filter(
+      (s) => !usedSongIds.has(s.songId),
+    );
     if (fallbackAvailable.length > 0) {
       availableSongs = fallbackAvailable;
       switchedToFallback = true;
@@ -776,7 +800,7 @@ async function resolveTurnCore(params: ResolveTurnParams) {
   if (availableSongs.length === 0) {
     // No more songs - determine winner by most songs
     const sortedPlayers = [...session.players].sort(
-      (a, b) => (b.timeline?.length ?? 0) - (a.timeline?.length ?? 0)
+      (a, b) => (b.timeline?.length ?? 0) - (a.timeline?.length ?? 0),
     );
     const songExhaustionWinner = sortedPlayers[0];
 
@@ -806,7 +830,11 @@ async function resolveTurnCore(params: ResolveTurnParams) {
       })
       .where(eq(gameSessions.id, session.id));
 
-    await storeGameHistory(dbClient, session.id, songExhaustionWinner?.id ?? null);
+    await storeGameHistory(
+      dbClient,
+      session.id,
+      songExhaustionWinner?.id ?? null,
+    );
     emitSessionUpdate(pin);
 
     return {
@@ -825,21 +853,14 @@ async function resolveTurnCore(params: ResolveTurnParams) {
     };
   }
 
-  const nextSong = availableSongs[Math.floor(Math.random() * availableSongs.length)];
+  const nextSong =
+    availableSongs[Math.floor(Math.random() * availableSongs.length)];
   const newUsedSongIds = [...(session.usedSongIds ?? []), nextSong.songId];
-
-  // Skip shuffle for solo games
-  let newTurnOrder = session.turnOrder;
-  const isSolo = (session.turnOrder?.length ?? 0) <= 1;
-  if (isNewRound && session.shuffleTurns && !isSolo) {
-    newTurnOrder = shuffleArray(session.turnOrder!);
-  }
 
   await dbClient
     .update(gameSessions)
     .set({
       currentTurnIndex: nextTurnIndex,
-      turnOrder: newTurnOrder,
       roundNumber: newRoundNumber,
       currentSong: {
         songId: nextSong.songId,
@@ -860,7 +881,9 @@ async function resolveTurnCore(params: ResolveTurnParams) {
       stealAttempts: [],
       isStealPhase: false,
       stealPhaseEndAt: null,
-      usingFallbackPlaylist: switchedToFallback ? true : session.usingFallbackPlaylist,
+      usingFallbackPlaylist: switchedToFallback
+        ? true
+        : session.usingFallbackPlaylist,
       updatedAt: new Date(),
     })
     .where(eq(gameSessions.id, session.id));
@@ -873,7 +896,7 @@ async function resolveTurnCore(params: ResolveTurnParams) {
     stolenBy: winningStealer,
     recipientId,
     gameEnded: false,
-    nextPlayerId: newTurnOrder?.[nextTurnIndex],
+    nextPlayerId: session.turnOrder?.[nextTurnIndex],
     isNewRound,
     newRoundNumber,
     guessWasCorrect,
@@ -1125,7 +1148,6 @@ export const gameRouter = createTRPCRouter({
         stealWindowDuration: session.stealWindowDuration,
         maxPlayers: session.maxPlayers,
         playlistUrl: session.playlistUrl,
-        shuffleTurns: session.shuffleTurns,
         turnOrder: session.turnOrder,
         currentTurnIndex: session.currentTurnIndex,
         currentPlayerId:
@@ -1191,7 +1213,6 @@ export const gameRouter = createTRPCRouter({
         stealWindowDuration: z.number().int().min(5).max(20).optional(),
         maxPlayers: z.number().int().min(1).max(20).optional(),
         playlistUrl: z.string().url().nullable().optional(),
-        shuffleTurns: z.boolean().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -1522,9 +1543,8 @@ export const gameRouter = createTRPCRouter({
         playlistWarning = "Using offline song library";
       }
 
-      // Set turn order (skip shuffle for solo games)
-      const playerIds = connectedPlayers.map((p: Player) => p.id);
-      const turnOrder = isSoloGame(connectedPlayers) ? playerIds : shuffleArray(playerIds);
+      // Set turn order based on join order
+      const turnOrder = connectedPlayers.map((p: Player) => p.id);
 
       // Shuffle available songs and assign one to each player
       const shuffledSongs = shuffleArray(playlistSongs);
@@ -1680,13 +1700,18 @@ export const gameRouter = createTRPCRouter({
         guessCorrect = nameMatch && artistMatch;
       }
 
-      const activePlayer = session.players.find((p) => p.id === currentPlayerId);
+      const activePlayer = session.players.find(
+        (p) => p.id === currentPlayerId,
+      );
       if (!activePlayer) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Active player not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Active player not found",
+        });
       }
 
       // Solo game: skip steal phase entirely and resolve immediately
-      if (isSoloGame(session.players)) {
+      if (session.players.length === 1) {
         const result = await resolveTurnCore({
           session,
           dbClient: ctx.db,
@@ -2768,16 +2793,10 @@ export const gameRouter = createTRPCRouter({
         availableSongs[Math.floor(Math.random() * availableSongs.length)];
       const newUsedSongIds = [...(session.usedSongIds ?? []), nextSong.songId];
 
-      let newTurnOrder = session.turnOrder;
-      if (isNewRound && session.shuffleTurns) {
-        newTurnOrder = shuffleArray(session.turnOrder!);
-      }
-
       await ctx.db
         .update(gameSessions)
         .set({
           currentTurnIndex: nextTurnIndex,
-          turnOrder: newTurnOrder,
           roundNumber: newRoundNumber,
           currentSong: {
             songId: nextSong.songId,
@@ -2813,7 +2832,7 @@ export const gameRouter = createTRPCRouter({
         stolenBy: winningStealer,
         recipientId,
         gameEnded: false,
-        nextPlayerId: newTurnOrder?.[nextTurnIndex],
+        nextPlayerId: session.turnOrder?.[nextTurnIndex],
         isNewRound,
         newRoundNumber,
         guessWasCorrect,

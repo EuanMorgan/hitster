@@ -17,22 +17,15 @@ import { CSS } from "@dnd-kit/utilities";
 import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { ActiveStealAttempt, TimelineSong } from "@/db/schema";
 import { useCountdownTimer } from "@/hooks/use-countdown-timer";
-import type {
-  ActiveStealAttempt,
-  SafeCurrentTurnSong,
-  TimelineSong,
-} from "@/db/schema";
 
 interface StealPhaseProps {
-  currentSong: SafeCurrentTurnSong;
   myTimeline: TimelineSong[];
   activePlayerName: string;
-  activePlayerPlacement: number;
   stealAttempts: ActiveStealAttempt[];
   stealPhaseEndAt: string;
   stealWindowDuration: number;
-  myTokens: number;
   isActivePlayer: boolean;
   hasAlreadyStolen: boolean;
   onSubmitSteal: (placementIndex: number) => void;
@@ -109,7 +102,7 @@ function StealSongCard({ isPlaced }: { isPlaced: boolean }) {
       style={style}
       {...attributes}
       {...listeners}
-      className={`bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-lg p-4 min-w-[100px] min-h-[80px] cursor-grab active:cursor-grabbing shadow-lg transition-all duration-150 touch-none ${
+      className={`bg-linear-to-br from-amber-500 to-amber-600 text-white rounded-lg p-4 min-w-[100px] min-h-[80px] cursor-grab active:cursor-grabbing shadow-lg transition-all duration-150 touch-none ${
         isDragging ? "opacity-50" : ""
       }`}
     >
@@ -124,7 +117,7 @@ function StealSongCard({ isPlaced }: { isPlaced: boolean }) {
 
 function PlacedStealCard() {
   return (
-    <div className="bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-lg p-3 shadow-lg min-w-[70px] sm:min-w-[80px] min-h-[60px] animate-pulse">
+    <div className="bg-linear-to-br from-amber-500 to-amber-600 text-white rounded-lg p-3 shadow-lg min-w-[70px] sm:min-w-[80px] min-h-[60px] animate-pulse">
       <div className="text-center">
         <div className="text-xl mb-1">🎯</div>
         <div className="text-xs font-medium">Stealing!</div>
@@ -135,7 +128,7 @@ function PlacedStealCard() {
 
 function TimelineSongCard({ song }: { song: TimelineSong }) {
   return (
-    <div className="bg-gradient-to-br from-card to-muted/50 border-2 border-green-500/30 rounded-lg p-2 sm:p-3 min-w-[80px] sm:min-w-[100px] min-h-[70px] shadow-sm">
+    <div className="bg-linear-to-br from-card to-muted/50 border-2 border-green-500/30 rounded-lg p-2 sm:p-3 min-w-[80px] sm:min-w-[100px] min-h-[70px] shadow-sm">
       <div className="text-center">
         <div className="font-bold text-lg sm:text-xl text-primary">
           {song.year}
@@ -190,14 +183,11 @@ function StealTimer({
 }
 
 export function StealPhase({
-  currentSong,
   myTimeline,
   activePlayerName,
-  activePlayerPlacement,
   stealAttempts,
   stealPhaseEndAt,
   stealWindowDuration,
-  myTokens,
   isActivePlayer,
   hasAlreadyStolen,
   onSubmitSteal,
@@ -373,7 +363,7 @@ export function StealPhase({
 
             <DragOverlay>
               {activeId === "steal-song" && (
-                <div className="bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-lg p-4 shadow-xl scale-105">
+                <div className="bg-linear-to-br from-amber-500 to-amber-600 text-white rounded-lg p-4 shadow-xl scale-105">
                   <div className="text-center">
                     <div className="text-2xl mb-1">🎯</div>
                     <div className="text-sm font-medium">Steal!</div>

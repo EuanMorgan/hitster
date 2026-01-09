@@ -35,6 +35,7 @@ export function useCountdownTimer({
   });
 
   // Reset triggered state when endTime changes (new phase)
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional reset on phase change
   useEffect(() => {
     hasTriggeredRef.current = false;
   }, [endTime]);

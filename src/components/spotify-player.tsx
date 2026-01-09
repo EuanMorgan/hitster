@@ -1,8 +1,8 @@
 "use client";
 
 import { Pause, Play } from "lucide-react";
-import { useSpotifyPlayer } from "@/hooks/use-spotify-player";
 import { Button } from "@/components/ui/button";
+import { useSpotifyPlayer } from "@/hooks/use-spotify-player";
 
 interface SpotifyPlayerProps {
   isHost: boolean;

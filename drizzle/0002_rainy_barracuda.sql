@@ -1,0 +1,1 @@
+ALTER TABLE "hitster_game_sessions" DROP COLUMN "shuffle_turns";

@@ -95,7 +95,6 @@ export function seedGameSession(
     yearLookupProgress: sessionData.yearLookupProgress ?? 0,
     yearLookupTotal: sessionData.yearLookupTotal ?? 0,
     gamesPlayed: sessionData.gamesPlayed ?? 0,
-    shuffleTurns: sessionData.shuffleTurns ?? false,
     createdAt: sessionData.createdAt ?? new Date(),
     updatedAt: sessionData.updatedAt ?? new Date(),
   };

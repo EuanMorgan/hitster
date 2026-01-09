@@ -15,6 +15,13 @@
       "when": 1767991748876,
       "tag": "0001_past_pretty_boy",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1767995504606,
+      "tag": "0002_rainy_barracuda",
+      "breakpoints": true
     }
   ]
 }

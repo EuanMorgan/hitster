@@ -69,13 +69,7 @@ function DropZone({
   );
 }
 
-function DraggableSongCard({
-  song,
-  isPlaced,
-}: {
-  song: SafeCurrentTurnSong;
-  isPlaced: boolean;
-}) {
+function DraggableSongCard({ isPlaced }: { isPlaced: boolean }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
       id: "current-song",
@@ -95,7 +89,7 @@ function DraggableSongCard({
       style={style}
       {...attributes}
       {...listeners}
-      className={`bg-gradient-to-br from-primary to-primary/80 text-primary-foreground rounded-lg p-4 min-w-[100px] min-h-[80px] cursor-grab active:cursor-grabbing shadow-lg transition-all duration-150 touch-none ${
+      className={`bg-linear-to-br from-primary to-primary/80 text-primary-foreground rounded-lg p-4 min-w-[100px] min-h-[80px] cursor-grab active:cursor-grabbing shadow-lg transition-all duration-150 touch-none ${
         isDragging ? "opacity-50" : ""
       }`}
     >
@@ -109,10 +103,8 @@ function DraggableSongCard({
 }
 
 function PlacedSongCard({
-  song,
   isNewlyPlaced = false,
 }: {
-  song: SafeCurrentTurnSong;
   isNewlyPlaced?: boolean;
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
@@ -126,7 +118,7 @@ function PlacedSongCard({
       style={style}
       {...attributes}
       {...listeners}
-      className={`bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-lg p-3 sm:p-4 shadow-lg min-w-[90px] sm:min-w-[110px] min-h-[70px] cursor-grab active:cursor-grabbing touch-none snap-start transition-all duration-150 ${
+      className={`bg-linear-to-br from-amber-500 to-amber-600 text-white rounded-lg p-3 sm:p-4 shadow-lg min-w-[90px] sm:min-w-[110px] min-h-[70px] cursor-grab active:cursor-grabbing touch-none snap-start transition-all duration-150 ${
         isDragging ? "opacity-50" : ""
       } ${isNewlyPlaced ? "animate-[dropPulse_300ms_ease-out]" : ""}`}
     >
@@ -141,7 +133,7 @@ function PlacedSongCard({
 
 function TimelineSongCard({ song }: { song: TimelineSong }) {
   return (
-    <div className="bg-gradient-to-br from-card to-muted/50 border-2 border-green-500/30 rounded-lg p-3 sm:p-4 min-w-[100px] sm:min-w-[120px] min-h-[80px] shadow-sm snap-start">
+    <div className="bg-linear-to-br from-card to-muted/50 border-2 border-green-500/30 rounded-lg p-3 sm:p-4 min-w-[100px] sm:min-w-[120px] min-h-[80px] shadow-sm snap-start">
       <div className="text-center">
         <div className="font-bold text-xl sm:text-2xl text-primary">
           {song.year}
@@ -181,6 +173,7 @@ function TurnTimer({
   });
 
   // Reset triggered state when turn changes
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional reset on turn change
   useEffect(() => {
     hasTriggeredRef.current = false;
   }, [turnStartedAt]);
@@ -404,10 +397,7 @@ export function TimelineDropZone({
         />
 
         <div className="flex justify-center">
-          <DraggableSongCard
-            song={currentSong}
-            isPlaced={placementIndex !== null}
-          />
+          <DraggableSongCard isPlaced={placementIndex !== null} />
         </div>
 
         <div className="overflow-x-auto pb-4 scroll-smooth">
@@ -418,10 +408,7 @@ export function TimelineDropZone({
               year={sortedTimeline[0]?.year}
             />
             {placementIndex === 0 && (
-              <PlacedSongCard
-                song={currentSong}
-                isNewlyPlaced={isNewlyPlaced}
-              />
+              <PlacedSongCard isNewlyPlaced={isNewlyPlaced} />
             )}
 
             {sortedTimeline.map((song, idx) => (
@@ -433,10 +420,7 @@ export function TimelineDropZone({
                   year={sortedTimeline[idx + 1]?.year}
                 />
                 {placementIndex === idx + 1 && (
-                  <PlacedSongCard
-                    song={currentSong}
-                    isNewlyPlaced={isNewlyPlaced}
-                  />
+                  <PlacedSongCard isNewlyPlaced={isNewlyPlaced} />
                 )}
               </div>
             ))}
@@ -564,7 +548,7 @@ export function TimelineDropZone({
 
       <DragOverlay>
         {activeId === "current-song" && (
-          <div className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground rounded-lg p-4 shadow-xl scale-105">
+          <div className="bg-linear-to-br from-primary to-primary/80 text-primary-foreground rounded-lg p-4 shadow-xl scale-105">
             <div className="text-center">
               <div className="text-2xl mb-1">🎵</div>
               <div className="text-sm font-medium">Mystery Song</div>

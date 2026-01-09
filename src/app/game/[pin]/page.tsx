@@ -19,7 +19,6 @@ import { WaitingView } from "@/components/game/waiting-view";
 import { SpotifyPlayer } from "@/components/spotify-player";
 import { StealDecidePhase } from "@/components/steal-decide-phase";
 import { StealPhase } from "@/components/steal-phase";
-import { TurnShuffleAnimation } from "@/components/turn-shuffle-animation";
 import {
   Card,
   CardDescription,
@@ -39,10 +38,7 @@ export default function GamePage() {
   const pin = (params.pin as string).toUpperCase();
   const router = useRouter();
   const { data: authSession } = useSession();
-  const [showShuffleAnimation, setShowShuffleAnimation] = useState(true);
   const [turnResult, setTurnResult] = useState<TurnResult | null>(null);
-  const [showRoundShuffleAnimation, setShowRoundShuffleAnimation] =
-    useState(false);
   const [playbackStartedAt, setPlaybackStartedAt] = useState<number | null>(
     null,
   );
@@ -70,15 +66,6 @@ export default function GamePage() {
       router.push(`/lobby/${pin}`);
     }
   }, [sessionQuery.data?.state, router, pin]);
-
-  // Skip shuffle animations for solo games
-  const isSoloGame = (sessionQuery.data?.turnOrder?.length ?? 0) <= 1;
-  useEffect(() => {
-    if (isSoloGame) {
-      if (showShuffleAnimation) setShowShuffleAnimation(false);
-      if (showRoundShuffleAnimation) setShowRoundShuffleAnimation(false);
-    }
-  }, [isSoloGame, showShuffleAnimation, showRoundShuffleAnimation]);
 
   const currentTrackUri = sessionQuery.data?.currentSong?.uri;
   // biome-ignore lint/correctness/useExhaustiveDependencies: intentional reset on track change
@@ -133,11 +120,8 @@ export default function GamePage() {
   }, [mutations.transitionToPlacePhase, pin]);
 
   const handleCloseResult = useCallback(() => {
-    if (turnResult?.isNewRound && !turnResult?.gameEnded) {
-      setShowRoundShuffleAnimation(true);
-    }
     setTurnResult(null);
-  }, [turnResult?.isNewRound, turnResult?.gameEnded]);
+  }, []);
 
   const handleTimeUp = useCallback(() => {}, []);
 
@@ -197,8 +181,6 @@ export default function GamePage() {
     );
   }
 
-  const showAnimations = showShuffleAnimation || showRoundShuffleAnimation;
-
   return (
     <div className="min-h-screen p-4 overflow-x-hidden animate-in fade-in duration-150">
       {turnResult && (
@@ -231,7 +213,7 @@ export default function GamePage() {
           <SpotifyPlayer
             isHost={isHost}
             trackUri={session?.currentSong?.uri ?? null}
-            shouldPlay={!showAnimations && !!session?.currentSong}
+            shouldPlay={!!session?.currentSong}
             onPlaybackStarted={() => setPlaybackStartedAt(Date.now())}
             onPlaybackError={(error) =>
               console.error("Spotify playback error:", error)
@@ -239,7 +221,7 @@ export default function GamePage() {
           />
         )}
 
-        {!showAnimations && currentPlayer && session?.state === "playing" && (
+        {currentPlayer && session?.state === "playing" && (
           <TurnIndicatorBanner
             isMyTurn={isMyTurn}
             currentPlayerName={currentPlayer.name}
@@ -248,26 +230,7 @@ export default function GamePage() {
           />
         )}
 
-        {showShuffleAnimation && session?.turnOrder && (
-          <TurnShuffleAnimation
-            players={session.players ?? []}
-            turnOrder={session.turnOrder}
-            onComplete={() => setShowShuffleAnimation(false)}
-          />
-        )}
-
-        {showRoundShuffleAnimation &&
-          !showShuffleAnimation &&
-          session?.turnOrder && (
-            <TurnShuffleAnimation
-              players={session.players ?? []}
-              turnOrder={session.turnOrder}
-              roundNumber={session.roundNumber}
-              onComplete={() => setShowRoundShuffleAnimation(false)}
-            />
-          )}
-
-        {!showAnimations && isHost && currentPlayer && !isMyTurn && (
+        {isHost && currentPlayer && !isMyTurn && (
           <>
             <ActivePlayerTimeline
               player={currentPlayer}
@@ -285,8 +248,7 @@ export default function GamePage() {
           </>
         )}
 
-        {!showAnimations &&
-          isDecidePhase &&
+        {isDecidePhase &&
           session?.stealDecidePhaseEndAt &&
           currentPlayer &&
           myPlayer && (
@@ -307,21 +269,17 @@ export default function GamePage() {
             />
           )}
 
-        {!showAnimations &&
-          isPlacePhase &&
+        {isPlacePhase &&
           session?.currentSong &&
           session?.stealPlacePhaseEndAt &&
           currentPlayer &&
           myPlayer && (
             <StealPhase
-              currentSong={session.currentSong}
               myTimeline={myPlayer.timeline ?? []}
               activePlayerName={currentPlayer.name}
-              activePlayerPlacement={session.activePlayerPlacement ?? 0}
               stealAttempts={session.stealAttempts ?? []}
               stealPhaseEndAt={session.stealPlacePhaseEndAt}
               stealWindowDuration={(session.stealWindowDuration ?? 10) * 2}
-              myTokens={myPlayer.tokens}
               isActivePlayer={isMyTurn}
               hasAlreadyStolen={hasAlreadyStolen}
               onSubmitSteal={handleSubmitSteal}
@@ -335,58 +293,52 @@ export default function GamePage() {
             />
           )}
 
-        {!showAnimations &&
-          !isStealPhase &&
-          isMyTurn &&
-          session?.currentSong &&
-          myPlayer && (
-            <MyTurnCard
-              timeline={myPlayer.timeline ?? []}
-              currentSong={session.currentSong}
-              onConfirm={handleConfirmTurn}
-              onTimeUp={handleTimeUp}
-              onSkip={handleSkipSong}
-              onGetFreeSong={handleGetFreeSong}
-              isSubmitting={mutations.confirmTurn.isPending}
-              isSkipping={mutations.skipSong.isPending}
-              isGettingFreeSong={mutations.getFreeSong.isPending}
-              turnDuration={session.turnDuration}
-              turnStartedAt={session.turnStartedAt}
-              playbackStartedAt={playbackStartedAt}
-              tokens={myPlayer.tokens}
-              timerPaused={hostDisconnected}
-            />
-          )}
+        {!isStealPhase && isMyTurn && session?.currentSong && myPlayer && (
+          <MyTurnCard
+            timeline={myPlayer.timeline ?? []}
+            currentSong={session.currentSong}
+            onConfirm={handleConfirmTurn}
+            onTimeUp={handleTimeUp}
+            onSkip={handleSkipSong}
+            onGetFreeSong={handleGetFreeSong}
+            isSubmitting={mutations.confirmTurn.isPending}
+            isSkipping={mutations.skipSong.isPending}
+            isGettingFreeSong={mutations.getFreeSong.isPending}
+            turnDuration={session.turnDuration}
+            turnStartedAt={session.turnStartedAt}
+            playbackStartedAt={playbackStartedAt}
+            tokens={myPlayer.tokens}
+            timerPaused={hostDisconnected}
+          />
+        )}
 
-        {!showAnimations && !isStealPhase && !isMyTurn && currentPlayer && (
+        {!isStealPhase && !isMyTurn && currentPlayer && (
           <WaitingView
             playerName={currentPlayer.name}
             playerAvatar={currentPlayer.avatar}
           />
         )}
 
-        {!showAnimations && (
-          <div className="space-y-4">
-            <h2 className="text-lg font-semibold">Players</h2>
-            <div className="grid gap-4">
-              {getPlayersSortedWithCurrentFirst(
-                session?.players ?? [],
-                currentPlayerId ?? null,
-              ).map((player, index) => (
-                <PlayerCard
-                  key={player.id}
-                  player={player}
-                  isCurrentTurn={player.id === session?.currentPlayerId}
-                  turnNumber={
-                    session?.turnOrder?.indexOf(player.id) !== undefined
-                      ? (session?.turnOrder?.indexOf(player.id) ?? 0) + 1
-                      : index + 1
-                  }
-                />
-              ))}
-            </div>
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold">Players</h2>
+          <div className="grid gap-4">
+            {getPlayersSortedWithCurrentFirst(
+              session?.players ?? [],
+              currentPlayerId ?? null,
+            ).map((player, index) => (
+              <PlayerCard
+                key={player.id}
+                player={player}
+                isCurrentTurn={player.id === session?.currentPlayerId}
+                turnNumber={
+                  session?.turnOrder?.indexOf(player.id) !== undefined
+                    ? (session?.turnOrder?.indexOf(player.id) ?? 0) + 1
+                    : index + 1
+                }
+              />
+            ))}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
