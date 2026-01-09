@@ -15,7 +15,7 @@ for ((i=1; i<=$1; i++)); do
 
     1. Find the highest-priority feature to work on and work only on that feature. \
     This should be the one YOU decide has the highest priority - not necessarily the first in the list.
-    2. Check that the types check via bun typecheck, the lint passes with bun lint, and the tests pass via bun test. If any of these file, fix the issue before moving on. \
+    2. Check that the types check via bun typecheck, the lint passes with bun lint, and the tests pass via bun test. If any of these fail, fix the issue before moving on. \
     3. If you made UI changes, you MUST use the Playwright MCP to visually verify the changes render correctly. \
     Navigate to the relevant page and take a snapshot. If it looks wrong, fix it before proceeding. \
     If Playwright fails to connect, restart the dev server and retry. \
