@@ -1108,3 +1108,18 @@ Files changed:
 - src/components/spotify-login-button.tsx (size="lg")
 - src/components/create-game-button.tsx (size="lg")
 - plans/prd.json (marked ui-polish #61 as passes: true)
+
+## 2026-01-09: Lobby waiting state polish
+
+PRD items: ui-polish #62 (Lobby waiting state polish)
+
+Changes:
+- PIN display: text-5xl with tracking-[0.3em] for increased letter-spacing
+- QR code: p-4 padding + shadow-md for subtle shadow
+- Added AnimatedDots component: cycles 1-3 dots every 500ms
+- Waiting message: "Waiting for friends to join" with animated dots
+- Player cards: hover:bg-muted/80 hover:scale-[1.02] + animate-in fade-in-0 slide-in-from-bottom-2 with staggered delay
+
+Files changed:
+- src/app/lobby/[pin]/page.tsx (PIN styling, QR shadow, AnimatedDots, player animations)
+- plans/prd.json (marked ui-polish #62 as passes: true)

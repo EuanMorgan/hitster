@@ -1066,7 +1066,7 @@
       "Player list: cards with subtle hover state, smooth enter animation",
       "DONE: Lobby feels alive and polished while waiting"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "ui-polish",

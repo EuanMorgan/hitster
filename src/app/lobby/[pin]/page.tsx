@@ -20,6 +20,21 @@ import { useGameSession } from "@/hooks/use-game-session";
 import { useSession } from "@/lib/auth-client";
 import { useTRPC } from "@/trpc/client";
 
+function AnimatedDots() {
+  const [dotCount, setDotCount] = useState(1);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDotCount((prev) => (prev % 3) + 1);
+    }, 500);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <span className="inline-block w-6 text-left">{".".repeat(dotCount)}</span>
+  );
+}
+
 function LobbySkeleton() {
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
@@ -180,11 +195,11 @@ export default function LobbyPage() {
           <div className="mt-4 flex flex-col items-center gap-4">
             <div className="p-4 bg-muted rounded-lg w-full">
               <p className="text-xs text-muted-foreground mb-1">Game PIN</p>
-              <p className="text-4xl font-mono font-bold tracking-widest">
+              <p className="text-5xl font-mono font-bold tracking-[0.3em]">
                 {session?.pin}
               </p>
             </div>
-            <div className="p-3 bg-white rounded-lg">
+            <div className="p-4 bg-white rounded-lg shadow-md">
               <QRCodeSVG value={joinUrl} size={160} />
             </div>
             <p className="text-xs text-muted-foreground">
@@ -199,12 +214,16 @@ export default function LobbyPage() {
                 Players ({session?.players.length}/{session?.maxPlayers})
               </h3>
               <div className="space-y-2">
-                {session?.players.map((player) => (
+                {session?.players.map((player, index) => (
                   <div
                     key={player.id}
-                    className={`flex items-center gap-2 p-2 rounded-lg bg-muted relative ${
+                    className={`flex items-center gap-2 p-2 rounded-lg bg-muted relative transition-all duration-200 hover:bg-muted/80 hover:scale-[1.02] animate-in fade-in-0 slide-in-from-bottom-2 ${
                       !player.isConnected ? "opacity-60" : ""
                     }`}
+                    style={{
+                      animationDelay: `${index * 100}ms`,
+                      animationFillMode: "backwards",
+                    }}
                   >
                     <span
                       className={`text-2xl ${!player.isConnected ? "grayscale" : ""}`}
@@ -259,9 +278,14 @@ export default function LobbyPage() {
             )}
 
             <p className="text-sm text-muted-foreground text-center">
-              {isHost
-                ? "Configure settings above, then start the game"
-                : "Waiting for host to start the game..."}
+              {isHost ? (
+                "Configure settings above, then start the game"
+              ) : (
+                <>
+                  Waiting for friends to join
+                  <AnimatedDots />
+                </>
+              )}
             </p>
           </div>
         </CardContent>
