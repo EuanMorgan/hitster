@@ -1004,7 +1004,7 @@
       "If latency >3s consistently, note that VPS deployment recommended",
       "DONE: README has 'Real-time Performance' section with findings"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "api",

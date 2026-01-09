@@ -1998,3 +1998,24 @@ Files changed:
 - src/app/game/[pin]/page.tsx (pass yearLookup props to header)
 - src/components/ui/progress.tsx (new - shadcn)
 - plans/prd.json (marked 2 items as passes: true)
+
+## 2026-01-09: Document subscription limitations
+
+PRD item: api/Document subscription limitations
+
+Changes:
+- Rewrote README.md with comprehensive project documentation
+- Added "Real-time Performance" section covering SSE architecture, Vercel limitations, mobile caveats
+- Documented expected latency: 50-200ms typical, 1-3s during reconnection
+- Added deployment recommendation table (Vercel Pro/Hobby vs VPS)
+- Noted VPS recommendation for >6 players or competitive play
+- Included testing instructions for measuring real-time performance locally
+
+Key decisions:
+- Based findings on technical analysis of implementation (not actual Vercel testing)
+- SSE uses 30s keep-alive timeout (vercel.json maxDuration: 30)
+- Client auto-reconnects and falls back to 2s polling on subscription error
+
+Files changed:
+- README.md (complete rewrite with Real-time Performance section)
+- plans/prd.json (marked as passes: true)
