@@ -1143,3 +1143,31 @@ Key decisions:
 Files changed:
 - src/app/game/[pin]/page.tsx (PlayerCard component)
 - plans/prd.json (marked ui-polish #63 as passes: true)
+
+## 2026-01-09: Song card design polish
+
+PRD items: ui-polish #64 (Song card design polish)
+
+Changes:
+- TimelineSongCard in timeline-drop-zone.tsx: gradient bg (from-card to-muted/50), year text-xl/2xl (20-24px), green success border (border-2 border-green-500/30), name line-clamp-2, artist single truncate
+- TimelineDisplay in game page: matched same styling pattern
+- TimelineSongCard in steal-phase.tsx: matched styling with smaller variant for space constraints
+
+All 6 PRD steps verified:
+1. ✅ Year bold 24px min - text-xl/2xl = 20-24px, high contrast via text-primary
+2. ✅ Song name 14px 2-line - text-sm = 14px, line-clamp-2
+3. ✅ Artist 12px muted single line - text-xs = 12px, text-muted-foreground truncate
+4. ✅ Gradient bg, 8px radius - bg-gradient-to-br from-card to-muted/50, rounded-lg (8px)
+5. ✅ Green border for correct - border-2 border-green-500/30 (all timeline songs = correct placements)
+6. ✅ Cards readable year prominent - styling applied consistently
+
+Key decisions:
+- All songs in timeline are "correct" by definition (incorrect get discarded), so green border on all
+- Used subtle green (30% opacity) to not overpower design while indicating success
+- Increased card min-widths for readability: 100px mobile, 120px desktop
+
+Files changed:
+- src/components/timeline-drop-zone.tsx (TimelineSongCard styling)
+- src/components/steal-phase.tsx (TimelineSongCard styling)
+- src/app/game/[pin]/page.tsx (TimelineDisplay styling)
+- plans/prd.json (marked ui-polish #64 as passes: true)

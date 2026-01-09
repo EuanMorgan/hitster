@@ -131,13 +131,16 @@ function PlacedStealCard() {
 
 function TimelineSongCard({ song }: { song: TimelineSong }) {
   return (
-    <div className="bg-card border border-border rounded-lg p-2 sm:p-3 min-w-[70px] sm:min-w-[80px] min-h-[60px] shadow-sm">
+    <div className="bg-gradient-to-br from-card to-muted/50 border-2 border-green-500/30 rounded-lg p-2 sm:p-3 min-w-[80px] sm:min-w-[100px] min-h-[70px] shadow-sm">
       <div className="text-center">
-        <div className="font-bold text-base sm:text-lg text-primary">
+        <div className="font-bold text-lg sm:text-xl text-primary">
           {song.year}
         </div>
-        <div className="text-[10px] sm:text-xs text-muted-foreground truncate max-w-[65px] sm:max-w-[80px]">
+        <div className="text-xs text-foreground line-clamp-1 max-w-[75px] sm:max-w-[95px]">
           {song.name}
+        </div>
+        <div className="text-[10px] sm:text-xs text-muted-foreground truncate max-w-[75px] sm:max-w-[95px]">
+          {song.artist}
         </div>
       </div>
     </div>

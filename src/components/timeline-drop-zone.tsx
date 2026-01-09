@@ -135,15 +135,15 @@ function PlacedSongCard({ song }: { song: SafeCurrentTurnSong }) {
 
 function TimelineSongCard({ song }: { song: TimelineSong }) {
   return (
-    <div className="bg-card border border-border rounded-lg p-3 sm:p-4 min-w-[90px] sm:min-w-[110px] min-h-[70px] shadow-sm snap-start">
+    <div className="bg-gradient-to-br from-card to-muted/50 border-2 border-green-500/30 rounded-lg p-3 sm:p-4 min-w-[100px] sm:min-w-[120px] min-h-[80px] shadow-sm snap-start">
       <div className="text-center">
-        <div className="font-bold text-lg sm:text-xl text-primary">
+        <div className="font-bold text-xl sm:text-2xl text-primary">
           {song.year}
         </div>
-        <div className="text-xs sm:text-sm text-foreground truncate max-w-[85px] sm:max-w-[105px]">
+        <div className="text-sm text-foreground line-clamp-2 max-w-[95px] sm:max-w-[115px]">
           {song.name}
         </div>
-        <div className="text-[10px] sm:text-xs text-muted-foreground truncate max-w-[85px] sm:max-w-[105px]">
+        <div className="text-xs text-muted-foreground truncate max-w-[95px] sm:max-w-[115px]">
           {song.artist}
         </div>
       </div>

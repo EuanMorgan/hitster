@@ -1092,7 +1092,7 @@
       "Placed card: success green border when correct, red when wrong",
       "DONE: Song cards readable, year prominent, correct/incorrect obvious"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "ui-polish",
