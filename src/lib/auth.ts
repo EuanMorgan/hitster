@@ -9,18 +9,6 @@ export const auth = betterAuth({
     provider: "pg",
     schema,
   }),
-  user: {
-    modelName: "hitster_user",
-  },
-  session: {
-    modelName: "hitster_session",
-  },
-  account: {
-    modelName: "hitster_account",
-  },
-  verification: {
-    modelName: "hitster_verification",
-  },
   baseURL: env.NEXT_PUBLIC_APP_URL,
   socialProviders: {
     spotify: {
