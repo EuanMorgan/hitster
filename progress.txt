@@ -1644,3 +1644,24 @@ Files changed:
 - src/components/game/active-player-timeline.tsx (new - 174 lines)
 - src/app/game/[pin]/page.tsx (import update, removed inline component)
 - plans/prd.json (marked refactor #97 as passes: true)
+
+## 2026-01-09: Extract GameFinishedScreen to separate component file
+
+PRD items: refactor #98 (Extract game finished screen to separate component)
+
+Changes:
+- Created src/components/game/game-finished-screen.tsx (246 lines)
+- Extracted finished game UI: confetti, winner celebration, final standings, party stats, action buttons
+- Props interface: players, playerStats, gamesPlayed, pin, isHost, onRematch, isRematchPending
+- Removed unused imports from game page (Confetti, Link, Button)
+- Game page reduced from ~1060 to 848 lines (~212 lines extracted)
+
+Key decisions:
+- Moved sorting logic inside component (sortedPlayers, sortedByWins)
+- SSR safety for window dimensions (fallback values for server render)
+- playerStats prop allows null | undefined (matches API response type)
+
+Files changed:
+- src/components/game/game-finished-screen.tsx (new - 246 lines)
+- src/app/game/[pin]/page.tsx (import update, removed inline finished block)
+- plans/prd.json (marked refactor #98 as passes: true)

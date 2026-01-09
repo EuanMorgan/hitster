@@ -1465,7 +1465,7 @@
       "Update game page to conditionally render GameFinishedScreen",
       "DONE: GameFinishedScreen in separate file (~220 lines extracted)"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "refactor",
