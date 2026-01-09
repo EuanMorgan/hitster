@@ -917,7 +917,7 @@
       "Add console.log for debugging: 'Skipping duplicate play call for {uri}'",
       "DONE: Song does not restart when game state updates during playback"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "ui",

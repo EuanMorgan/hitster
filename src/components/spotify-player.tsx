@@ -209,35 +209,34 @@ export function SpotifyPlayer({
   // Track position when paused to enable resume
   const pausedPositionRef = useRef<number>(0);
 
-  // Track URI for detecting track changes during playback
-  const prevPlayTrackRef = useRef(trackUri);
+  // Track URI currently playing to prevent duplicate play calls
+  const currentPlayingUriRef = useRef<string | null>(null);
 
   // Handle play/pause based on shouldPlay prop
   useEffect(() => {
     if (!isReady || !deviceId || !trackUri) return;
 
-    const trackChanged = trackUri !== prevPlayTrackRef.current;
+    const trackChanged = trackUri !== currentPlayingUriRef.current;
 
-    // Play if: (should play AND not playing) OR (should play AND track changed)
-    if (shouldPlay && (!isPlaying || trackChanged)) {
-      if (trackChanged) {
-        pausedPositionRef.current = 0;
-        prevPlayTrackRef.current = trackUri;
-      }
-      const resumePosition = trackChanged ? 0 : pausedPositionRef.current;
+    // Play only if track changed - skip duplicate play calls for same URI
+    if (shouldPlay && trackChanged) {
+      console.log(`Playing track: ${trackUri}`);
+      currentPlayingUriRef.current = trackUri;
+      pausedPositionRef.current = 0;
       // Set loading state while buffering
       setIsLoading(true);
       playTrackMutation.mutate(
-        { trackUri, deviceId, positionMs: resumePosition },
+        { trackUri, deviceId, positionMs: 0 },
         {
           onSuccess: () => {
-            playbackStartTimeRef.current = Date.now() - resumePosition;
+            playbackStartTimeRef.current = Date.now();
             setIsPlaying(true);
             setIsLoading(false);
           },
           onError: (err) => {
             console.error("Spotify play track error:", err.message);
             setIsLoading(false);
+            currentPlayingUriRef.current = null; // Allow retry
             if (isReauthRequired(err)) {
               handleReauth();
             } else {
@@ -248,10 +247,16 @@ export function SpotifyPlayer({
           },
         },
       );
+    } else if (shouldPlay && !trackChanged) {
+      // Same track, already playing or should be - skip duplicate call
+      console.log(`Skipping duplicate play call for ${trackUri}`);
     } else if (!shouldPlay && isPlaying) {
       pausedPositionRef.current = currentPosition;
       setIsLoading(false);
       pauseMutation.mutate({ deviceId });
+    } else if (!shouldPlay && currentPlayingUriRef.current) {
+      // Clear current playing URI when playback should stop (e.g., new turn starting)
+      currentPlayingUriRef.current = null;
     }
   }, [
     shouldPlay,
@@ -298,7 +303,7 @@ export function SpotifyPlayer({
     };
   }, [isPlaying, durationMs, deviceId, onPositionChange, pauseMutation.mutate]);
 
-  // Reset position when track changes
+  // Track previous URI for resetting position state
   const prevTrackUriRef = useRef(trackUri);
   useEffect(() => {
     if (trackUri !== prevTrackUriRef.current) {

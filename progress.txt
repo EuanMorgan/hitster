@@ -931,3 +931,19 @@ Key decision: Two countdowns were confusing - song progress bar (how long song p
 Files changed:
 - src/components/spotify-player.tsx (removed progress bar UI, kept playback logic)
 - plans/prd.json (marked gameplay #76 as passes: true)
+
+## 2026-01-09: Prevent song restart on state changes
+
+PRD items: gameplay #52 (Prevent song restart on state changes)
+
+Changes:
+- Added currentPlayingUriRef to track currently playing URI
+- playTrack now only called when URI differs from currentPlayingUriRef
+- currentPlayingUriRef cleared on error (allow retry) and when shouldPlay=false
+- Added console.log debug messages for play and skip-duplicate scenarios
+
+Key decision: Previous logic used isPlaying state which could get reset during re-renders, causing duplicate playTrack calls. New ref-based approach tracks actual intent, not derived state.
+
+Files changed:
+- src/components/spotify-player.tsx (added currentPlayingUriRef, simplified play logic)
+- plans/prd.json (marked gameplay #52 as passes: true)
