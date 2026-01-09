@@ -1,6 +1,5 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { ActivePlayerTimeline } from "@/components/game/active-player-timeline";
@@ -25,6 +24,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import type { TimelineSong } from "@/db/schema";
+import { useGameMutations } from "@/hooks/use-game-mutations";
 import { useGameSession } from "@/hooks/use-game-session";
 import { useGameState } from "@/hooks/use-game-state";
 import { usePlayerHeartbeat } from "@/hooks/use-player-heartbeat";
@@ -34,7 +34,6 @@ import {
   getPlayersSortedWithCurrentFirst,
   getTimelineSortedByYear,
 } from "@/lib/game-selectors";
-import { useTRPC } from "@/trpc/client";
 
 function TokenDisplay({ count }: { count: number }) {
   if (count === 0) {
@@ -217,7 +216,6 @@ export default function GamePage() {
   const params = useParams();
   const pin = (params.pin as string).toUpperCase();
   const router = useRouter();
-  const queryClient = useQueryClient();
   const { data: authSession } = useSession();
   const [showShuffleAnimation, setShowShuffleAnimation] = useState(true);
   const [turnResult, setTurnResult] = useState<TurnResult | null>(null);
@@ -227,118 +225,11 @@ export default function GamePage() {
     null,
   );
 
-  const trpc = useTRPC();
-
   const sessionQuery = useGameSession({ pin });
 
-  const confirmTurnMutation = useMutation({
-    ...trpc.game.confirmTurn.mutationOptions(),
-    onSuccess: () => {
-      // Steal phase started - just invalidate query
-      queryClient.invalidateQueries({
-        queryKey: trpc.game.getSession.queryKey({ pin }),
-      });
-    },
-  });
-
-  const submitStealMutation = useMutation({
-    ...trpc.game.submitSteal.mutationOptions(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: trpc.game.getSession.queryKey({ pin }),
-      });
-    },
-  });
-
-  const decideToStealMutation = useMutation({
-    ...trpc.game.decideToSteal.mutationOptions(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: trpc.game.getSession.queryKey({ pin }),
-      });
-    },
-  });
-
-  const skipStealMutation = useMutation({
-    ...trpc.game.skipSteal.mutationOptions(),
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({
-        queryKey: trpc.game.getSession.queryKey({ pin }),
-      });
-      // If all players skipped, immediately resolve
-      if (data.allSkipped) {
-        resolveStealPhaseMutation.mutate({ pin });
-      }
-    },
-  });
-
-  const transitionToPlacePhaseMutation = useMutation({
-    ...trpc.game.transitionToPlacePhase.mutationOptions(),
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({
-        queryKey: trpc.game.getSession.queryKey({ pin }),
-      });
-      // If no one decided to steal, immediately resolve
-      if (data.skippedToResolve) {
-        resolveStealPhaseMutation.mutate({ pin });
-      }
-    },
-  });
-
-  const resolveStealPhaseMutation = useMutation({
-    ...trpc.game.resolveStealPhase.mutationOptions(),
-    onSuccess: (data) => {
-      setTurnResult({
-        activePlayerCorrect: data.activePlayerCorrect,
-        song: data.song,
-        stolenBy: data.stolenBy,
-        recipientId: data.recipientId,
-        gameEnded: data.gameEnded,
-        winnerId: "winnerId" in data ? data.winnerId : undefined,
-        isNewRound: "isNewRound" in data ? data.isNewRound : undefined,
-        newRoundNumber:
-          "newRoundNumber" in data ? data.newRoundNumber : undefined,
-        guessWasCorrect: data.guessWasCorrect,
-        guessedName: data.guessedName,
-        guessedArtist: data.guessedArtist,
-      });
-      queryClient.invalidateQueries({
-        queryKey: trpc.game.getSession.queryKey({ pin }),
-      });
-    },
-  });
-
-  const skipSongMutation = useMutation({
-    ...trpc.game.skipSong.mutationOptions(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: trpc.game.getSession.queryKey({ pin }),
-      });
-    },
-  });
-
-  const getFreeSongMutation = useMutation({
-    ...trpc.game.getFreeSong.mutationOptions(),
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({
-        queryKey: trpc.game.getSession.queryKey({ pin }),
-      });
-      if (data.gameEnded && "winnerId" in data) {
-        setTurnResult({
-          activePlayerCorrect: true,
-          song: data.freeSong,
-          gameEnded: true,
-          winnerId: data.winnerId,
-        });
-      }
-    },
-  });
-
-  const startRematchMutation = useMutation({
-    ...trpc.game.startRematch.mutationOptions(),
-    onSuccess: () => {
-      router.push(`/lobby/${pin}`);
-    },
+  const mutations = useGameMutations({
+    pin,
+    onTurnResult: setTurnResult,
   });
 
   const { playerId: currentPlayerId } = usePlayerValidation({
@@ -373,7 +264,7 @@ export default function GamePage() {
   const handleConfirmTurn = useCallback(
     (placementIndex: number, guessedName?: string, guessedArtist?: string) => {
       if (!currentPlayerId) return;
-      confirmTurnMutation.mutate({
+      mutations.confirmTurn.mutate({
         pin,
         playerId: currentPlayerId,
         placementIndex,
@@ -381,44 +272,42 @@ export default function GamePage() {
         guessedArtist,
       });
     },
-    [confirmTurnMutation, pin, currentPlayerId],
+    [mutations.confirmTurn, pin, currentPlayerId],
   );
 
   const handleSubmitSteal = useCallback(
     (placementIndex: number) => {
       if (!currentPlayerId) return;
-      submitStealMutation.mutate({
+      mutations.submitSteal.mutate({
         pin,
         playerId: currentPlayerId,
         placementIndex,
       });
     },
-    [submitStealMutation, pin, currentPlayerId],
+    [mutations.submitSteal, pin, currentPlayerId],
   );
 
   const handleResolveStealPhase = useCallback(() => {
-    if (resolveStealPhaseMutation.isPending) return;
-    resolveStealPhaseMutation.mutate({ pin });
-  }, [resolveStealPhaseMutation, pin]);
+    if (mutations.resolveStealPhase.isPending) return;
+    mutations.resolveStealPhase.mutate({ pin });
+  }, [mutations.resolveStealPhase, pin]);
 
   const handleDecideToSteal = useCallback(() => {
-    if (!currentPlayerId || decideToStealMutation.isPending) return;
-    decideToStealMutation.mutate({ pin, playerId: currentPlayerId });
-  }, [decideToStealMutation, pin, currentPlayerId]);
+    if (!currentPlayerId || mutations.decideToSteal.isPending) return;
+    mutations.decideToSteal.mutate({ pin, playerId: currentPlayerId });
+  }, [mutations.decideToSteal, pin, currentPlayerId]);
 
   const handleSkipSteal = useCallback(() => {
-    if (!currentPlayerId || skipStealMutation.isPending) return;
-    skipStealMutation.mutate({ pin, playerId: currentPlayerId });
-  }, [skipStealMutation, pin, currentPlayerId]);
+    if (!currentPlayerId || mutations.skipSteal.isPending) return;
+    mutations.skipSteal.mutate({ pin, playerId: currentPlayerId });
+  }, [mutations.skipSteal, pin, currentPlayerId]);
 
   const handleDecidePhaseTimeUp = useCallback(() => {
-    // Transition from decide phase to place phase (or resolve if no stealers)
-    if (transitionToPlacePhaseMutation.isPending) return;
-    transitionToPlacePhaseMutation.mutate({ pin });
-  }, [transitionToPlacePhaseMutation, pin]);
+    if (mutations.transitionToPlacePhase.isPending) return;
+    mutations.transitionToPlacePhase.mutate({ pin });
+  }, [mutations.transitionToPlacePhase, pin]);
 
   const handleCloseResult = useCallback(() => {
-    // Check if new round started - show shuffle animation
     if (turnResult?.isNewRound && !turnResult?.gameEnded) {
       setShowRoundShuffleAnimation(true);
     }
@@ -430,20 +319,20 @@ export default function GamePage() {
   }, []);
 
   const handleSkipSong = useCallback(() => {
-    if (!currentPlayerId || skipSongMutation.isPending) return;
-    skipSongMutation.mutate({
+    if (!currentPlayerId || mutations.skipSong.isPending) return;
+    mutations.skipSong.mutate({
       pin,
       playerId: currentPlayerId,
     });
-  }, [skipSongMutation, pin, currentPlayerId]);
+  }, [mutations.skipSong, pin, currentPlayerId]);
 
   const handleGetFreeSong = useCallback(() => {
-    if (!currentPlayerId || getFreeSongMutation.isPending) return;
-    getFreeSongMutation.mutate({
+    if (!currentPlayerId || mutations.getFreeSong.isPending) return;
+    mutations.getFreeSong.mutate({
       pin,
       playerId: currentPlayerId,
     });
-  }, [getFreeSongMutation, pin, currentPlayerId]);
+  }, [mutations.getFreeSong, pin, currentPlayerId]);
 
   if (sessionQuery.isLoading) {
     return <GameSkeleton />;
@@ -489,8 +378,8 @@ export default function GamePage() {
         gamesPlayed={session.gamesPlayed ?? 1}
         pin={session.pin}
         isHost={isHost}
-        onRematch={() => startRematchMutation.mutate({ pin })}
-        isRematchPending={startRematchMutation.isPending}
+        onRematch={() => mutations.startRematch.mutate({ pin })}
+        isRematchPending={mutations.startRematch.isPending}
       />
     );
   }
@@ -665,8 +554,8 @@ export default function GamePage() {
               onDecideSteal={handleDecideToSteal}
               onSkipSteal={handleSkipSteal}
               onTimeUp={handleDecidePhaseTimeUp}
-              isDeciding={decideToStealMutation.isPending}
-              isSkipping={skipStealMutation.isPending}
+              isDeciding={mutations.decideToSteal.isPending}
+              isSkipping={mutations.skipSteal.isPending}
             />
           )}
 
@@ -691,7 +580,7 @@ export default function GamePage() {
               hasAlreadyStolen={hasAlreadyStolen}
               onSubmitSteal={handleSubmitSteal}
               onResolve={handleResolveStealPhase}
-              isSubmitting={submitStealMutation.isPending}
+              isSubmitting={mutations.submitSteal.isPending}
               decidedStealers={decidedStealers}
               canStealAsLateJoiner={
                 !isMyTurn && !hasDecided && myPlayer.tokens >= 1
@@ -724,9 +613,9 @@ export default function GamePage() {
                   onTimeUp={handleTimeUp}
                   onSkip={handleSkipSong}
                   onGetFreeSong={handleGetFreeSong}
-                  isSubmitting={confirmTurnMutation.isPending}
-                  isSkipping={skipSongMutation.isPending}
-                  isGettingFreeSong={getFreeSongMutation.isPending}
+                  isSubmitting={mutations.confirmTurn.isPending}
+                  isSkipping={mutations.skipSong.isPending}
+                  isGettingFreeSong={mutations.getFreeSong.isPending}
                   turnDuration={session.turnDuration}
                   turnStartedAt={session.turnStartedAt}
                   playbackStartedAt={playbackStartedAt}

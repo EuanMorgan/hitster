@@ -1508,7 +1508,7 @@
       "Remove duplicated queryClient.invalidateQueries patterns",
       "DONE: Single hook for all game mutations, consistent invalidation"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "refactor",

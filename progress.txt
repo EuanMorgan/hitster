@@ -1808,3 +1808,26 @@ Files changed:
 - src/hooks/use-game-state.ts (new - 120 lines)
 - src/app/game/[pin]/page.tsx (import hook, destructure values, removed inline computations)
 - plans/prd.json (marked refactor #100 as passes: true)
+
+## 2026-01-09: Consolidate game mutation handlers into hook
+
+PRD items: refactor #101 (Consolidate game mutation handlers into hook)
+
+Changes:
+- Created src/hooks/use-game-mutations.ts (120 lines)
+- Hook accepts pin + onTurnResult callback
+- Returns 9 mutations: confirmTurn, submitSteal, decideToSteal, skipSteal, transitionToPlacePhase, resolveStealPhase, skipSong, getFreeSong, startRematch
+- Shared invalidateSession helper eliminates duplicate queryClient.invalidateQueries calls
+- Updated game page: replaced 9 individual useMutation calls with single useGameMutations hook
+- Game page reduced from 794 to 683 lines (~111 lines removed)
+
+Key decisions:
+- Included ALL 9 mutations (not just 6 in PRD) for complete consolidation
+- onTurnResult callback allows parent to handle result state
+- Each mutation uses same invalidateSession pattern for consistency
+- Router only needed in game page for lobby redirect (startRematch redirects from hook)
+
+Files changed:
+- src/hooks/use-game-mutations.ts (new - 120 lines)
+- src/app/game/[pin]/page.tsx (replaced 9 mutations with hook, removed unused imports)
+- plans/prd.json (marked refactor #101 as passes: true)
