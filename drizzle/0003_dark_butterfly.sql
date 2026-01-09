@@ -1,0 +1,1 @@
+ALTER TABLE "hitster_game_sessions" ADD COLUMN "last_turn_result" jsonb;
