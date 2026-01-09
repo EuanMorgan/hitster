@@ -116,7 +116,10 @@ function TokenDisplay({ count }: { count: number }) {
 function TimelineDisplay({ timeline }: { timeline: TimelineSong[] }) {
   if (timeline.length === 0) {
     return (
-      <div className="text-sm text-muted-foreground italic">No songs yet</div>
+      <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+        <span>🎵</span>
+        <span>No songs yet — your musical journey starts here!</span>
+      </div>
     );
   }
 
@@ -448,8 +451,11 @@ function ActivePlayerTimeline({
             Timeline ({sortedTimeline.length} songs)
           </h4>
           {sortedTimeline.length === 0 ? (
-            <div className="text-lg text-muted-foreground italic p-6 text-center border-2 border-dashed rounded-xl">
-              No songs in timeline yet
+            <div className="flex flex-col items-center gap-2 text-muted-foreground p-6 text-center border-2 border-dashed rounded-xl">
+              <span className="text-3xl">🎵</span>
+              <span className="text-lg">
+                No songs yet — your musical journey starts here!
+              </span>
             </div>
           ) : (
             <div className="flex flex-wrap gap-4">

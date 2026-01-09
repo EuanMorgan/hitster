@@ -144,7 +144,8 @@ export default function DashboardPage() {
         <CardContent>
           {games.length === 0 ? (
             <div className="py-8 text-center text-muted-foreground">
-              <p>Host your first game to see history here!</p>
+              <span className="text-4xl block mb-3">🎮</span>
+              <p>Your game history is empty. Time to play!</p>
               <Button className="mt-4" asChild>
                 <Link href="/">Create Game</Link>
               </Button>

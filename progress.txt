@@ -1335,3 +1335,24 @@ Files changed:
 - src/mocks/db.ts (shuffleTurns default)
 - src/mocks/fixtures.ts (shuffleTurns on all sessions)
 - plans/prd.json (marked lobby #78 as passes: true)
+
+## 2026-01-09: Empty states with personality
+
+PRD items: ui-polish #68 (Empty states with personality)
+
+Changes:
+- Empty timeline: added 🎵 + "No songs yet — your musical journey starts here!"
+- Empty game history: added 🎮 + "Your game history is empty. Time to play!"
+- Lobby player list: shows 👥 + "Share the PIN and wait for friends to join!" when host is alone
+- All use muted-foreground text, centered layout, emojis for character
+
+Key decisions:
+- Host always exists as player[0], so "empty players" = only host waiting
+- Consistent pattern: emoji + friendly message + dashed border on larger containers
+- Kept existing CTA button on dashboard for actionability
+
+Files changed:
+- src/app/game/[pin]/page.tsx (TimelineDisplay + ActivePlayerTimeline empty states)
+- src/app/lobby/[pin]/page.tsx (player list empty hint for waiting host)
+- src/app/dashboard/page.tsx (game history empty state with emoji)
+- plans/prd.json (marked ui-polish #68 as passes: true)

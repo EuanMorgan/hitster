@@ -243,6 +243,12 @@ export default function LobbyPage() {
                     )}
                   </div>
                 ))}
+                {session?.players.length === 1 && isHost && (
+                  <div className="flex items-center gap-2 p-3 text-sm text-muted-foreground text-center border-2 border-dashed rounded-lg">
+                    <span>👥</span>
+                    <span>Share the PIN and wait for friends to join!</span>
+                  </div>
+                )}
               </div>
             </div>
 

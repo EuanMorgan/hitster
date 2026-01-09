@@ -1145,7 +1145,7 @@
       "Muted text color, centered",
       "DONE: Empty states helpful and have character"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "ui-polish",
