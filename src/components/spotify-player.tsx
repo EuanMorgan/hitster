@@ -201,18 +201,26 @@ export function SpotifyPlayer({
   // Track position when paused to enable resume
   const pausedPositionRef = useRef<number>(0);
 
+  // Track URI for detecting track changes during playback
+  const prevPlayTrackRef = useRef(trackUri);
+
   // Handle play/pause based on shouldPlay prop
   useEffect(() => {
     if (!isReady || !deviceId || !trackUri) return;
 
-    if (shouldPlay && !isPlaying) {
-      // Resume from paused position if we have one, otherwise start from beginning
-      const resumePosition = pausedPositionRef.current;
+    const trackChanged = trackUri !== prevPlayTrackRef.current;
+
+    // Play if: (should play AND not playing) OR (should play AND track changed)
+    if (shouldPlay && (!isPlaying || trackChanged)) {
+      if (trackChanged) {
+        pausedPositionRef.current = 0;
+        prevPlayTrackRef.current = trackUri;
+      }
+      const resumePosition = trackChanged ? 0 : pausedPositionRef.current;
       playTrackMutation.mutate(
         { trackUri, deviceId, positionMs: resumePosition },
         {
           onSuccess: () => {
-            // Adjust start time to account for resumed position
             playbackStartTimeRef.current = Date.now() - resumePosition;
             setIsPlaying(true);
           },
@@ -229,7 +237,6 @@ export function SpotifyPlayer({
         },
       );
     } else if (!shouldPlay && isPlaying) {
-      // Store current position before pausing for later resume
       pausedPositionRef.current = currentPosition;
       pauseMutation.mutate({ deviceId });
     }
