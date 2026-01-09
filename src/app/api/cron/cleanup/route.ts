@@ -1,6 +1,6 @@
+import { and, lt, ne } from "drizzle-orm";
 import { db } from "@/db";
 import { gameSessions } from "@/db/schema";
-import { and, lt, ne } from "drizzle-orm";
 
 const STALE_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
 
@@ -17,10 +17,13 @@ export async function POST(req: Request) {
     .where(
       and(
         lt(gameSessions.updatedAt, cutoff),
-        ne(gameSessions.state, "finished")
-      )
+        ne(gameSessions.state, "finished"),
+      ),
     )
     .returning({ id: gameSessions.id });
 
-  return Response.json({ deleted: result.length, cutoff: cutoff.toISOString() });
+  return Response.json({
+    deleted: result.length,
+    cutoff: cutoff.toISOString(),
+  });
 }
