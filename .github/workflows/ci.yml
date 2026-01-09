@@ -91,14 +91,18 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit == 'true'
         run: bunx playwright install-deps chromium
 
+      - name: Set up environment
+        run: cp .env.example .env
+
+      - name: Push database schema
+        run: bun run db:push
+        env:
+          DATABASE_URL: postgresql://hitster:hitster@localhost:5432/hitster
+
       - name: E2E Tests
         run: bun run test:e2e
         env:
           DATABASE_URL: postgresql://hitster:hitster@localhost:5432/hitster
-          BETTER_AUTH_SECRET: test-secret-key-min-32-characters-here
-          NEXT_PUBLIC_APP_URL: http://127.0.0.1:3001
-          SPOTIFY_CLIENT_ID: fake-client-id
-          SPOTIFY_CLIENT_SECRET: fake-client-secret
 
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
