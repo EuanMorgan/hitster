@@ -9,7 +9,9 @@ test.describe("Home Page", () => {
     await expect(page.locator('[data-slot="card-title"]')).toContainText(
       "Hitster",
     );
-    await expect(page.getByText("Hello, Hitster Player!")).toBeVisible();
+    await expect(
+      page.getByText("Ready to test your music knowledge?"),
+    ).toBeVisible();
   });
 
   test("displays Join Game and Create Game links/buttons", async ({ page }) => {
