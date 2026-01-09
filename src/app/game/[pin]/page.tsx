@@ -1263,7 +1263,7 @@ export default function GamePage() {
           </CardContent>
         </Card>
 
-        {/* Spotify Player - Host Only (continues during steal phase) */}
+        {/* Spotify Player - Host Only (plays continuously through turn + steal phases) */}
         {isHost && session?.state === "playing" && (
           <SpotifyPlayer
             isHost={isHost}
@@ -1273,7 +1273,6 @@ export default function GamePage() {
               !showRoundShuffleAnimation &&
               !!session?.currentSong
             }
-            durationMs={(session?.songPlayDuration ?? 30) * 1000}
             onPlaybackStarted={() => setPlaybackStartedAt(Date.now())}
             onPlaybackError={(error) => {
               console.error("Spotify playback error:", error);

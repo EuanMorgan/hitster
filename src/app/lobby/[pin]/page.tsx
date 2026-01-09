@@ -252,7 +252,6 @@ export default function LobbyPage() {
                   pin={session.pin}
                   initialSettings={{
                     songsToWin: session.songsToWin,
-                    songPlayDuration: session.songPlayDuration,
                     turnDuration: session.turnDuration,
                     stealWindowDuration: session.stealWindowDuration,
                     maxPlayers: session.maxPlayers,

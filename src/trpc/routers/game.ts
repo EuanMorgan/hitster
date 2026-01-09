@@ -380,7 +380,6 @@ async function storeGameHistory(
   // Store game data including settings
   const gameData = {
     songsToWin: session.songsToWin,
-    songPlayDuration: session.songPlayDuration,
     turnDuration: session.turnDuration,
     stealWindowDuration: session.stealWindowDuration,
     playlistUrl: session.playlistUrl,
@@ -626,7 +625,6 @@ export const gameRouter = createTRPCRouter({
         hostId: session.hostId,
         state: session.state,
         songsToWin: session.songsToWin,
-        songPlayDuration: session.songPlayDuration,
         turnDuration: session.turnDuration,
         stealWindowDuration: session.stealWindowDuration,
         maxPlayers: session.maxPlayers,
@@ -688,7 +686,6 @@ export const gameRouter = createTRPCRouter({
       z.object({
         pin: z.string().length(4),
         songsToWin: z.number().int().min(5).max(20).optional(),
-        songPlayDuration: z.number().int().min(15).max(60).optional(),
         turnDuration: z.number().int().min(30).max(90).optional(),
         stealWindowDuration: z.number().int().min(5).max(20).optional(),
         maxPlayers: z.number().int().min(1).max(20).optional(),

@@ -10,7 +10,6 @@ import { useTRPC } from "@/trpc/client";
 
 type GameSettings = {
   songsToWin: number;
-  songPlayDuration: number;
   turnDuration: number;
   stealWindowDuration: number;
   maxPlayers: number;
@@ -24,12 +23,6 @@ type Props = {
 
 const SETTINGS_CONFIG = {
   songsToWin: { label: "Songs to Win", min: 5, max: 20, unit: "songs" },
-  songPlayDuration: {
-    label: "Song Play Duration",
-    min: 15,
-    max: 60,
-    unit: "sec",
-  },
   turnDuration: { label: "Turn Duration", min: 30, max: 90, unit: "sec" },
   stealWindowDuration: { label: "Steal Window", min: 5, max: 20, unit: "sec" },
   maxPlayers: { label: "Max Players", min: 1, max: 20, unit: "players" },
@@ -44,7 +37,6 @@ export function GameSettings({ pin, initialSettings }: Props) {
     Record<NumericSettingsKey, string>
   >({
     songsToWin: String(initialSettings.songsToWin),
-    songPlayDuration: String(initialSettings.songPlayDuration),
     turnDuration: String(initialSettings.turnDuration),
     stealWindowDuration: String(initialSettings.stealWindowDuration),
     maxPlayers: String(initialSettings.maxPlayers),
@@ -116,7 +108,6 @@ export function GameSettings({ pin, initialSettings }: Props) {
 
   const hasChanges =
     settings.songsToWin !== initialSettings.songsToWin ||
-    settings.songPlayDuration !== initialSettings.songPlayDuration ||
     settings.turnDuration !== initialSettings.turnDuration ||
     settings.stealWindowDuration !== initialSettings.stealWindowDuration ||
     settings.maxPlayers !== initialSettings.maxPlayers ||

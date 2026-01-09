@@ -10,12 +10,10 @@ interface SpotifyPlayerProps {
   isHost: boolean;
   trackUri?: string | null;
   shouldPlay: boolean;
-  durationMs: number;
   onPlaybackStarted?: () => void;
   onPlaybackStopped?: () => void;
   onPlaybackError?: (error: string) => void;
   onDeviceReady?: (deviceId: string) => void;
-  onPositionChange?: (positionMs: number) => void;
   onLoadingChange?: (isLoading: boolean) => void;
 }
 
@@ -37,12 +35,10 @@ export function SpotifyPlayer({
   isHost,
   trackUri,
   shouldPlay,
-  durationMs,
   onPlaybackStarted,
   onPlaybackStopped,
   onPlaybackError,
   onDeviceReady,
-  onPositionChange,
   onLoadingChange,
 }: SpotifyPlayerProps) {
   const trpc = useTRPC();
@@ -53,9 +49,6 @@ export function SpotifyPlayer({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [needsReauth, setNeedsReauth] = useState(false);
-  const [currentPosition, setCurrentPosition] = useState(0);
-  const positionIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const playbackStartTimeRef = useRef<number | null>(null);
 
   // Get access token from server
   const {
@@ -190,9 +183,6 @@ export function SpotifyPlayer({
         playerRef.current.disconnect();
       }
       script.remove();
-      if (positionIntervalRef.current) {
-        clearInterval(positionIntervalRef.current);
-      }
     };
   }, [
     isHost,
@@ -205,9 +195,6 @@ export function SpotifyPlayer({
     refetchToken,
     handleReauth,
   ]);
-
-  // Track position when paused to enable resume
-  const pausedPositionRef = useRef<number>(0);
 
   // Track URI currently playing to prevent duplicate play calls
   const currentPlayingUriRef = useRef<string | null>(null);
@@ -222,14 +209,12 @@ export function SpotifyPlayer({
     if (shouldPlay && trackChanged) {
       console.log(`Playing track: ${trackUri}`);
       currentPlayingUriRef.current = trackUri;
-      pausedPositionRef.current = 0;
       // Set loading state while buffering
       setIsLoading(true);
       playTrackMutation.mutate(
         { trackUri, deviceId, positionMs: 0 },
         {
           onSuccess: () => {
-            playbackStartTimeRef.current = Date.now();
             setIsPlaying(true);
             setIsLoading(false);
           },
@@ -251,7 +236,6 @@ export function SpotifyPlayer({
       // Same track, already playing or should be - skip duplicate call
       console.log(`Skipping duplicate play call for ${trackUri}`);
     } else if (!shouldPlay && isPlaying) {
-      pausedPositionRef.current = currentPosition;
       setIsLoading(false);
       pauseMutation.mutate({ deviceId });
     } else if (!shouldPlay && currentPlayingUriRef.current) {
@@ -264,55 +248,11 @@ export function SpotifyPlayer({
     deviceId,
     trackUri,
     isPlaying,
-    currentPosition,
     onPlaybackError,
     pauseMutation.mutate,
     playTrackMutation.mutate,
     handleReauth,
   ]);
-
-  // Track position and auto-stop after duration
-  useEffect(() => {
-    if (!isPlaying || !playbackStartTimeRef.current) {
-      if (positionIntervalRef.current) {
-        clearInterval(positionIntervalRef.current);
-        positionIntervalRef.current = null;
-      }
-      return;
-    }
-
-    positionIntervalRef.current = setInterval(() => {
-      if (!playbackStartTimeRef.current) return;
-
-      const elapsed = Date.now() - playbackStartTimeRef.current;
-      setCurrentPosition(elapsed);
-      onPositionChange?.(elapsed);
-
-      // Auto-stop after duration
-      if (elapsed >= durationMs && deviceId) {
-        pauseMutation.mutate({ deviceId });
-        playbackStartTimeRef.current = null;
-        setCurrentPosition(durationMs);
-      }
-    }, 100);
-
-    return () => {
-      if (positionIntervalRef.current) {
-        clearInterval(positionIntervalRef.current);
-      }
-    };
-  }, [isPlaying, durationMs, deviceId, onPositionChange, pauseMutation.mutate]);
-
-  // Track previous URI for resetting position state
-  const prevTrackUriRef = useRef(trackUri);
-  useEffect(() => {
-    if (trackUri !== prevTrackUriRef.current) {
-      setCurrentPosition(0);
-      playbackStartTimeRef.current = null;
-      pausedPositionRef.current = 0;
-      prevTrackUriRef.current = trackUri;
-    }
-  });
 
   // Handle non-reauth token errors
   useEffect(() => {

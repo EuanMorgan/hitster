@@ -1260,3 +1260,29 @@ Files changed:
 - src/mocks/db.ts (new fields in seedGameSession)
 - src/mocks/fixtures.ts (new fields in all session fixtures)
 - plans/prd.json (marked stealing #46-50 as passes: true)
+
+## 2026-01-09: Continuous song playback across phases
+
+PRD items: gameplay #80 (Continuous song playback across phases)
+
+Changes:
+- Removed songPlayDuration from SpotifyPlayer props - no more durationMs
+- Removed auto-stop logic from SpotifyPlayer (position tracking, auto-pause after duration)
+- Removed songPlayDuration from GameSettings UI (SETTINGS_CONFIG, inputValues, hasChanges)
+- Removed songPlayDuration from updateSettings tRPC mutation input validation
+- Removed songPlayDuration from getSession response
+- Removed songPlayDuration from storeGameHistory gameData
+
+Key decisions:
+- Database column retained for backwards compat - just removed from UI/validation/API response
+- Song now plays continuously from turn start until next turn (shouldPlay controls playback)
+- Turn timer (45s) and steal timers (decide 10s + place 20s) remain separate and unchanged
+- Simplifies UX: no confusing "song stops at 30s but timer continues" scenario
+
+Files changed:
+- src/components/spotify-player.tsx (removed durationMs prop, auto-stop, position tracking)
+- src/components/game-settings.tsx (removed songPlayDuration from type, config, state)
+- src/app/game/[pin]/page.tsx (removed durationMs prop from SpotifyPlayer)
+- src/app/lobby/[pin]/page.tsx (removed songPlayDuration from GameSettings initialSettings)
+- src/trpc/routers/game.ts (removed from updateSettings validation, getSession response, storeGameHistory)
+- plans/prd.json (marked gameplay #80 as passes: true)

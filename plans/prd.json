@@ -1262,7 +1262,7 @@
       "Simplifies settings UI and playback logic",
       "DONE: Song plays throughout all phases, no restart between phases"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "playlist",
