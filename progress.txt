@@ -947,3 +947,22 @@ Key decision: Previous logic used isPlaying state which could get reset during r
 Files changed:
 - src/components/spotify-player.tsx (added currentPlayingUriRef, simplified play logic)
 - plans/prd.json (marked gameplay #52 as passes: true)
+
+## 2026-01-09: Turn timer synced to playback start
+
+PRD items: gameplay #51 (Turn timer synced to playback start)
+
+Changes:
+- Added playbackStartedAt state to game page, tracks when Spotify playback actually starts
+- Added playbackStartedAt prop to TimelineDropZone and TurnTimer components
+- TurnTimer now uses playbackStartedAt for elapsed time calculation when available
+- Falls back to turnStartedAt for non-host players (who don't have SpotifyPlayer)
+- Added onPlaybackStarted callback to SpotifyPlayer that sets playbackStartedAt=Date.now()
+- Reset playbackStartedAt when track URI changes (new turn)
+
+Key decision: Use playbackStartedAt when available (host has synced playback), fall back to server turnStartedAt timestamp for non-hosts. This ensures the timer works for all players while giving hosts the benefit of synced timing.
+
+Files changed:
+- src/components/timeline-drop-zone.tsx (added playbackStartedAt prop, updated TurnTimer logic)
+- src/app/game/[pin]/page.tsx (added playbackStartedAt state, callbacks, prop passing)
+- plans/prd.json (marked gameplay #51 as passes: true)

@@ -549,6 +549,9 @@ export default function GamePage() {
   } | null>(null);
   const [showRoundShuffleAnimation, setShowRoundShuffleAnimation] =
     useState(false);
+  const [playbackStartedAt, setPlaybackStartedAt] = useState<number | null>(
+    null,
+  );
 
   const trpc = useTRPC();
 
@@ -657,6 +660,13 @@ export default function GamePage() {
       router.push(`/lobby/${pin}`);
     }
   }, [sessionQuery.data?.state, router, pin]);
+
+  // Reset playbackStartedAt when track changes (new turn)
+  const currentTrackUri = sessionQuery.data?.currentSong?.uri;
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional reset on track change
+  useEffect(() => {
+    setPlaybackStartedAt(null);
+  }, [currentTrackUri]);
 
   const handleConfirmTurn = useCallback(
     (placementIndex: number, guessedName?: string, guessedArtist?: string) => {
@@ -1059,6 +1069,7 @@ export default function GamePage() {
               !!session?.currentSong
             }
             durationMs={(session?.songPlayDuration ?? 30) * 1000}
+            onPlaybackStarted={() => setPlaybackStartedAt(Date.now())}
             onPlaybackError={(error) => {
               console.error("Spotify playback error:", error);
             }}
@@ -1166,6 +1177,7 @@ export default function GamePage() {
                   isGettingFreeSong={getFreeSongMutation.isPending}
                   turnDuration={session.turnDuration}
                   turnStartedAt={session.turnStartedAt}
+                  playbackStartedAt={playbackStartedAt}
                   tokens={myPlayer.tokens}
                   timerPaused={hostDisconnected}
                 />

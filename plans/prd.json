@@ -905,7 +905,7 @@
       "onPlaybackStarted callback sets playbackStartedAt=Date.now()",
       "DONE: With 5s Spotify delay, player still gets full 45s turn after song starts"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "gameplay",

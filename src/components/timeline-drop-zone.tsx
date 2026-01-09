@@ -35,6 +35,7 @@ interface TimelineDropZoneProps {
   isGettingFreeSong?: boolean;
   turnDuration: number;
   turnStartedAt: string | null;
+  playbackStartedAt: number | null;
   tokens: number;
   timerPaused?: boolean;
 }
@@ -150,11 +151,13 @@ function TimelineSongCard({ song }: { song: TimelineSong }) {
 function TurnTimer({
   turnDuration,
   turnStartedAt,
+  playbackStartedAt,
   onTimeUp,
   isPaused = false,
 }: {
   turnDuration: number;
   turnStartedAt: string | null;
+  playbackStartedAt: number | null;
   onTimeUp: () => void;
   isPaused?: boolean;
 }) {
@@ -163,6 +166,7 @@ function TurnTimer({
   const [pausedTimeLeft, setPausedTimeLeft] = useState<number | null>(null);
 
   useEffect(() => {
+    // No turn in progress - reset
     if (!turnStartedAt) {
       setTimeLeft(turnDuration);
       setHasTriggered(false);
@@ -170,11 +174,15 @@ function TurnTimer({
       return;
     }
 
+    // Use playbackStartedAt if available (host has synced playback), otherwise fall back to turnStartedAt
+    // This ensures non-host players still get a working timer
+    const effectiveStartTime =
+      playbackStartedAt ?? new Date(turnStartedAt).getTime();
+
     // When pausing, store the current time left
     if (isPaused) {
       if (pausedTimeLeft === null) {
-        const startTime = new Date(turnStartedAt).getTime();
-        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        const elapsed = Math.floor((Date.now() - effectiveStartTime) / 1000);
         const remaining = Math.max(0, turnDuration - elapsed);
         setPausedTimeLeft(remaining);
         setTimeLeft(remaining);
@@ -182,16 +190,14 @@ function TurnTimer({
       return;
     }
 
-    // If resuming from pause, we still show pausedTimeLeft (no actual timer resume logic needed here -
-    // server controls the actual timer, we just freeze the UI)
+    // If resuming from pause, clear paused state
     if (pausedTimeLeft !== null) {
       setPausedTimeLeft(null);
     }
 
-    const startTime = new Date(turnStartedAt).getTime();
-
+    // Timer calculation - synced to playback start for hosts, server timestamp for non-hosts
     const updateTimer = () => {
-      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      const elapsed = Math.floor((Date.now() - effectiveStartTime) / 1000);
       const remaining = Math.max(0, turnDuration - elapsed);
       setTimeLeft(remaining);
 
@@ -207,6 +213,7 @@ function TurnTimer({
   }, [
     turnDuration,
     turnStartedAt,
+    playbackStartedAt,
     onTimeUp,
     hasTriggered,
     isPaused,
@@ -279,6 +286,7 @@ export function TimelineDropZone({
   isGettingFreeSong,
   turnDuration,
   turnStartedAt,
+  playbackStartedAt,
   tokens,
   timerPaused = false,
 }: TimelineDropZoneProps) {
@@ -362,6 +370,7 @@ export function TimelineDropZone({
         <TurnTimer
           turnDuration={turnDuration}
           turnStartedAt={turnStartedAt}
+          playbackStartedAt={playbackStartedAt}
           onTimeUp={handleTimeUp}
           isPaused={timerPaused}
         />
