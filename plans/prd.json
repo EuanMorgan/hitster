@@ -1387,7 +1387,7 @@
       "Remove biome-ignore comments from both pages",
       "DONE: Heartbeat works, zero duplicated interval logic between pages"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "refactor",

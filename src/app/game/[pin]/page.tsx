@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/card";
 import type { TimelineSong } from "@/db/schema";
 import { useGameSession } from "@/hooks/use-game-session";
+import { usePlayerHeartbeat } from "@/hooks/use-player-heartbeat";
 import { useSession } from "@/lib/auth-client";
 import { usePlayerStore } from "@/stores/player-store";
 import { useTRPC } from "@/trpc/client";
@@ -359,20 +360,7 @@ export default function GamePage() {
     }
   }, [pin, storedPlayerId, storedPin]);
 
-  // Heartbeat to track player presence
-  const heartbeatMutation = useMutation({
-    ...trpc.game.heartbeat.mutationOptions(),
-  });
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: mutate is stable
-  useEffect(() => {
-    if (!currentPlayerId) return;
-    const sendHeartbeat = () =>
-      heartbeatMutation.mutate({ playerId: currentPlayerId });
-    sendHeartbeat();
-    const interval = setInterval(sendHeartbeat, 3000);
-    return () => clearInterval(interval);
-  }, [currentPlayerId]);
+  usePlayerHeartbeat(currentPlayerId);
 
   // Validate player belongs to this game session
   useEffect(() => {

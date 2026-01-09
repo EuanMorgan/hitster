@@ -1714,3 +1714,25 @@ Files changed:
 - src/app/lobby/[pin]/page.tsx (read from store, update on validation)
 - src/app/game/[pin]/page.tsx (read from store, update on validation)
 - plans/prd.json (marked refactor #91, #104 as passes: true)
+
+## 2026-01-09: Extract player heartbeat logic to custom hook
+
+PRD items: refactor #92 (Extract player heartbeat logic to custom hook)
+
+Changes:
+- Created src/hooks/use-player-heartbeat.ts with usePlayerHeartbeat(playerId) hook
+- Hook uses ref to track mutate fn (prevents re-triggering on mutation object changes)
+- Updated lobby page: removed heartbeat mutation + biome-ignore useEffect, use hook
+- Updated game page: same cleanup, use hook
+- Both pages now have ~13 fewer lines of duplicated heartbeat code
+
+Key decisions:
+- Used mutateRef pattern: store mutate in ref, only re-run effect when playerId changes
+- Keeps interval stable - no recreation on other state changes
+- Hook returns void (fire-and-forget heartbeat, no error handling needed in UI)
+
+Files changed:
+- src/hooks/use-player-heartbeat.ts (new - 27 lines)
+- src/app/lobby/[pin]/page.tsx (import hook, removed 13 lines of heartbeat code)
+- src/app/game/[pin]/page.tsx (import hook, removed 13 lines of heartbeat code)
+- plans/prd.json (marked refactor #92 as passes: true)
