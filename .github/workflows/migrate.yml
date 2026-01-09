@@ -1,0 +1,24 @@
+name: Database Migrations
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/db/schema.ts'
+      - 'drizzle/**'
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - run: bun install --frozen-lockfile
+
+      - run: bun db:migrate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}

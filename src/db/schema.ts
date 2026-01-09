@@ -4,13 +4,18 @@ import {
   index,
   integer,
   jsonb,
-  pgEnum,
-  pgTable,
+  pgEnum as basePgEnum,
+  pgTableCreator,
   text,
   timestamp,
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
+
+// Create prefixed table/enum creators for multi-project DB sharing
+const pgTable = pgTableCreator((name) => `hitster_${name}`);
+const pgEnum = <T extends string>(name: string, values: readonly [T, ...T[]]) =>
+  basePgEnum(`hitster_${name}`, values);
 
 // Better Auth tables
 export const user = pgTable("user", {
