@@ -270,6 +270,8 @@ export default function GamePage() {
           myPlayer && (
             <StealDecidePhase
               activePlayerName={currentPlayer.name}
+              activePlayerTimeline={currentPlayer.timeline ?? []}
+              activePlayerPlacement={session.activePlayerPlacement ?? null}
               stealDecidePhaseEndAt={session.stealDecidePhaseEndAt}
               stealWindowDuration={session.stealWindowDuration ?? 10}
               myTokens={myPlayer.tokens}
@@ -291,7 +293,8 @@ export default function GamePage() {
           currentPlayer &&
           myPlayer && (
             <StealPhase
-              myTimeline={myPlayer.timeline ?? []}
+              activePlayerTimeline={currentPlayer.timeline ?? []}
+              activePlayerPlacement={session.activePlayerPlacement ?? null}
               activePlayerName={currentPlayer.name}
               stealAttempts={session.stealAttempts ?? []}
               stealPhaseEndAt={session.stealPlacePhaseEndAt}

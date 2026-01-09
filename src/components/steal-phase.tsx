@@ -21,7 +21,8 @@ import type { ActiveStealAttempt, TimelineSong } from "@/db/schema";
 import { useCountdownTimer } from "@/hooks/use-countdown-timer";
 
 interface StealPhaseProps {
-  myTimeline: TimelineSong[];
+  activePlayerTimeline: TimelineSong[];
+  activePlayerPlacement: number | null;
   activePlayerName: string;
   stealAttempts: ActiveStealAttempt[];
   stealPhaseEndAt: string;
@@ -182,8 +183,22 @@ function StealTimer({
   );
 }
 
+function ActivePlacementMarker() {
+  return (
+    <div className="bg-amber-500/30 border-2 border-amber-500 border-dashed rounded-lg p-2 min-w-[70px] sm:min-w-[80px] min-h-[60px] sm:min-h-[70px]">
+      <div className="text-center">
+        <div className="text-lg sm:text-xl">🎵</div>
+        <div className="text-[10px] sm:text-xs text-amber-600 dark:text-amber-400 font-medium">
+          Their guess
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function StealPhase({
-  myTimeline,
+  activePlayerTimeline,
+  activePlayerPlacement,
   activePlayerName,
   stealAttempts,
   stealPhaseEndAt,
@@ -200,7 +215,9 @@ export function StealPhase({
   const [placementIndex, setPlacementIndex] = useState<number | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
 
-  const sortedTimeline = [...myTimeline].sort((a, b) => a.year - b.year);
+  const sortedTimeline = [...activePlayerTimeline].sort(
+    (a, b) => a.year - b.year,
+  );
 
   // In place phase, can steal if: already committed in decide phase OR late-joiner with tokens
   const committedInDecidePhase =
@@ -280,11 +297,10 @@ export function StealPhase({
         />
 
         <div className="text-center text-sm text-muted-foreground">
-          {activePlayerName} placed the song.{" "}
           {isActivePlayer
             ? "Waiting to see if anyone steals..."
             : canSteal
-              ? "Spend 1 token to steal if you think they're wrong!"
+              ? `Place where you think the song belongs in ${activePlayerName}'s timeline!`
               : hasAlreadyStolen
                 ? "You've already submitted a steal attempt!"
                 : "Not enough tokens to steal."}
@@ -310,11 +326,13 @@ export function StealPhase({
               </div>
 
               <div className="text-center text-xs text-muted-foreground">
-                Your timeline - place where you think the song belongs
+                {activePlayerName}&apos;s timeline - place where you think the
+                song belongs
               </div>
 
               <div className="overflow-x-auto pb-4">
                 <div className="flex items-center gap-2 min-w-min px-4">
+                  {activePlayerPlacement === 0 && <ActivePlacementMarker />}
                   <StealDropZone
                     index={0}
                     isActive={activeId !== null}
@@ -327,6 +345,9 @@ export function StealPhase({
                   {sortedTimeline.map((song, idx) => (
                     <div key={song.songId} className="flex items-center gap-2">
                       <TimelineSongCard song={song} />
+                      {activePlayerPlacement === idx + 1 && (
+                        <ActivePlacementMarker />
+                      )}
                       <StealDropZone
                         index={idx + 1}
                         isActive={activeId !== null}

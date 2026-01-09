@@ -3,10 +3,13 @@
 import { useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { TimelineSong } from "@/db/schema";
 import { useCountdownTimer } from "@/hooks/use-countdown-timer";
 
 interface StealDecidePhaseProps {
   activePlayerName: string;
+  activePlayerTimeline: TimelineSong[];
+  activePlayerPlacement: number | null;
   stealDecidePhaseEndAt: string;
   stealWindowDuration: number;
   myTokens: number;
@@ -59,8 +62,86 @@ function DecideTimer({
   );
 }
 
+function TimelineSlot({
+  song,
+  isPlacement,
+}: {
+  song?: TimelineSong;
+  isPlacement?: boolean;
+}) {
+  if (isPlacement) {
+    return (
+      <div className="bg-amber-500/20 border-2 border-amber-500 rounded-lg p-2 min-w-[70px] sm:min-w-[80px] min-h-[60px] sm:min-h-[70px] animate-pulse">
+        <div className="text-center">
+          <div className="text-lg sm:text-xl">🎵</div>
+          <div className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+            Placed here
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!song) return null;
+
+  return (
+    <div className="bg-linear-to-br from-card to-muted/50 border-2 border-green-500/30 rounded-lg p-2 min-w-[70px] sm:min-w-[80px] min-h-[60px] sm:min-h-[70px] shadow-sm">
+      <div className="text-center">
+        <div className="font-bold text-base sm:text-lg text-primary">
+          {song.year}
+        </div>
+        <div className="text-[10px] sm:text-xs text-foreground line-clamp-1 max-w-[65px] sm:max-w-[75px]">
+          {song.name}
+        </div>
+        <div className="text-[9px] sm:text-[10px] text-muted-foreground truncate max-w-[65px] sm:max-w-[75px]">
+          {song.artist}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ActivePlayerTimelineDisplay({
+  timeline,
+  placementIndex,
+  playerName,
+}: {
+  timeline: TimelineSong[];
+  placementIndex: number | null;
+  playerName: string;
+}) {
+  const sortedTimeline = [...timeline].sort((a, b) => a.year - b.year);
+
+  return (
+    <div className="space-y-2">
+      <div className="text-center text-xs text-muted-foreground">
+        {playerName}&apos;s timeline - where they placed the song:
+      </div>
+      <div className="overflow-x-auto pb-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 min-w-min px-2 justify-center">
+          {placementIndex === 0 && <TimelineSlot isPlacement />}
+          {sortedTimeline.map((song, idx) => (
+            <div
+              key={song.songId}
+              className="flex items-center gap-1.5 sm:gap-2"
+            >
+              <TimelineSlot song={song} />
+              {placementIndex === idx + 1 && <TimelineSlot isPlacement />}
+            </div>
+          ))}
+          {sortedTimeline.length === 0 && placementIndex === 0 && (
+            <div className="text-xs text-muted-foreground">First song</div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function StealDecidePhase({
   activePlayerName,
+  activePlayerTimeline,
+  activePlayerPlacement,
   stealDecidePhaseEndAt,
   stealWindowDuration,
   myTokens,
@@ -94,14 +175,19 @@ export function StealDecidePhase({
           onTimeUp={handleTimeUp}
         />
 
+        <ActivePlayerTimelineDisplay
+          timeline={activePlayerTimeline}
+          placementIndex={activePlayerPlacement}
+          playerName={activePlayerName}
+        />
+
         <div className="text-center text-sm text-muted-foreground">
-          {activePlayerName} placed the song.{" "}
           {isActivePlayer
             ? "Waiting for others to decide..."
             : hasDecided
               ? "You've made your decision!"
               : canSteal
-                ? "Do you want to try to steal?"
+                ? "Think they placed it wrong? Steal!"
                 : "Not enough tokens to steal."}
         </div>
 
