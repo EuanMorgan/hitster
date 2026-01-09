@@ -4,7 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export function GameSkeleton() {
   return (
     <div className="min-h-screen p-4 animate-in fade-in duration-150">
-      <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
         {/* Header skeleton */}
         <Card>
           <CardHeader className="text-center pb-2 px-3 sm:px-6 pt-3 sm:pt-6">

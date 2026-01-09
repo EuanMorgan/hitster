@@ -27,7 +27,7 @@ import { useTRPC } from "@/trpc/client";
 
 function GameDetailSkeleton() {
   return (
-    <div className="container mx-auto max-w-4xl space-y-6 p-4 animate-in fade-in duration-150">
+    <div className="container mx-auto max-w-7xl space-y-6 p-4 animate-in fade-in duration-150">
       <div className="flex items-center justify-between">
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-10 w-10" />
@@ -81,7 +81,7 @@ export default function GameDetailPage() {
 
   if (error) {
     return (
-      <div className="container mx-auto max-w-4xl p-4">
+      <div className="container mx-auto max-w-7xl p-4">
         <Card>
           <CardHeader>
             <CardTitle>Error</CardTitle>
@@ -104,7 +104,7 @@ export default function GameDetailPage() {
   const { playerStats, aggregateStats, gameData } = data;
 
   return (
-    <div className="container mx-auto max-w-4xl space-y-6 p-4 animate-in fade-in duration-150">
+    <div className="container mx-auto max-w-7xl space-y-6 p-4 animate-in fade-in duration-150">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="sm" asChild>

@@ -197,7 +197,7 @@ export default function GamePage() {
 
       {hostDisconnected && !isHost && <HostDisconnectedOverlay />}
 
-      <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
         <GameHeader
           pin={session?.pin ?? pin}
           roundNumber={session?.roundNumber ?? 1}
