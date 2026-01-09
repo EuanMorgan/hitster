@@ -2,7 +2,7 @@
 
 1. Find the highest-priority feature to work on and work only on that feature. \
    This should be the one YOU decide has the highest priority - not necessarily the first in the list.
-2. Check that the type check via bun typecheck and that the tests pass via bun test. \
+2. Check that the type check via bun typecheck and that the unit tests pass via bun run test. \
 3. (Optional) If you made UI changes, use the Playwright MCP to visually verify the changes are correct. \
    Navigate to the relevant page and take a snapshot to confirm the UI renders as expected. \
 4. Update the PRD with the work that was done. \

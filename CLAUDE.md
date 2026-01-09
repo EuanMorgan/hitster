@@ -26,7 +26,7 @@ bun dev
 bun run build
 
 # Testing
-bun test              # Run vitest tests
+bun run test          # Run vitest tests (NOT `bun test` - that uses bun's native runner)
 bun test:watch        # Watch mode
 bun test:coverage     # With coverage
 bun test:e2e          # Playwright E2E tests

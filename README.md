@@ -80,7 +80,7 @@ bun dev
 ```bash
 bun dev              # Development server
 bun run build        # Production build
-bun test             # Run tests
+bun run test         # Run vitest tests (NOT `bun test`)
 bun test:e2e         # E2E tests with Playwright
 bun lint             # Biome check
 bun typecheck        # TypeScript check
