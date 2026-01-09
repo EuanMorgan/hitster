@@ -1627,3 +1627,20 @@ Files changed:
 - src/components/game/player-progress-bar.tsx (new - 58 lines)
 - src/app/game/[pin]/page.tsx (import update, removed inline component)
 - plans/prd.json (marked refactor #96 as passes: true)
+
+## 2026-01-09: Extract ActivePlayerTimeline to separate component file
+
+PRD items: refactor #97 (Extract ActivePlayerTimeline to separate component file)
+
+Changes:
+- Created src/components/game/active-player-timeline.tsx with ActivePlayerTimeline component
+- Included TokenDisplay helper (used only by ActivePlayerTimeline, not shared)
+- Defined explicit ActivePlayerTimelineProps interface
+- Removed inline ActivePlayerTimeline from game page (~150 lines extracted)
+- Updated game page to import ActivePlayerTimeline
+- Game page reduced from ~1213 to ~1060 lines
+
+Files changed:
+- src/components/game/active-player-timeline.tsx (new - 174 lines)
+- src/app/game/[pin]/page.tsx (import update, removed inline component)
+- plans/prd.json (marked refactor #97 as passes: true)
