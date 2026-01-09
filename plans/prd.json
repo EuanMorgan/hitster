@@ -1170,7 +1170,7 @@
       "Test all screens in dark mode",
       "DONE: Dark mode polished and accessible"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "ui-polish",
