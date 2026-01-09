@@ -1194,7 +1194,7 @@
       "Only clamp to min/max on blur or form submit",
       "DONE: Can backspace to clear input, type new value, min enforced on blur"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "ui",
@@ -1204,7 +1204,7 @@
       "Auto-close settings panel after successful save",
       "DONE: Save shows toast confirmation and closes panel"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "gameplay",

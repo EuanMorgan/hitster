@@ -2,6 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,9 +35,20 @@ const SETTINGS_CONFIG = {
   maxPlayers: { label: "Max Players", min: 1, max: 20, unit: "players" },
 } as const;
 
+type NumericSettingsKey = keyof typeof SETTINGS_CONFIG;
+
 export function GameSettings({ pin, initialSettings }: Props) {
   const [isOpen, setIsOpen] = useState(false);
   const [settings, setSettings] = useState<GameSettings>(initialSettings);
+  const [inputValues, setInputValues] = useState<
+    Record<NumericSettingsKey, string>
+  >({
+    songsToWin: String(initialSettings.songsToWin),
+    songPlayDuration: String(initialSettings.songPlayDuration),
+    turnDuration: String(initialSettings.turnDuration),
+    stealWindowDuration: String(initialSettings.stealWindowDuration),
+    maxPlayers: String(initialSettings.maxPlayers),
+  });
   const [error, setError] = useState<string | null>(null);
 
   const trpc = useTRPC();
@@ -49,21 +61,36 @@ export function GameSettings({ pin, initialSettings }: Props) {
           queryKey: trpc.game.getSession.queryKey({ pin }),
         });
         setError(null);
+        toast.success("Settings saved");
+        setIsOpen(false);
       },
       onError: (err) => {
         setError(err.message);
+        toast.error("Failed to save settings");
       },
     }),
   );
 
-  const handleChange = (key: keyof typeof SETTINGS_CONFIG, value: string) => {
+  const handleChange = (key: NumericSettingsKey, value: string) => {
+    setInputValues((prev) => ({ ...prev, [key]: value }));
+
     const numValue = parseInt(value, 10);
-    if (Number.isNaN(numValue)) return;
+    if (!Number.isNaN(numValue)) {
+      setSettings((prev) => ({ ...prev, [key]: numValue }));
+    }
+  };
 
+  const handleBlur = (key: NumericSettingsKey) => {
     const config = SETTINGS_CONFIG[key];
-    const clampedValue = Math.min(Math.max(numValue, config.min), config.max);
+    const numValue = parseInt(inputValues[key], 10);
 
-    setSettings((prev) => ({ ...prev, [key]: clampedValue }));
+    if (Number.isNaN(numValue) || numValue < config.min) {
+      setSettings((prev) => ({ ...prev, [key]: config.min }));
+      setInputValues((prev) => ({ ...prev, [key]: String(config.min) }));
+    } else if (numValue > config.max) {
+      setSettings((prev) => ({ ...prev, [key]: config.max }));
+      setInputValues((prev) => ({ ...prev, [key]: String(config.max) }));
+    }
   };
 
   const handlePlaylistChange = (value: string) => {
@@ -71,9 +98,19 @@ export function GameSettings({ pin, initialSettings }: Props) {
   };
 
   const handleSave = () => {
+    // Clamp all values before saving
+    const clampedSettings = { ...settings };
+    for (const key of Object.keys(SETTINGS_CONFIG) as NumericSettingsKey[]) {
+      const config = SETTINGS_CONFIG[key];
+      clampedSettings[key] = Math.min(
+        Math.max(settings[key], config.min),
+        config.max,
+      );
+    }
+
     updateMutation.mutate({
       pin,
-      ...settings,
+      ...clampedSettings,
     });
   };
 
@@ -121,8 +158,9 @@ export function GameSettings({ pin, initialSettings }: Props) {
                     type="number"
                     min={config.min}
                     max={config.max}
-                    value={settings[key]}
+                    value={inputValues[key]}
                     onChange={(e) => handleChange(key, e.target.value)}
+                    onBlur={() => handleBlur(key)}
                     className="h-8 text-sm"
                   />
                   <span className="text-xs text-muted-foreground w-12">

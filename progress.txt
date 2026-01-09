@@ -897,3 +897,21 @@ Files changed:
 - package.json (added @neoconfetti/react dependency)
 - src/app/game/[pin]/page.tsx (added Confetti import + component in game over view)
 - plans/prd.json (marked ui #60 as passes: true)
+
+## 2026-01-09: Fixed settings number inputs + save UX
+
+PRD items: ui #74 (Fix settings number inputs), ui #75 (Improve settings save UX)
+
+Changes:
+- Split state: `settings` (numeric) + `inputValues` (string) for proper input handling
+- Allow empty/intermediate values during editing, clamp on blur
+- handleBlur enforces min/max bounds after user finishes typing
+- handleSave clamps all values before submitting
+- Added toast.success on save, toast.error on failure
+- Auto-close settings panel on successful save
+
+Key decision: Dual state approach (string for input value, number for actual setting) allows users to clear input and type freely while maintaining valid state for submission.
+
+Files changed:
+- src/components/game-settings.tsx (rewrote input handling + added toast + auto-close)
+- plans/prd.json (marked ui #74, #75 as passes: true)
