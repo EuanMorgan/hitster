@@ -1,3 +1,4 @@
+import { AlertTriangle, CheckCircle2, Info, XCircle } from "lucide-react";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
@@ -37,7 +38,19 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <TRPCReactProvider>{children}</TRPCReactProvider>
-          <Toaster richColors position="top-center" />
+          <Toaster
+            position="top-center"
+            toastOptions={{
+              duration: 4000,
+              className: "animate-in slide-in-from-top-2 fade-in duration-300",
+            }}
+            icons={{
+              success: <CheckCircle2 className="h-5 w-5 text-green-600" />,
+              error: <XCircle className="h-5 w-5 text-red-600" />,
+              info: <Info className="h-5 w-5 text-blue-600" />,
+              warning: <AlertTriangle className="h-5 w-5 text-amber-600" />,
+            }}
+          />
         </ThemeProvider>
       </body>
     </html>

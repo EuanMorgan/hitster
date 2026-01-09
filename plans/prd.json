@@ -1132,7 +1132,7 @@
       "Animation: slide down + fade in, 300ms ease-out",
       "DONE: Toasts feel polished and match app style"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "ui-polish",

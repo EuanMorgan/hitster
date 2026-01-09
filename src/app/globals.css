@@ -122,3 +122,39 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Custom toast styling - left border accent */
+[data-sonner-toaster] [data-sonner-toast] {
+  --toast-border-radius: 0.5rem;
+  border-radius: var(--toast-border-radius);
+  border-left-width: 4px;
+  background: var(--card);
+  color: var(--card-foreground);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.15);
+}
+
+[data-sonner-toaster] [data-sonner-toast][data-type="success"] {
+  border-left-color: oklch(0.72 0.17 142);
+}
+
+[data-sonner-toaster] [data-sonner-toast][data-type="error"] {
+  border-left-color: oklch(0.64 0.21 25);
+}
+
+[data-sonner-toaster] [data-sonner-toast][data-type="info"] {
+  border-left-color: oklch(0.62 0.18 250);
+}
+
+[data-sonner-toaster] [data-sonner-toast][data-type="warning"] {
+  border-left-color: oklch(0.78 0.18 75);
+}
+
+/* Toast icons */
+[data-sonner-toaster] [data-sonner-toast] [data-icon] {
+  margin-right: 0.5rem;
+}
+
+/* Dark mode adjustments */
+.dark [data-sonner-toaster] [data-sonner-toast] {
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.4);
+}

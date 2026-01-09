@@ -1286,3 +1286,24 @@ Files changed:
 - src/app/lobby/[pin]/page.tsx (removed songPlayDuration from GameSettings initialSettings)
 - src/trpc/routers/game.ts (removed from updateSettings validation, getSession response, storeGameHistory)
 - plans/prd.json (marked gameplay #80 as passes: true)
+
+## 2026-01-09: Implemented toast and feedback styling
+
+PRD items: ui-polish #67 (Toast and feedback styling)
+
+Changes:
+- Custom CSS for toast left border styling by type (success=green, error=red, info=blue, warning=amber)
+- Custom icons via lucide-react (CheckCircle2, XCircle, Info, AlertTriangle)
+- Slide down + fade in animation via animate-in classes (300ms)
+- Dark mode shadow adjustments
+- Removed richColors (full background) in favor of left border accent style
+
+Key decisions:
+- Kept top-center position for both mobile/desktop (sonner uses inline styles, can't override without !important which biome rejects)
+- Top-center is reasonable UX for party game where multiple people view screen
+- Used oklch colors for border to match theme system
+
+Files changed:
+- src/app/globals.css (custom toast CSS for borders, icons, dark mode)
+- src/app/layout.tsx (Toaster config with icons, animation class)
+- plans/prd.json (marked ui-polish #67 as passes: true)
