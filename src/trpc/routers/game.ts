@@ -672,23 +672,18 @@ async function resolveTurnCore(params: ResolveTurnParams) {
       const stealer = session.players.find((p) => p.id === attempt.playerId);
       if (!stealer) continue;
 
-      const stealerTimeline = stealer.timeline ?? [];
-      const sortedStealerTimeline = [...stealerTimeline].sort(
-        (a, b) => a.year - b.year,
-      );
-
+      // Validate stealer's placement against ACTIVE PLAYER's timeline
       let stealerCorrect = false;
-      if (sortedStealerTimeline.length === 0) {
+      if (sortedTimeline.length === 0) {
         stealerCorrect = true;
       } else if (attempt.placementIndex === 0) {
-        stealerCorrect = songYear <= sortedStealerTimeline[0].year;
-      } else if (attempt.placementIndex >= sortedStealerTimeline.length) {
+        stealerCorrect = songYear <= sortedTimeline[0].year;
+      } else if (attempt.placementIndex >= sortedTimeline.length) {
         stealerCorrect =
-          songYear >=
-          sortedStealerTimeline[sortedStealerTimeline.length - 1].year;
+          songYear >= sortedTimeline[sortedTimeline.length - 1].year;
       } else {
-        const before = sortedStealerTimeline[attempt.placementIndex - 1];
-        const after = sortedStealerTimeline[attempt.placementIndex];
+        const before = sortedTimeline[attempt.placementIndex - 1];
+        const after = sortedTimeline[attempt.placementIndex];
         stealerCorrect = songYear >= before.year && songYear <= after.year;
       }
 
@@ -1955,17 +1950,25 @@ export const gameRouter = createTRPCRouter({
         .where(eq(players.id, input.playerId));
 
       // Add to decided stealers
+      const newDecidedStealers = [...decidedStealers, input.playerId];
       await ctx.db
         .update(gameSessions)
         .set({
-          decidedStealers: [...decidedStealers, input.playerId],
+          decidedStealers: newDecidedStealers,
           updatedAt: new Date(),
         })
         .where(eq(gameSessions.id, session.id));
 
       emitSessionUpdate(pin);
 
-      return { success: true, tokenDeducted: true };
+      // Check if all eligible players have decided
+      const eligiblePlayers = session.players.filter(
+        (p) => p.id !== currentPlayerId,
+      );
+      const totalDecided = newDecidedStealers.length + playerSkips.length;
+      const allDecided = totalDecided >= eligiblePlayers.length;
+
+      return { success: true, tokenDeducted: true, allDecided };
     }),
 
   // Decide phase: player clicks "Skip" button
@@ -2047,16 +2050,14 @@ export const gameRouter = createTRPCRouter({
         (p) => p.id !== currentPlayerId,
       );
       const totalDecided = decidedStealers.length + newPlayerSkips.length;
+      const allDecided = totalDecided >= eligiblePlayers.length;
 
-      // If all eligible skipped, we can resolve immediately
-      if (totalDecided >= eligiblePlayers.length) {
-        // All players have decided - if nobody chose to steal, skip to resolve
-        if (decidedStealers.length === 0) {
-          return { success: true, allSkipped: true };
-        }
+      if (allDecided) {
+        const allSkipped = decidedStealers.length === 0;
+        return { success: true, allSkipped, allDecided: true };
       }
 
-      return { success: true, allSkipped: false };
+      return { success: true, allSkipped: false, allDecided: false };
     }),
 
   // Transition from decide phase to place phase
@@ -2163,6 +2164,29 @@ export const gameRouter = createTRPCRouter({
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Active player cannot steal",
+        });
+      }
+
+      // Get active player for timeline bounds check
+      const activePlayer = session.players.find(
+        (p) => p.id === currentPlayerId,
+      );
+      if (!activePlayer) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Active player not found",
+        });
+      }
+
+      // Validate placement is within active player's timeline bounds
+      const activeTimelineLength = activePlayer.timeline?.length ?? 0;
+      if (
+        input.placementIndex < 0 ||
+        input.placementIndex > activeTimelineLength
+      ) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Invalid placement index for active player's timeline",
         });
       }
 
@@ -2694,24 +2718,18 @@ export const gameRouter = createTRPCRouter({
           );
           if (!stealer) continue;
 
-          const stealerTimeline = stealer.timeline ?? [];
-          const sortedStealerTimeline = [...stealerTimeline].sort(
-            (a, b) => a.year - b.year,
-          );
-
-          // Validate stealer's placement against THEIR timeline
+          // Validate stealer's placement against ACTIVE PLAYER's timeline
           let stealerCorrect = false;
-          if (sortedStealerTimeline.length === 0) {
+          if (sortedTimeline.length === 0) {
             stealerCorrect = true;
           } else if (attempt.placementIndex === 0) {
-            stealerCorrect = songYear <= sortedStealerTimeline[0].year;
-          } else if (attempt.placementIndex >= sortedStealerTimeline.length) {
+            stealerCorrect = songYear <= sortedTimeline[0].year;
+          } else if (attempt.placementIndex >= sortedTimeline.length) {
             stealerCorrect =
-              songYear >=
-              sortedStealerTimeline[sortedStealerTimeline.length - 1].year;
+              songYear >= sortedTimeline[sortedTimeline.length - 1].year;
           } else {
-            const before = sortedStealerTimeline[attempt.placementIndex - 1];
-            const after = sortedStealerTimeline[attempt.placementIndex];
+            const before = sortedTimeline[attempt.placementIndex - 1];
+            const after = sortedTimeline[attempt.placementIndex];
             stealerCorrect = songYear >= before.year && songYear <= after.year;
           }
 

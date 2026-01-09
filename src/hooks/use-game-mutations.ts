@@ -30,7 +30,12 @@ export function useGameMutations({ pin }: UseGameMutationsOptions) {
 
   const decideToSteal = useMutation({
     ...trpc.game.decideToSteal.mutationOptions(),
-    onSuccess: invalidateSession,
+    onSuccess: (data) => {
+      invalidateSession();
+      if (data.allDecided) {
+        transitionToPlacePhase.mutate({ pin });
+      }
+    },
   });
 
   const resolveStealPhase = useMutation({
@@ -42,8 +47,12 @@ export function useGameMutations({ pin }: UseGameMutationsOptions) {
     ...trpc.game.skipSteal.mutationOptions(),
     onSuccess: (data) => {
       invalidateSession();
-      if (data.allSkipped) {
-        resolveStealPhase.mutate({ pin });
+      if (data.allDecided) {
+        if (data.allSkipped) {
+          resolveStealPhase.mutate({ pin });
+        } else {
+          transitionToPlacePhase.mutate({ pin });
+        }
       }
     },
   });
