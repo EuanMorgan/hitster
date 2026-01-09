@@ -846,3 +846,24 @@ Files changed:
 - next.config.ts (added output: "standalone")
 - .env.example (added Docker docs)
 - plans/prd.json (marked deployment #44 as passes: true)
+
+## 2026-01-09: Implemented Spotify loading state indicator
+
+PRD items: gameplay #50 (Spotify loading state and indicator)
+
+Changes:
+- Added isLoading state to SpotifyPlayer component
+- Set isLoading=true when playTrackMutation starts
+- Set isLoading=false on success or error
+- Added "Loading song..." UI with spinner between ready and playing states
+- Added onLoadingChange callback prop for parent components
+
+Implementation notes:
+- Non-host players don't see loading indicator (they don't have SpotifyPlayer)
+- Host sees spinner + "Loading song..." while Spotify is buffering
+- Existing "Waiting for X to place..." message sufficient for non-host players
+- Loading state cleared on both success and error paths
+
+Files changed:
+- src/components/spotify-player.tsx (added isLoading state, onLoadingChange prop, loading UI)
+- plans/prd.json (marked gameplay #50 as passes: true)

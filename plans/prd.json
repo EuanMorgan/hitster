@@ -893,7 +893,7 @@
       "onPlaybackStarted sets isLoading=false",
       "DONE: Visible loading indicator appears before song plays, disappears when playing"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "gameplay",

@@ -16,6 +16,7 @@ interface SpotifyPlayerProps {
   onPlaybackError?: (error: string) => void;
   onDeviceReady?: (deviceId: string) => void;
   onPositionChange?: (positionMs: number) => void;
+  onLoadingChange?: (isLoading: boolean) => void;
 }
 
 declare global {
@@ -42,12 +43,14 @@ export function SpotifyPlayer({
   onPlaybackError,
   onDeviceReady,
   onPositionChange,
+  onLoadingChange,
 }: SpotifyPlayerProps) {
   const trpc = useTRPC();
   const playerRef = useRef<Spotify.Player | null>(null);
   const [deviceId, setDeviceId] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [needsReauth, setNeedsReauth] = useState(false);
   const [currentPosition, setCurrentPosition] = useState(0);
@@ -73,6 +76,11 @@ export function SpotifyPlayer({
       handleReauth();
     }
   }, [tokenError, handleReauth]);
+
+  // Emit loading state changes to parent
+  useEffect(() => {
+    onLoadingChange?.(isLoading);
+  }, [isLoading, onLoadingChange]);
 
   // Play track mutation
   const playTrackMutation = useMutation(
@@ -217,15 +225,19 @@ export function SpotifyPlayer({
         prevPlayTrackRef.current = trackUri;
       }
       const resumePosition = trackChanged ? 0 : pausedPositionRef.current;
+      // Set loading state while buffering
+      setIsLoading(true);
       playTrackMutation.mutate(
         { trackUri, deviceId, positionMs: resumePosition },
         {
           onSuccess: () => {
             playbackStartTimeRef.current = Date.now() - resumePosition;
             setIsPlaying(true);
+            setIsLoading(false);
           },
           onError: (err) => {
             console.error("Spotify play track error:", err.message);
+            setIsLoading(false);
             if (isReauthRequired(err)) {
               handleReauth();
             } else {
@@ -238,6 +250,7 @@ export function SpotifyPlayer({
       );
     } else if (!shouldPlay && isPlaying) {
       pausedPositionRef.current = currentPosition;
+      setIsLoading(false);
       pauseMutation.mutate({ deviceId });
     }
   }, [
@@ -331,6 +344,11 @@ export function SpotifyPlayer({
         <div className="flex items-center gap-2 text-zinc-400">
           <div className="animate-spin h-4 w-4 border-2 border-green-500 border-t-transparent rounded-full" />
           <span>Connecting to Spotify...</span>
+        </div>
+      ) : isLoading ? (
+        <div className="flex items-center gap-2 text-amber-400">
+          <div className="animate-spin h-4 w-4 border-2 border-amber-500 border-t-transparent rounded-full" />
+          <span>Loading song...</span>
         </div>
       ) : (
         <div className="space-y-3">
