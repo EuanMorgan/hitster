@@ -1547,7 +1547,7 @@
       "Add unit test: draw 50 songs, verify no duplicates in IDs",
       "DONE: Play full game with playlist fallback, no song appears twice"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "refactor",

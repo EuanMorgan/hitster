@@ -1506,3 +1506,26 @@ Files changed:
 - src/trpc/routers/game.ts (tokensEarned/tokensSpent fields in getGameDetails)
 - src/app/dashboard/game/[id]/page.tsx (UI to display earned/spent)
 - plans/prd.json (marked statistics #36 as passes: true)
+
+## 2026-01-09: Verified song uniqueness - no duplicates bug
+
+PRD items: playlist #103 (Fix duplicate songs appearing in same game)
+
+Investigation findings:
+- Song selection logic already correct in game.ts
+- usedSongIds tracked across entire game session at all 3 draw points (skipSong, getFreeSong, resolveStealPhase)
+- Fallback logic correctly excludes already-used songs from both custom and fallback playlists
+- usedSongIds persists in gameSessions table and resets on rematch
+
+Added unit tests:
+- Draw 50 songs, verify no duplicates
+- Prevent drawing already-used songs
+- Return null when all songs exhausted
+- Handle fallback playlist correctly
+- Exclude songs from both playlists when falling back
+
+Key decision: Code was already correct - no bug fix needed, just verification via tests
+
+Files changed:
+- src/lib/__tests__/song-selection.test.ts (new - 5 unit tests for song selection logic)
+- plans/prd.json (marked playlist #103 as passes: true)
