@@ -44,12 +44,22 @@ function DropZone({
   index,
   isActive,
   year,
+  isLast,
+  prevYear,
 }: {
   index: number;
   isActive: boolean;
   year?: number;
+  isLast?: boolean;
+  prevYear?: number;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: `drop-${index}` });
+
+  const label = year
+    ? `≤${year}`
+    : isLast && prevYear
+      ? `>${prevYear}`
+      : "Drop";
 
   return (
     <div
@@ -62,9 +72,7 @@ function DropZone({
             : "border-muted-foreground/30"
       }`}
     >
-      <span className="text-xs sm:text-sm text-muted-foreground">
-        {year ? `≤${year}` : "Drop"}
-      </span>
+      <span className="text-xs sm:text-sm text-muted-foreground">{label}</span>
     </div>
   );
 }
@@ -426,6 +434,8 @@ export function TimelineDropZone({
                   index={idx + 1}
                   isActive={activeId !== null}
                   year={sortedTimeline[idx + 1]?.year}
+                  isLast={idx === sortedTimeline.length - 1}
+                  prevYear={song.year}
                 />
                 {placementIndex === idx + 1 && (
                   <PlacedSongCard isNewlyPlaced={isNewlyPlaced} />

@@ -43,17 +43,27 @@ function StealDropZone({
   year,
   isOccupied,
   occupiedBy,
+  isLast,
+  prevYear,
 }: {
   index: number;
   isActive: boolean;
   year?: number;
   isOccupied?: boolean;
   occupiedBy?: string;
+  isLast?: boolean;
+  prevYear?: number;
 }) {
   const { setNodeRef, isOver } = useDroppable({
     id: `steal-drop-${index}`,
     disabled: isOccupied,
   });
+
+  const label = year
+    ? `≤${year}`
+    : isLast && prevYear
+      ? `>${prevYear}`
+      : "Steal";
 
   if (isOccupied) {
     return (
@@ -76,9 +86,7 @@ function StealDropZone({
             : "border-muted-foreground/30"
       }`}
     >
-      <span className="text-xs text-muted-foreground">
-        {year ? `≤${year}` : "Steal"}
-      </span>
+      <span className="text-xs text-muted-foreground">{label}</span>
     </div>
   );
 }
@@ -354,6 +362,8 @@ export function StealPhase({
                         year={sortedTimeline[idx + 1]?.year}
                         isOccupied={occupiedPositions.has(idx + 1)}
                         occupiedBy={occupiedPositions.get(idx + 1)}
+                        isLast={idx === sortedTimeline.length - 1}
+                        prevYear={song.year}
                       />
                       {placementIndex === idx + 1 && <PlacedStealCard />}
                     </div>
