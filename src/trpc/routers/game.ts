@@ -1658,16 +1658,16 @@ export const gameRouter = createTRPCRouter({
       // Process guess if provided
       const guess = session.activePlayerGuess;
       let guessWasCorrect = false;
-      if (guess?.guessedName && guess?.guessedArtist) {
-        const nameMatch = fuzzyMatch(
-          guess.guessedName,
-          session.currentSong.name,
-        );
-        const artistMatch = fuzzyMatch(
-          guess.guessedArtist,
-          session.currentSong.artist,
-        );
-        guessWasCorrect = nameMatch && artistMatch;
+      let nameCorrect = false;
+      let artistCorrect = false;
+      if (guess?.guessedName || guess?.guessedArtist) {
+        nameCorrect = guess?.guessedName
+          ? fuzzyMatch(guess.guessedName, session.currentSong.name)
+          : false;
+        artistCorrect = guess?.guessedArtist
+          ? fuzzyMatch(guess.guessedArtist, session.currentSong.artist)
+          : false;
+        guessWasCorrect = nameCorrect && artistCorrect;
       }
 
       // Award token if guess was correct
@@ -1816,6 +1816,8 @@ export const gameRouter = createTRPCRouter({
               gameEnded: true,
               winnerId,
               guessWasCorrect,
+              nameCorrect,
+              artistCorrect,
               guessedName: guess?.guessedName ?? null,
               guessedArtist: guess?.guessedArtist ?? null,
             };
@@ -1894,6 +1896,8 @@ export const gameRouter = createTRPCRouter({
           winnerId: songExhaustionWinner?.id,
           reason: "No more songs available",
           guessWasCorrect,
+          nameCorrect,
+          artistCorrect,
           guessedName: guess?.guessedName ?? null,
           guessedArtist: guess?.guessedArtist ?? null,
         };
@@ -1947,6 +1951,8 @@ export const gameRouter = createTRPCRouter({
         isNewRound,
         newRoundNumber,
         guessWasCorrect,
+        nameCorrect,
+        artistCorrect,
         guessedName: guess?.guessedName ?? null,
         guessedArtist: guess?.guessedArtist ?? null,
       };

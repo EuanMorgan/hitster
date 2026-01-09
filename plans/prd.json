@@ -928,7 +928,7 @@
       "All players see overlay via subscription update",
       "DONE: Result shows for 5 seconds, song audible throughout"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "ui",
@@ -941,7 +941,7 @@
       "Text size min 16px for readability",
       "DONE: Can clearly see green highlight on correct guess, red on wrong"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "ui",

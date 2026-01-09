@@ -433,6 +433,8 @@ function TurnResultOverlay({
     gameEnded?: boolean;
     winnerId?: string;
     guessWasCorrect?: boolean;
+    nameCorrect?: boolean;
+    artistCorrect?: boolean;
     guessedName?: string | null;
     guessedArtist?: string | null;
   };
@@ -440,8 +442,8 @@ function TurnResultOverlay({
   winnerName?: string;
 }) {
   useEffect(() => {
-    // Longer timeout if game ended to enjoy the celebration
-    const timer = setTimeout(onClose, result.gameEnded ? 6000 : 4000);
+    // Longer timeout if game ended to enjoy celebration, 5s for normal results
+    const timer = setTimeout(onClose, result.gameEnded ? 6000 : 5000);
     return () => clearTimeout(timer);
   }, [onClose, result.gameEnded]);
 
@@ -506,18 +508,58 @@ function TurnResultOverlay({
               </div>
               {/* Show guess result if a guess was made */}
               {(result.guessedName || result.guessedArtist) && (
-                <div
-                  className={`mt-4 p-3 rounded-lg ${result.guessWasCorrect ? "bg-green-100 dark:bg-green-900/30" : "bg-red-100 dark:bg-red-900/30"}`}
-                >
-                  <div className="text-sm font-medium mb-1">
-                    {result.guessWasCorrect
-                      ? "🎯 Correct guess! +1 token"
-                      : "❌ Wrong guess"}
+                <div className="mt-4 p-3 rounded-lg bg-muted/50 text-left">
+                  {/* Title with token bonus animation */}
+                  <div className="text-base font-medium mb-3 text-center">
+                    {result.guessWasCorrect ? (
+                      <span className="inline-flex items-center gap-2">
+                        🎯 Correct guess!
+                        <span className="inline-block animate-[scale_0.3s_ease-out] text-lg">
+                          +1 🪙
+                        </span>
+                      </span>
+                    ) : (
+                      "Your Guess"
+                    )}
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    Your guess: {result.guessedName || "—"} by{" "}
-                    {result.guessedArtist || "—"}
-                  </div>
+                  {/* Name comparison */}
+                  {result.guessedName && (
+                    <div className="mb-2">
+                      <div
+                        className={`text-base px-2 py-1 rounded ${
+                          result.nameCorrect
+                            ? "bg-green-500/20 text-green-700 dark:text-green-400"
+                            : "bg-red-500/20 text-red-700 dark:text-red-400"
+                        }`}
+                      >
+                        Your guess: {result.guessedName}
+                      </div>
+                      {!result.nameCorrect && (
+                        <div className="text-base text-muted-foreground mt-1 px-2">
+                          Actual: {result.song.name}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {/* Artist comparison */}
+                  {result.guessedArtist && (
+                    <div>
+                      <div
+                        className={`text-base px-2 py-1 rounded ${
+                          result.artistCorrect
+                            ? "bg-green-500/20 text-green-700 dark:text-green-400"
+                            : "bg-red-500/20 text-red-700 dark:text-red-400"
+                        }`}
+                      >
+                        Your guess: {result.guessedArtist}
+                      </div>
+                      {!result.artistCorrect && (
+                        <div className="text-base text-muted-foreground mt-1 px-2">
+                          Actual: {result.song.artist}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </>
@@ -545,6 +587,8 @@ export default function GamePage() {
     isNewRound?: boolean;
     newRoundNumber?: number;
     guessWasCorrect?: boolean;
+    nameCorrect?: boolean;
+    artistCorrect?: boolean;
     guessedName?: string | null;
     guessedArtist?: string | null;
   } | null>(null);

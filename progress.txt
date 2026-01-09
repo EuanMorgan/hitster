@@ -982,3 +982,23 @@ Key decision: Compact token format shows "🪙{count}" on mobile (<640px) and "�
 Files changed:
 - src/app/game/[pin]/page.tsx (overflow-x-hidden, TokenDisplay compact, TimelineDisplay no -mx-2, name max-width)
 - plans/prd.json (marked ui #57, #58 as passes: true)
+
+## 2026-01-09: Implemented result overlay improvements + guess feedback
+
+PRD items: ui #55 (Result overlay 5 seconds), ui #56 (Guess feedback with color highlighting)
+
+Changes:
+- TurnResultOverlay timeout changed from 4000ms to 5000ms for normal results
+- Added nameCorrect/artistCorrect booleans to resolveStealPhase return
+- Updated guess logic to track individual name/artist correctness (previously only tracked combined)
+- Redesigned guess feedback UI: separate boxes for name/artist with green/red backgrounds
+- Shows "Your guess: X" with highlight, "Actual: Y" below if incorrect
+- Token bonus (+1 🪙) shown with scale animation when guess correct
+- All text uses text-base (16px) for readability
+
+Key decision: Changed from requiring BOTH name AND artist to be guessed to allowing individual field tracking. Now users can see partial correctness (e.g., got song name right but artist wrong).
+
+Files changed:
+- src/trpc/routers/game.ts (added nameCorrect/artistCorrect to guess processing + all return statements)
+- src/app/game/[pin]/page.tsx (updated TurnResultOverlay type + UI, turnResult state type)
+- plans/prd.json (marked ui #55, #56 as passes: true)
