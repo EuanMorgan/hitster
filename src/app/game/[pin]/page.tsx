@@ -26,11 +26,11 @@ import {
 } from "@/components/ui/card";
 import type { TimelineSong } from "@/db/schema";
 import { useGameSession } from "@/hooks/use-game-session";
+import { useGameState } from "@/hooks/use-game-state";
 import { usePlayerHeartbeat } from "@/hooks/use-player-heartbeat";
 import { usePlayerValidation } from "@/hooks/use-player-validation";
 import { useSession } from "@/lib/auth-client";
 import {
-  getCurrentPlayer,
   getPlayersSortedWithCurrentFirst,
   getTimelineSortedByYear,
 } from "@/lib/game-selectors";
@@ -350,6 +350,12 @@ export default function GamePage() {
 
   usePlayerHeartbeat(currentPlayerId);
 
+  const gameState = useGameState({
+    session: sessionQuery.data,
+    currentPlayerId,
+    authUserId: authSession?.user?.id,
+  });
+
   // Redirect back to lobby if game is not playing
   useEffect(() => {
     if (sessionQuery.data?.state === "lobby") {
@@ -458,7 +464,22 @@ export default function GamePage() {
 
   const session = sessionQuery.data;
 
-  const isHost = authSession?.user?.id === session?.hostId;
+  // Destructure computed game state
+  const {
+    currentPlayer,
+    myPlayer,
+    isHost,
+    isMyTurn,
+    isDecidePhase,
+    isPlacePhase,
+    isStealPhase,
+    decidedStealers,
+    hasDecided,
+    hasAlreadyStolen,
+    totalEligible,
+    decidedCount,
+    hostDisconnected,
+  } = gameState;
 
   if (session?.state === "finished") {
     return (
@@ -473,40 +494,6 @@ export default function GamePage() {
       />
     );
   }
-
-  const isMyTurn = currentPlayerId === session?.currentPlayerId;
-  const currentPlayer = getCurrentPlayer(
-    session?.players ?? [],
-    session?.currentPlayerId ?? null,
-  );
-  const myPlayer = getCurrentPlayer(
-    session?.players ?? [],
-    currentPlayerId ?? null,
-  );
-
-  // Two-phase steal system
-  const stealPhase = session?.stealPhase ?? null;
-  const isDecidePhase = stealPhase === "decide";
-  const isPlacePhase = stealPhase === "place";
-  const isStealPhase = stealPhase !== null;
-  const decidedStealers = session?.decidedStealers ?? [];
-  const playerSkips = session?.playerSkips ?? [];
-  const hasDecided =
-    decidedStealers.includes(currentPlayerId ?? "") ||
-    playerSkips.includes(currentPlayerId ?? "");
-  const hasAlreadyStolen = (session?.stealAttempts ?? []).some(
-    (a) => a.playerId === currentPlayerId,
-  );
-  // Total eligible = all non-active players
-  const totalEligible =
-    (session?.players.length ?? 0) - 1 > 0
-      ? (session?.players.length ?? 0) - 1
-      : 0;
-  const decidedCount = decidedStealers.length + playerSkips.length;
-
-  // Check if host is disconnected during gameplay
-  const hostDisconnected =
-    session?.state === "playing" && session?.hostIsConnected === false;
 
   return (
     <div className="min-h-screen p-4 overflow-x-hidden animate-in fade-in duration-150">

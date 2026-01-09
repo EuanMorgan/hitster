@@ -1781,3 +1781,30 @@ Files changed:
 - src/app/game/[pin]/page.tsx (import selectors, replace inline sorts)
 - src/components/game/game-finished-screen.tsx (import selectors, replace inline sorts)
 - plans/prd.json (marked refactor #99 as passes: true)
+
+## 2026-01-09: Create useGameState hook for computed game values
+
+PRD items: refactor #100 (Create useGameState hook)
+
+Changes:
+- Created src/hooks/use-game-state.ts (120 lines)
+- Hook accepts session, currentPlayerId, authUserId params
+- Returns memoized computed values: currentPlayer, myPlayer, isHost, isMyTurn
+- Returns steal phase state: stealPhase, isDecidePhase, isPlacePhase, isStealPhase
+- Returns steal participation: decidedStealers, hasDecided, hasAlreadyStolen
+- Returns eligibility counts: totalEligible, decidedCount
+- Returns connection state: hostDisconnected
+- Uses getCurrentPlayer selector from game-selectors.ts
+- Updated game page: destructures all values from gameState hook call
+- Removed ~30 lines of inline computed values from game page
+- Game page now 794 lines (down from ~807)
+
+Key decisions:
+- Used useMemo for all computations to prevent recalc on every render
+- Return type uses undefined (not null) to match selector return types
+- Hook called unconditionally before any early returns (React rules)
+
+Files changed:
+- src/hooks/use-game-state.ts (new - 120 lines)
+- src/app/game/[pin]/page.tsx (import hook, destructure values, removed inline computations)
+- plans/prd.json (marked refactor #100 as passes: true)
