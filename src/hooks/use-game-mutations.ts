@@ -25,7 +25,23 @@ export function useGameMutations({
 
   const confirmTurn = useMutation({
     ...trpc.game.confirmTurn.mutationOptions(),
-    onSuccess: invalidateSession,
+    onSuccess: (data) => {
+      invalidateSession();
+
+      if ("soloResolved" in data && data.soloResolved) {
+        onTurnResult?.({
+          activePlayerCorrect: data.activePlayerCorrect,
+          song: data.song,
+          stolenBy: null,
+          recipientId: data.recipientId,
+          gameEnded: data.gameEnded,
+          winnerId: "winnerId" in data ? data.winnerId : undefined,
+          guessWasCorrect: data.guessWasCorrect,
+          guessedName: data.guessedName,
+          guessedArtist: data.guessedArtist,
+        });
+      }
+    },
   });
 
   const submitSteal = useMutation({

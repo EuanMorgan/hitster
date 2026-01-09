@@ -313,6 +313,14 @@ export function TimelineDropZone({
   const [guessedArtist, setGuessedArtist] = useState("");
   const [isNewlyPlaced, setIsNewlyPlaced] = useState(false);
 
+  // Reset placement state when a new song is drawn
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional reset on song change
+  useEffect(() => {
+    setPlacementIndex(null);
+    setGuessedName("");
+    setGuessedArtist("");
+  }, [currentSong.songId]);
+
   const sortedTimeline = [...timeline].sort((a, b) => a.year - b.year);
 
   const handleTimeUp = useCallback(() => {
