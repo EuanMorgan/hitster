@@ -1054,7 +1054,7 @@
       "Spacing: min 24px between sections",
       "DONE: Home page feels polished, not like default template"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "ui-polish",

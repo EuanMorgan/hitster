@@ -16,7 +16,12 @@ export function SpotifyLoginButton() {
   };
 
   return (
-    <Button onClick={handleLogin} disabled={isLoading} className="w-full">
+    <Button
+      onClick={handleLogin}
+      disabled={isLoading}
+      size="lg"
+      className="w-full text-base"
+    >
       {isLoading ? "Connecting..." : "Login with Spotify"}
     </Button>
   );

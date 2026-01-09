@@ -1085,3 +1085,26 @@ Files changed:
 - src/app/game/[pin]/page.tsx (TimelineDisplay updated)
 - src/components/timeline-drop-zone.tsx (DropZone, PlacedSongCard, TimelineSongCard updated)
 - plans/prd.json (marked ui #53 as passes: true)
+
+## 2026-01-09: Home page visual polish
+
+PRD items: ui-polish #61 (Home page visual polish)
+
+Changes:
+- Replaced generic Greeting component with static personality text: "Ready to test your music knowledge?"
+- Removed unused Greeting component import and prefetch call
+- Added background gradient: bg-gradient-to-br from-background via-background to-primary/10
+- Increased button sizes: size="lg" on Join Game, Create Game, SpotifyLoginButton
+- Improved spacing: space-y-4 on header, gap-6 on content, pb-6 padding
+- Made title larger: text-3xl font-bold
+
+Key decisions:
+- Removed dynamic greeting (was just "Hello, Hitster Player!") for simpler static text
+- Kept gradient subtle (to-primary/10) to work in both light/dark modes
+- Used existing shadcn button size="lg" prop for consistency
+
+Files changed:
+- src/app/page.tsx (removed Greeting, added gradient, improved spacing)
+- src/components/spotify-login-button.tsx (size="lg")
+- src/components/create-game-button.tsx (size="lg")
+- plans/prd.json (marked ui-polish #61 as passes: true)

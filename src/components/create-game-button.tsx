@@ -24,7 +24,7 @@ export function CreateGameButton() {
 
   if (!session?.user) {
     return (
-      <Button variant="secondary" className="flex-1" disabled>
+      <Button variant="secondary" size="lg" className="flex-1" disabled>
         Create Game
       </Button>
     );
@@ -33,6 +33,7 @@ export function CreateGameButton() {
   return (
     <Button
       variant="secondary"
+      size="lg"
       className="flex-1"
       onClick={() => createGameMutation.mutate()}
       disabled={createGameMutation.isPending}
