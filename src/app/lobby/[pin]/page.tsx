@@ -92,6 +92,7 @@ export default function LobbyPage() {
     ...trpc.game.heartbeat.mutationOptions(),
   });
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: mutate is stable
   useEffect(() => {
     if (!currentPlayerId) return;
     const sendHeartbeat = () =>
@@ -99,7 +100,7 @@ export default function LobbyPage() {
     sendHeartbeat();
     const interval = setInterval(sendHeartbeat, 3000);
     return () => clearInterval(interval);
-  }, [currentPlayerId, heartbeatMutation]);
+  }, [currentPlayerId]);
 
   // Redirect to game page when state changes to playing
   useEffect(() => {

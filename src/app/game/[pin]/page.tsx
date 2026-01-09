@@ -639,6 +639,7 @@ export default function GamePage() {
     ...trpc.game.heartbeat.mutationOptions(),
   });
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: mutate is stable
   useEffect(() => {
     if (!currentPlayerId) return;
     const sendHeartbeat = () =>
@@ -646,7 +647,7 @@ export default function GamePage() {
     sendHeartbeat();
     const interval = setInterval(sendHeartbeat, 3000);
     return () => clearInterval(interval);
-  }, [currentPlayerId, heartbeatMutation]);
+  }, [currentPlayerId]);
 
   // Redirect back to lobby if game is not playing
   useEffect(() => {

@@ -55,8 +55,8 @@ export function useGameSession({ pin, enabled = true }: UseGameSessionOptions) {
             });
           }
         },
-      },
-    ),
+      }
+    )
   );
 
   const isSubscribed = subscription.status === "pending";
