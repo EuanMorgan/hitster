@@ -9,6 +9,8 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   output: "standalone",
+  transpilePackages: ["@t3-oss/env-nextjs", "@t3-oss/env-core"],
+
   images: {
     remotePatterns: [
       {

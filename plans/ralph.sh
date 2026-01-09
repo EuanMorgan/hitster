@@ -31,7 +31,7 @@ for ((i=1; i<=$1; i++)); do
     Keep entries concise. Sacrifice grammar for the sake of concision. This file helps future iterations skip exploration.\
     6. Make a git commit of that feature. \
     ONLY WORK ON A SINGLE FEATURE. \
-    If, while implementing the feature, you notice the PRD is complete, output <promise>COMPLETE</promise>
+    After completing your feature, check if every item in the PRD now has 'passes': true. If so, output <promise>COMPLETE</promise>. If any items still have 'passes': false, do not output COMPLETE.
     ") || true
 
     echo "$result"
