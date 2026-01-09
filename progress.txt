@@ -1595,3 +1595,19 @@ Files changed:
 - src/components/game/game-skeleton.tsx (new)
 - src/app/game/[pin]/page.tsx (import update, removed inline component)
 - plans/prd.json (marked refactor #94 as passes: true)
+
+## 2026-01-09: Extract TurnResultOverlay to separate component file
+
+PRD items: refactor #95 (Extract TurnResultOverlay to separate component file)
+
+Changes:
+- Created src/components/game/turn-result-overlay.tsx with TurnResultOverlay component
+- Exported TurnResult interface for reuse in game page state
+- Removed inline TurnResultOverlay from game page (~160 lines extracted)
+- Updated game page to import TurnResultOverlay and TurnResult type
+- Game page reduced from 1428 to 1268 lines
+
+Files changed:
+- src/components/game/turn-result-overlay.tsx (new - 160 lines)
+- src/app/game/[pin]/page.tsx (import update, removed inline component, simplified state type)
+- plans/prd.json (marked refactor #95 as passes: true)
