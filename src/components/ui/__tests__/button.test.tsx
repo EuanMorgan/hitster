@@ -67,4 +67,16 @@ describe("Button", () => {
       screen.getByRole("link", { name: "Link Button" }),
     ).toBeInTheDocument();
   });
+
+  it("shows loading spinner when loading prop is true", () => {
+    render(<Button loading>Submit</Button>);
+    const button = screen.getByRole("button");
+    expect(button).toBeDisabled();
+    expect(screen.getByText("Loading")).toBeInTheDocument();
+  });
+
+  it("shows children when not loading", () => {
+    render(<Button loading={false}>Submit</Button>);
+    expect(screen.getByRole("button", { name: "Submit" })).toBeInTheDocument();
+  });
 });

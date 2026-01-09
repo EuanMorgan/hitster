@@ -1200,3 +1200,24 @@ Files changed:
 - src/app/game/[pin]/page.tsx (ActivePlayerTimeline timer tabular-nums)
 - vitest.config.ts (fixed exclude patterns)
 - plans/prd.json (marked ui-polish #65 as passes: true)
+
+## 2026-01-09: Button hierarchy and states polish
+
+PRD items: ui-polish #66 (Button hierarchy and states)
+
+Changes:
+- Added active:scale-[0.98] to all buttons for tactile feedback
+- Updated default height to h-11 (44px), lg to h-12, sm to h-9 for touch targets
+- Destructive variant: now red outline, fills red on hover (was solid fill)
+- Added loading prop: shows Loader2 spinner, auto-disables button
+- Added loading state tests to button.test.tsx
+
+Key decisions:
+- Increased base height from h-9 to h-11 to meet 44px touch target requirement
+- Loading shows spinner only (no text) to maintain consistent button width
+- Destructive uses outline pattern to match PRD "red outline, hover red fill"
+
+Files changed:
+- src/components/ui/button.tsx (variants, sizes, loading prop)
+- src/components/ui/__tests__/button.test.tsx (loading tests)
+- plans/prd.json (marked ui-polish #66 as passes: true)

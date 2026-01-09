@@ -1119,7 +1119,7 @@
       "All buttons: min 44px height for touch",
       "DONE: Button importance clear from visual weight"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "ui-polish",
