@@ -1665,3 +1665,24 @@ Files changed:
 - src/components/game/game-finished-screen.tsx (new - 246 lines)
 - src/app/game/[pin]/page.tsx (import update, removed inline finished block)
 - plans/prd.json (marked refactor #98 as passes: true)
+
+## 2026-01-09: Add Zustand player store
+
+PRD items: refactor (Add Zustand with persist middleware for player state)
+
+Changes:
+- Installed zustand package
+- Created src/stores/player-store.ts with PlayerStore interface
+- Store shape: playerId, sessionId, gamePin, setPlayer(), clearPlayer()
+- persist middleware with 'hitster-player' key, skipHydration: true for SSR
+- Exported usePlayerStore and usePlayerStoreHydration hooks
+
+Key decisions:
+- skipHydration: true prevents SSR hydration mismatch - components must call rehydrate
+- Single key 'hitster-player' replaces 3 separate localStorage keys
+- Store ready for migration but old localStorage code still exists (next PRD item)
+
+Files changed:
+- package.json (added zustand dependency)
+- src/stores/player-store.ts (new - 52 lines)
+- plans/prd.json (marked refactor Zustand store as passes: true)
