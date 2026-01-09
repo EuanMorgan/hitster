@@ -16,30 +16,32 @@ Hitster is a Jackbox-style online multiplayer adaptation of the Hitster board ga
 
 ## Development Commands
 
+**IMPORTANT: Always use `bun` instead of `npm` for all commands.**
+
 ```bash
 # Development server
-npm run dev
+bun dev
 
 # Build
-npm run build
+bun run build
 
 # Testing
-npm run test          # Run vitest tests
-npm run test:watch    # Watch mode
-npm run test:coverage # With coverage
-npm run test:e2e      # Playwright E2E tests
-npm run test:e2e:ui   # E2E with UI
+bun test              # Run vitest tests
+bun test:watch        # Watch mode
+bun test:coverage     # With coverage
+bun test:e2e          # Playwright E2E tests
+bun test:e2e:ui       # E2E with UI
 
 # Linting/Formatting
-npm run lint          # Biome check
-npm run format        # Biome format --write
-npm run typecheck     # tsc --noEmit
+bun lint              # Biome check
+bun format            # Biome format --write
+bun typecheck         # tsc --noEmit
 
 # Database (Drizzle)
-npm run db:push       # Push schema to DB
-npm run db:studio     # Open Drizzle Studio
-npm run db:generate   # Generate migrations
-npm run db:migrate    # Run migrations
+bun db:push           # Push schema to DB
+bun db:studio         # Open Drizzle Studio
+bun db:generate       # Generate migrations
+bun db:migrate        # Run migrations
 ```
 
 ## Tech Stack
@@ -126,4 +128,6 @@ For automated testing with Spotify auth (ralph loop):
 3. Auth state saved to `.auth/storage-state.json`
 4. Playwright MCP configured via `.mcp.json` to load this state
 
-Re-run `auth:export` weekly when session expires.
+**IMPORTANT**: Always use `http://127.0.0.1:3000` not `http://localhost:3000` when navigating with Playwright MCP. Spotify OAuth only allows loopback IP, and session cookies are bound to `127.0.0.1`.
+
+Re-run `bun auth:export` weekly when session expires.

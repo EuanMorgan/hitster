@@ -642,9 +642,9 @@
       "List of past games with dates",
       "Click to view detailed game stats",
       "Aggregate stats across all games",
-      "Visual charts/graphs for stats"
+      "Visual charts/graphs for stats (AccuracyChart area chart + GamesActivityChart bar chart using shadcn charts)"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "statistics",
@@ -652,12 +652,12 @@
     "steps": [
       "Winner and final standings",
       "Each player's accuracy percentage",
-      "Tokens earned and spent per player",
+      "Tokens earned and spent per player (currently only shows remaining)",
       "Average seconds from song start to placement confirmation",
       "Songs guessed correctly (count and percentage)",
       "Show 'X/Y steals successful (Z%)'"
     ],
-    "passes": true
+    "passes": false
   },
   {
     "category": "ui",

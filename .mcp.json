@@ -4,7 +4,9 @@
       "command": "npx",
       "args": [
         "@playwright/mcp@latest",
-        "--storage-state=.auth/storage-state.json"
+        "--isolated",
+        "--browser=chromium",
+        "--storage-state=/Users/euanmorgan/Dev/learning/hitster/.auth/storage-state.json"
       ]
     }
   }

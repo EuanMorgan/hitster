@@ -1,5 +1,13 @@
 {
   "permissions": {
-    "allow": ["WebFetch(domain:github.com)"]
+    "allow": [
+      "WebFetch(domain:github.com)",
+      "WebSearch",
+      "mcp__playwright__browser_click",
+      "mcp__playwright__browser_take_screenshot",
+      "mcp__playwright__browser_drag",
+      "mcp__playwright__browser_snapshot",
+      "mcp__playwright__browser_wait_for"
+    ]
   }
 }

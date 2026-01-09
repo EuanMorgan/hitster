@@ -20,6 +20,9 @@ for ((i=1; i<=$1; i++)); do
     Navigate to the relevant page and take a snapshot. If it looks wrong, fix it before proceeding. \
     If Playwright fails to connect, restart the dev server and retry. \
     4. Update the PRD with the work that was done. \
+    IMPORTANT: Only set 'passes': true if ALL steps in the PRD are fully implemented. \
+    If some steps are done but others remain, keep 'passes': false and note partial progress in progress.txt. \
+    A PRD with 4 steps where only 2 are done is NOT complete - do not mark it as passing. \
     5. After completing each task, append to progress.txt:
     - Task completed and PRD item reference
     - Key decisions made and reasoning

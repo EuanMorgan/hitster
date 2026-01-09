@@ -25,6 +25,7 @@ async function exportAuth() {
   console.log(`Saved auth state to ${STORAGE_STATE_PATH}`);
 
   await browser.close();
+  process.exit(0);
 }
 
 exportAuth();
