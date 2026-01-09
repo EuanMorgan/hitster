@@ -156,6 +156,23 @@ export type ActivePlayerGuess = {
   guessedArtist: string | null;
 };
 
+export type TurnResultData = {
+  activePlayerCorrect: boolean;
+  song: { name: string; artist: string; year: number };
+  stolenBy?: { playerId: string; playerName: string } | null;
+  recipientId?: string | null;
+  gameEnded?: boolean;
+  winnerId?: string;
+  isNewRound?: boolean;
+  newRoundNumber?: number;
+  guessWasCorrect?: boolean;
+  nameCorrect?: boolean;
+  artistCorrect?: boolean;
+  guessedName?: string | null;
+  guessedArtist?: string | null;
+  displayedAt: string;
+};
+
 export type PlaylistSong = {
   songId: string;
   name: string;
@@ -198,6 +215,8 @@ export const gameSessions = pgTable(
     stealAttempts: jsonb("steal_attempts")
       .$type<ActiveStealAttempt[]>()
       .default([]),
+    // Turn result shared across all clients
+    lastTurnResult: jsonb("last_turn_result").$type<TurnResultData | null>(),
     // Legacy field - kept for backwards compatibility during migration
     isStealPhase: boolean("is_steal_phase").default(false),
     stealPhaseEndAt: timestamp("steal_phase_end_at"),

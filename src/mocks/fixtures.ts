@@ -68,6 +68,7 @@ export const fixtures = {
       activePlayerPlacement: null,
       activePlayerGuess: null,
       stealAttempts: [],
+      lastTurnResult: null,
       isStealPhase: false,
       stealPhaseEndAt: null,
       playlistSongs: null,
@@ -110,6 +111,7 @@ export const fixtures = {
       activePlayerPlacement: null,
       activePlayerGuess: null,
       stealAttempts: [],
+      lastTurnResult: null,
       isStealPhase: false,
       stealPhaseEndAt: null,
       playlistSongs: [
@@ -155,6 +157,7 @@ export const fixtures = {
       activePlayerPlacement: null,
       activePlayerGuess: null,
       stealAttempts: [],
+      lastTurnResult: null,
       isStealPhase: false,
       stealPhaseEndAt: null,
       playlistSongs: null,

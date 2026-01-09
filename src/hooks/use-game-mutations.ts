@@ -1,18 +1,13 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useCallback } from "react";
-import type { TurnResult } from "@/components/game/turn-result-overlay";
 import { useTRPC } from "@/trpc/client";
 
 interface UseGameMutationsOptions {
   pin: string;
-  onTurnResult?: (result: TurnResult) => void;
 }
 
-export function useGameMutations({
-  pin,
-  onTurnResult,
-}: UseGameMutationsOptions) {
+export function useGameMutations({ pin }: UseGameMutationsOptions) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const trpc = useTRPC();
@@ -25,23 +20,7 @@ export function useGameMutations({
 
   const confirmTurn = useMutation({
     ...trpc.game.confirmTurn.mutationOptions(),
-    onSuccess: (data) => {
-      invalidateSession();
-
-      if ("soloResolved" in data && data.soloResolved) {
-        onTurnResult?.({
-          activePlayerCorrect: data.activePlayerCorrect,
-          song: data.song,
-          stolenBy: null,
-          recipientId: data.recipientId,
-          gameEnded: data.gameEnded,
-          winnerId: "winnerId" in data ? data.winnerId : undefined,
-          guessWasCorrect: data.guessWasCorrect,
-          guessedName: data.guessedName,
-          guessedArtist: data.guessedArtist,
-        });
-      }
-    },
+    onSuccess: invalidateSession,
   });
 
   const submitSteal = useMutation({
@@ -56,23 +35,7 @@ export function useGameMutations({
 
   const resolveStealPhase = useMutation({
     ...trpc.game.resolveStealPhase.mutationOptions(),
-    onSuccess: (data) => {
-      onTurnResult?.({
-        activePlayerCorrect: data.activePlayerCorrect,
-        song: data.song,
-        stolenBy: data.stolenBy,
-        recipientId: data.recipientId,
-        gameEnded: data.gameEnded,
-        winnerId: "winnerId" in data ? data.winnerId : undefined,
-        isNewRound: "isNewRound" in data ? data.isNewRound : undefined,
-        newRoundNumber:
-          "newRoundNumber" in data ? data.newRoundNumber : undefined,
-        guessWasCorrect: data.guessWasCorrect,
-        guessedName: data.guessedName,
-        guessedArtist: data.guessedArtist,
-      });
-      invalidateSession();
-    },
+    onSuccess: invalidateSession,
   });
 
   const skipSteal = useMutation({
@@ -102,17 +65,7 @@ export function useGameMutations({
 
   const getFreeSong = useMutation({
     ...trpc.game.getFreeSong.mutationOptions(),
-    onSuccess: (data) => {
-      invalidateSession();
-      if (data.gameEnded && "winnerId" in data) {
-        onTurnResult?.({
-          activePlayerCorrect: true,
-          song: data.freeSong,
-          gameEnded: true,
-          winnerId: data.winnerId,
-        });
-      }
-    },
+    onSuccess: invalidateSession,
   });
 
   const startRematch = useMutation({

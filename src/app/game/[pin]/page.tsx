@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ActivePlayerTimeline } from "@/components/game/active-player-timeline";
 import { GameFinishedScreen } from "@/components/game/game-finished-screen";
 import { GameHeader } from "@/components/game/game-header";
@@ -39,12 +39,25 @@ export default function GamePage() {
   const router = useRouter();
   const { data: authSession } = useSession();
   const [turnResult, setTurnResult] = useState<TurnResult | null>(null);
+  const shownResultRef = useRef<string | null>(null);
   const [playbackStartedAt, setPlaybackStartedAt] = useState<number | null>(
     null,
   );
 
   const sessionQuery = useGameSession({ pin });
-  const mutations = useGameMutations({ pin, onTurnResult: setTurnResult });
+  const mutations = useGameMutations({ pin });
+
+  // Show turn result from session when it changes
+  const lastTurnResult = sessionQuery.data?.lastTurnResult;
+  useEffect(() => {
+    if (
+      lastTurnResult &&
+      lastTurnResult.displayedAt !== shownResultRef.current
+    ) {
+      shownResultRef.current = lastTurnResult.displayedAt;
+      setTurnResult(lastTurnResult);
+    }
+  }, [lastTurnResult]);
 
   const { playerId: currentPlayerId } = usePlayerValidation({
     pin,

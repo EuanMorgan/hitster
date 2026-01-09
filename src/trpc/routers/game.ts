@@ -734,6 +734,25 @@ async function resolveTurnCore(params: ResolveTurnParams) {
           .set({ wins: recipient.wins + 1 })
           .where(eq(players.id, recipientId));
 
+        const turnResult = {
+          activePlayerCorrect,
+          song: {
+            name: currentSong.name,
+            artist: currentSong.artist,
+            year: currentSong.year,
+          },
+          stolenBy: winningStealer,
+          recipientId,
+          gameEnded: true as const,
+          winnerId,
+          guessWasCorrect,
+          nameCorrect,
+          artistCorrect,
+          guessedName: guess?.guessedName ?? null,
+          guessedArtist: guess?.guessedArtist ?? null,
+          displayedAt: new Date().toISOString(),
+        };
+
         await dbClient
           .update(gameSessions)
           .set({
@@ -749,6 +768,7 @@ async function resolveTurnCore(params: ResolveTurnParams) {
             stealAttempts: [],
             isStealPhase: false,
             stealPhaseEndAt: null,
+            lastTurnResult: turnResult,
             updatedAt: new Date(),
           })
           .where(eq(gameSessions.id, session.id));
@@ -811,6 +831,25 @@ async function resolveTurnCore(params: ResolveTurnParams) {
         .where(eq(players.id, songExhaustionWinner.id));
     }
 
+    const turnResult = {
+      activePlayerCorrect,
+      song: {
+        name: currentSong.name,
+        artist: currentSong.artist,
+        year: currentSong.year,
+      },
+      stolenBy: winningStealer,
+      recipientId,
+      gameEnded: true as const,
+      winnerId: songExhaustionWinner?.id,
+      guessWasCorrect,
+      nameCorrect,
+      artistCorrect,
+      guessedName: guess?.guessedName ?? null,
+      guessedArtist: guess?.guessedArtist ?? null,
+      displayedAt: new Date().toISOString(),
+    };
+
     await dbClient
       .update(gameSessions)
       .set({
@@ -826,6 +865,7 @@ async function resolveTurnCore(params: ResolveTurnParams) {
         stealAttempts: [],
         isStealPhase: false,
         stealPhaseEndAt: null,
+        lastTurnResult: turnResult,
         updatedAt: new Date(),
       })
       .where(eq(gameSessions.id, session.id));
@@ -857,6 +897,26 @@ async function resolveTurnCore(params: ResolveTurnParams) {
     availableSongs[Math.floor(Math.random() * availableSongs.length)];
   const newUsedSongIds = [...(session.usedSongIds ?? []), nextSong.songId];
 
+  const turnResult = {
+    activePlayerCorrect,
+    song: {
+      name: currentSong.name,
+      artist: currentSong.artist,
+      year: currentSong.year,
+    },
+    stolenBy: winningStealer,
+    recipientId,
+    gameEnded: false as const,
+    isNewRound,
+    newRoundNumber,
+    guessWasCorrect,
+    nameCorrect,
+    artistCorrect,
+    guessedName: guess?.guessedName ?? null,
+    guessedArtist: guess?.guessedArtist ?? null,
+    displayedAt: new Date().toISOString(),
+  };
+
   await dbClient
     .update(gameSessions)
     .set({
@@ -881,6 +941,7 @@ async function resolveTurnCore(params: ResolveTurnParams) {
       stealAttempts: [],
       isStealPhase: false,
       stealPhaseEndAt: null,
+      lastTurnResult: turnResult,
       usingFallbackPlaylist: switchedToFallback
         ? true
         : session.usingFallbackPlaylist,
@@ -1191,6 +1252,8 @@ export const gameRouter = createTRPCRouter({
         yearLookupStatus: session.yearLookupStatus ?? null,
         yearLookupProgress: session.yearLookupProgress ?? 0,
         yearLookupTotal: session.yearLookupTotal ?? 0,
+        // Turn result for all players to see
+        lastTurnResult: session.lastTurnResult ?? null,
         players: orderedPlayers.map((p) => ({
           id: p.id,
           name: p.name,
@@ -2419,11 +2482,25 @@ export const gameRouter = createTRPCRouter({
           .set({ wins: player.wins + 1 })
           .where(eq(players.id, input.playerId));
 
+        const turnResult = {
+          activePlayerCorrect: true,
+          song: {
+            name: freeSong.name,
+            artist: freeSong.artist,
+            year: freeSong.year,
+          },
+          recipientId: input.playerId,
+          gameEnded: true as const,
+          winnerId: input.playerId,
+          displayedAt: new Date().toISOString(),
+        };
+
         await ctx.db
           .update(gameSessions)
           .set({
             state: "finished",
             currentSong: null,
+            lastTurnResult: turnResult,
             updatedAt: new Date(),
           })
           .where(eq(gameSessions.id, session.id));
@@ -2667,6 +2744,25 @@ export const gameRouter = createTRPCRouter({
               .set({ wins: recipient.wins + 1 })
               .where(eq(players.id, recipientId));
 
+            const turnResult = {
+              activePlayerCorrect,
+              song: {
+                name: session.currentSong.name,
+                artist: session.currentSong.artist,
+                year: session.currentSong.year,
+              },
+              stolenBy: winningStealer,
+              recipientId,
+              gameEnded: true as const,
+              winnerId,
+              guessWasCorrect,
+              nameCorrect,
+              artistCorrect,
+              guessedName: guess?.guessedName ?? null,
+              guessedArtist: guess?.guessedArtist ?? null,
+              displayedAt: new Date().toISOString(),
+            };
+
             await ctx.db
               .update(gameSessions)
               .set({
@@ -2682,6 +2778,7 @@ export const gameRouter = createTRPCRouter({
                 stealAttempts: [],
                 isStealPhase: false,
                 stealPhaseEndAt: null,
+                lastTurnResult: turnResult,
                 updatedAt: new Date(),
               })
               .where(eq(gameSessions.id, session.id));
@@ -2747,6 +2844,25 @@ export const gameRouter = createTRPCRouter({
             .where(eq(players.id, songExhaustionWinner.id));
         }
 
+        const turnResult = {
+          activePlayerCorrect,
+          song: {
+            name: session.currentSong.name,
+            artist: session.currentSong.artist,
+            year: session.currentSong.year,
+          },
+          stolenBy: winningStealer,
+          recipientId,
+          gameEnded: true as const,
+          winnerId: songExhaustionWinner?.id,
+          guessWasCorrect,
+          nameCorrect,
+          artistCorrect,
+          guessedName: guess?.guessedName ?? null,
+          guessedArtist: guess?.guessedArtist ?? null,
+          displayedAt: new Date().toISOString(),
+        };
+
         await ctx.db
           .update(gameSessions)
           .set({
@@ -2762,6 +2878,7 @@ export const gameRouter = createTRPCRouter({
             stealAttempts: [],
             isStealPhase: false,
             stealPhaseEndAt: null,
+            lastTurnResult: turnResult,
             updatedAt: new Date(),
           })
           .where(eq(gameSessions.id, session.id));
@@ -2793,6 +2910,26 @@ export const gameRouter = createTRPCRouter({
         availableSongs[Math.floor(Math.random() * availableSongs.length)];
       const newUsedSongIds = [...(session.usedSongIds ?? []), nextSong.songId];
 
+      const turnResult = {
+        activePlayerCorrect,
+        song: {
+          name: session.currentSong.name,
+          artist: session.currentSong.artist,
+          year: session.currentSong.year,
+        },
+        stolenBy: winningStealer,
+        recipientId,
+        gameEnded: false as const,
+        isNewRound,
+        newRoundNumber,
+        guessWasCorrect,
+        nameCorrect,
+        artistCorrect,
+        guessedName: guess?.guessedName ?? null,
+        guessedArtist: guess?.guessedArtist ?? null,
+        displayedAt: new Date().toISOString(),
+      };
+
       await ctx.db
         .update(gameSessions)
         .set({
@@ -2817,6 +2954,7 @@ export const gameRouter = createTRPCRouter({
           stealAttempts: [],
           isStealPhase: false,
           stealPhaseEndAt: null,
+          lastTurnResult: turnResult,
           usingFallbackPlaylist: switchedToFallback
             ? true
             : session.usingFallbackPlaylist,
