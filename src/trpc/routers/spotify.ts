@@ -112,6 +112,8 @@ export const spotifyRouter = createTRPCRouter({
         artist: string;
         year: number;
         uri: string;
+        isrc?: string;
+        spotifyYear?: number;
       }> = [];
 
       const nextUrl: string | null =
@@ -146,6 +148,7 @@ export const spotifyRouter = createTRPCRouter({
               uri?: string;
               album?: { release_date?: string };
               artists?: Array<{ name: string }>;
+              external_ids?: { isrc?: string };
             };
           }>;
           next: string | null;
@@ -166,6 +169,8 @@ export const spotifyRouter = createTRPCRouter({
               artist: track.artists?.map((a) => a.name).join(", ") || "Unknown",
               year,
               uri: track.uri || "",
+              isrc: track.external_ids?.isrc,
+              spotifyYear: year,
             });
           }
         }

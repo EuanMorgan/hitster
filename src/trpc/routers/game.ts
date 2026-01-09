@@ -177,6 +177,7 @@ async function fetchPlaylistTracks(
           uri?: string;
           album?: { release_date?: string };
           artists?: Array<{ name: string }>;
+          external_ids?: { isrc?: string };
         };
       }>;
       next: string | null;
@@ -196,6 +197,8 @@ async function fetchPlaylistTracks(
           artist: track.artists?.map((a) => a.name).join(", ") || "Unknown",
           year,
           uri: track.uri,
+          isrc: track.external_ids?.isrc,
+          spotifyYear: year,
         });
       }
     }
@@ -227,6 +230,8 @@ const PLACEHOLDER_SONGS: PlaylistSong[] = [
     artist: "Queen",
     year: 1975,
     uri: "spotify:track:7tFiyTwD0nx5a1eklYtX2J",
+    isrc: "GBUM71029604",
+    spotifyYear: 1975,
   },
   {
     songId: "40riOy7x9W7GXjyGp4pjAv",
@@ -234,6 +239,8 @@ const PLACEHOLDER_SONGS: PlaylistSong[] = [
     artist: "Eagles",
     year: 1977,
     uri: "spotify:track:40riOy7x9W7GXjyGp4pjAv",
+    isrc: "USEE10001091",
+    spotifyYear: 1977,
   },
   {
     songId: "2LlQb7Uoj1kKyGhlkBf9aC",
@@ -241,6 +248,8 @@ const PLACEHOLDER_SONGS: PlaylistSong[] = [
     artist: "Michael Jackson",
     year: 1982,
     uri: "spotify:track:2LlQb7Uoj1kKyGhlkBf9aC",
+    isrc: "USSM18200037",
+    spotifyYear: 1982,
   },
   {
     songId: "7o2CTH4ctstm8TNelqjb51",
@@ -248,6 +257,8 @@ const PLACEHOLDER_SONGS: PlaylistSong[] = [
     artist: "Guns N' Roses",
     year: 1987,
     uri: "spotify:track:7o2CTH4ctstm8TNelqjb51",
+    isrc: "USGF18700610",
+    spotifyYear: 1987,
   },
   {
     songId: "5ghIJDpPoe3CfHMGu71E6T",
@@ -255,6 +266,8 @@ const PLACEHOLDER_SONGS: PlaylistSong[] = [
     artist: "Nirvana",
     year: 1991,
     uri: "spotify:track:5ghIJDpPoe3CfHMGu71E6T",
+    isrc: "USGF19942501",
+    spotifyYear: 1991,
   },
   {
     songId: "5wj4E6IsrVtn8IBJQOd0Cl",
@@ -262,6 +275,8 @@ const PLACEHOLDER_SONGS: PlaylistSong[] = [
     artist: "Oasis",
     year: 1995,
     uri: "spotify:track:5wj4E6IsrVtn8IBJQOd0Cl",
+    isrc: "GBAAP9500100",
+    spotifyYear: 1995,
   },
   {
     songId: "6vQN2a9QSgWcm74KEZYfDL",
@@ -269,6 +284,8 @@ const PLACEHOLDER_SONGS: PlaylistSong[] = [
     artist: "Beyoncé",
     year: 2003,
     uri: "spotify:track:6vQN2a9QSgWcm74KEZYfDL",
+    isrc: "USSM10301614",
+    spotifyYear: 2003,
   },
   {
     songId: "4OSBTYWVwsQhGLF9NHvIbR",
@@ -276,6 +293,8 @@ const PLACEHOLDER_SONGS: PlaylistSong[] = [
     artist: "Adele",
     year: 2010,
     uri: "spotify:track:4OSBTYWVwsQhGLF9NHvIbR",
+    isrc: "GBBKS1000339",
+    spotifyYear: 2010,
   },
   {
     songId: "32OlwWuMpZ6b0aN2RZOeMS",
@@ -283,6 +302,8 @@ const PLACEHOLDER_SONGS: PlaylistSong[] = [
     artist: "Bruno Mars",
     year: 2014,
     uri: "spotify:track:32OlwWuMpZ6b0aN2RZOeMS",
+    isrc: "GBARL1401524",
+    spotifyYear: 2014,
   },
   {
     songId: "0VjIjW4GlUZAMYd2vXMi3b",
@@ -290,6 +311,8 @@ const PLACEHOLDER_SONGS: PlaylistSong[] = [
     artist: "The Weeknd",
     year: 2019,
     uri: "spotify:track:0VjIjW4GlUZAMYd2vXMi3b",
+    isrc: "USUG11904022",
+    spotifyYear: 2019,
   },
   {
     songId: "7J1uxwnxfQLu4APicE5Rnj",
@@ -297,6 +320,8 @@ const PLACEHOLDER_SONGS: PlaylistSong[] = [
     artist: "Michael Jackson",
     year: 1983,
     uri: "spotify:track:7J1uxwnxfQLu4APicE5Rnj",
+    isrc: "USSM18200116",
+    spotifyYear: 1983,
   },
   {
     songId: "1z3ugFmUKoCzGsI6jdY4Ci",
@@ -304,6 +329,8 @@ const PLACEHOLDER_SONGS: PlaylistSong[] = [
     artist: "Madonna",
     year: 1989,
     uri: "spotify:track:1z3ugFmUKoCzGsI6jdY4Ci",
+    isrc: "USWB10803840",
+    spotifyYear: 1989,
   },
   {
     songId: "1v7L65Lzy0j0vdpRjJewt1",
@@ -311,6 +338,8 @@ const PLACEHOLDER_SONGS: PlaylistSong[] = [
     artist: "Eminem",
     year: 2002,
     uri: "spotify:track:1v7L65Lzy0j0vdpRjJewt1",
+    isrc: "USIR10211104",
+    spotifyYear: 2002,
   },
   {
     songId: "7qiZfU4dY1lWllzX7mPBI3",
@@ -318,6 +347,8 @@ const PLACEHOLDER_SONGS: PlaylistSong[] = [
     artist: "Ed Sheeran",
     year: 2017,
     uri: "spotify:track:7qiZfU4dY1lWllzX7mPBI3",
+    isrc: "GBAHS1600463",
+    spotifyYear: 2017,
   },
   {
     songId: "2Fxmhks0bxGSBdJ92vM42m",
@@ -325,6 +356,8 @@ const PLACEHOLDER_SONGS: PlaylistSong[] = [
     artist: "Billie Eilish",
     year: 2019,
     uri: "spotify:track:2Fxmhks0bxGSBdJ92vM42m",
+    isrc: "USUM71900764",
+    spotifyYear: 2019,
   },
   {
     songId: "7s25THrKz86DM225dOYwnr",
@@ -332,6 +365,8 @@ const PLACEHOLDER_SONGS: PlaylistSong[] = [
     artist: "Aretha Franklin",
     year: 1967,
     uri: "spotify:track:7s25THrKz86DM225dOYwnr",
+    isrc: "USAT21502755",
+    spotifyYear: 1967,
   },
   {
     songId: "3mRM4NM8iO7UBqrSigCQFH",
@@ -339,6 +374,8 @@ const PLACEHOLDER_SONGS: PlaylistSong[] = [
     artist: "Bee Gees",
     year: 1977,
     uri: "spotify:track:3mRM4NM8iO7UBqrSigCQFH",
+    isrc: "USPR37737031",
+    spotifyYear: 1977,
   },
   {
     songId: "2WfaOiMkCvy7F5fcp2zZ8L",
@@ -346,6 +383,8 @@ const PLACEHOLDER_SONGS: PlaylistSong[] = [
     artist: "a-ha",
     year: 1985,
     uri: "spotify:track:2WfaOiMkCvy7F5fcp2zZ8L",
+    isrc: "USWB10903440",
+    spotifyYear: 1985,
   },
   {
     songId: "3CeCwcJO8CXqz3y7u7rqJR",
@@ -353,6 +392,8 @@ const PLACEHOLDER_SONGS: PlaylistSong[] = [
     artist: "Madonna",
     year: 1990,
     uri: "spotify:track:3CeCwcJO8CXqz3y7u7rqJR",
+    isrc: "USWB10903441",
+    spotifyYear: 1990,
   },
   {
     songId: "3LOpEypkiAME5oAuwdB0bI",
@@ -360,6 +401,8 @@ const PLACEHOLDER_SONGS: PlaylistSong[] = [
     artist: "TLC",
     year: 1999,
     uri: "spotify:track:3LOpEypkiAME5oAuwdB0bI",
+    isrc: "USAR19900181",
+    spotifyYear: 1999,
   },
 ];
 

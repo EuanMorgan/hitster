@@ -1925,3 +1925,25 @@ Files changed:
 - src/mocks/fixtures.ts (added yearLookup fields to game session fixtures)
 - src/mocks/db.ts (added yearLookup fields to seedGameSession)
 - plans/prd.json (marked as passes: true)
+
+## 2026-01-09: Extract ISRC from Spotify playlist tracks API
+
+PRD item: playlist/Extract ISRC from Spotify playlist tracks API
+
+Changes:
+- Updated fetchPlaylistTracks in game.ts to extract external_ids.isrc from Spotify API
+- Updated getPlaylistTracks in spotify.ts with same changes
+- Added isrc and spotifyYear to PlaylistSong when mapping tracks
+- Added ISRC values to all 20 PLACEHOLDER_SONGS (real ISRCs for testing)
+- Updated MSW mock handlers to include external_ids.isrc in track responses
+
+Key decisions:
+- Extract ISRC directly from Spotify's external_ids field
+- Store spotifyYear alongside year for future MusicBrainz comparison
+- Used real ISRC values in placeholders (e.g., GBUM71029604 for Bohemian Rhapsody)
+
+Files changed:
+- src/trpc/routers/game.ts (fetchPlaylistTracks + PLACEHOLDER_SONGS)
+- src/trpc/routers/spotify.ts (getPlaylistTracks)
+- src/mocks/handlers.ts (added external_ids to mock tracks)
+- plans/prd.json (marked as passes: true)

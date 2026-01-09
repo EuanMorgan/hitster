@@ -16,6 +16,7 @@ export const mockPlaylistTracks = [
       },
       uri: "spotify:track:track1",
       duration_ms: 354000,
+      external_ids: { isrc: "GBUM71029604" },
     },
   },
   {
@@ -29,6 +30,7 @@ export const mockPlaylistTracks = [
       },
       uri: "spotify:track:track2",
       duration_ms: 294000,
+      external_ids: { isrc: "USSM18200116" },
     },
   },
   {
@@ -42,6 +44,7 @@ export const mockPlaylistTracks = [
       },
       uri: "spotify:track:track3",
       duration_ms: 301000,
+      external_ids: { isrc: "USGF19942501" },
     },
   },
   {
@@ -55,6 +58,7 @@ export const mockPlaylistTracks = [
       },
       uri: "spotify:track:track4",
       duration_ms: 431000,
+      external_ids: { isrc: "GBAYE0801491" },
     },
   },
   {
@@ -68,6 +72,7 @@ export const mockPlaylistTracks = [
       },
       uri: "spotify:track:track5",
       duration_ms: 228000,
+      external_ids: { isrc: "GBBKS1000339" },
     },
   },
 ];

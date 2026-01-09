@@ -1290,7 +1290,7 @@
       "Update PLACEHOLDER_SONGS to include dummy ISRC values for testing",
       "DONE: Console.log shows ISRC values when fetching real Spotify playlist"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "playlist",
