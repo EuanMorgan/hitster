@@ -1036,3 +1036,26 @@ Files changed:
 - src/app/game/[pin]/page.tsx (validate player, redirect if invalid)
 - src/app/lobby/[pin]/page.tsx (validate player, redirect if invalid)
 - plans/prd.json (marked api #59 as passes: true)
+
+## 2026-01-09: Implemented mobile turn indicator clarity
+
+PRD items: ui #54 (Mobile turn indicator clarity)
+
+Changes:
+- Created TurnIndicatorBanner component in game page
+- Shows "{PlayerName}'s Turn" or "Your Turn!" prominently
+- Phase indicator below: "Placing song" / "Steal Phase" / "Results"
+- Your turn: primary bg with 2s pulse animation
+- Other player's turn: muted bg with border
+- Renders after header card during gameplay (not during shuffle animations)
+
+All 5 PRD steps verified:
+1. ✅ Prominent banner at top - TurnIndicatorBanner with avatar, name, phase
+2. ✅ Current phase shown - phaseLabels object: placing/steal/results
+3. ✅ Your Turn: primary bg + pulsing border - animate-[pulse_2s_ease-in-out_infinite]
+4. ✅ Other player's turn: muted bg - bg-muted/80 border border-border
+5. ✅ Immediately obvious whose turn - large text, contrasting colors
+
+Files changed:
+- src/app/game/[pin]/page.tsx (added TurnIndicatorBanner component + rendering)
+- plans/prd.json (marked ui #54 as passes: true)

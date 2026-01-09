@@ -991,7 +991,7 @@
       "Other player's turn uses muted background",
       "DONE: Immediately obvious whose turn it is and what phase on mobile"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "api",
