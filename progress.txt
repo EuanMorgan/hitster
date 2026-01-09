@@ -1831,3 +1831,46 @@ Files changed:
 - src/hooks/use-game-mutations.ts (new - 120 lines)
 - src/app/game/[pin]/page.tsx (replaced 9 mutations with hook, removed unused imports)
 - plans/prd.json (marked refactor #101 as passes: true)
+
+## 2026-01-09: Simplify game page conditional rendering
+
+PRD items: refactor #102 (Simplify game page conditional rendering)
+
+Changes:
+- Extracted TokenDisplay to src/components/game/token-display.tsx (15 lines)
+- Extracted TimelineDisplay to src/components/game/timeline-display.tsx (35 lines)
+- Extracted PlayerCard to src/components/game/player-card.tsx (80 lines)
+- Extracted TurnIndicatorBanner to src/components/game/turn-indicator-banner.tsx (45 lines)
+- Extracted HostDisconnectedOverlay to src/components/game/host-disconnected-overlay.tsx (25 lines)
+- Extracted WaitingView to src/components/game/waiting-view.tsx (25 lines)
+- Extracted GameHeader to src/components/game/game-header.tsx (50 lines)
+- Extracted MyTurnCard to src/components/game/my-turn-card.tsx (65 lines)
+- Simplified conditionals with showAnimations variable
+- Game page reduced from 683 to 381 lines (~302 lines extracted)
+
+Key decisions:
+- Grouped all animation checks into single showAnimations variable
+- Kept orchestration logic in game page, extracted presentation to components
+- Each component is self-contained with explicit props interfaces
+- Dead code removed (ThemeToggle, TimelineDropZone, CardContent imports no longer needed)
+
+All 7 PRD steps verified:
+1. ✅ Reviewed remaining code - identified 8 extractable components
+2. ✅ Grouped conditional blocks - showAnimations simplifies animation checks
+3. ✅ Extracted WaitingForTurn and MyTurnView - WaitingView and MyTurnCard
+4. ✅ Game page under 400 lines - 381 lines final count
+5. ✅ Removed dead code - unused imports cleaned up
+6. ✅ typecheck + test pass - all 55 tests pass
+7. ✅ Readable conditional flow - clean rendering sections
+
+Files changed:
+- src/components/game/token-display.tsx (new)
+- src/components/game/timeline-display.tsx (new)
+- src/components/game/player-card.tsx (new)
+- src/components/game/turn-indicator-banner.tsx (new)
+- src/components/game/host-disconnected-overlay.tsx (new)
+- src/components/game/waiting-view.tsx (new)
+- src/components/game/game-header.tsx (new)
+- src/components/game/my-turn-card.tsx (new)
+- src/app/game/[pin]/page.tsx (reduced from 683 to 381 lines)
+- plans/prd.json (marked refactor #102 as passes: true)

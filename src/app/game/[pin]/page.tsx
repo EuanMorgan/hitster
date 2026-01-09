@@ -4,213 +4,35 @@ import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { ActivePlayerTimeline } from "@/components/game/active-player-timeline";
 import { GameFinishedScreen } from "@/components/game/game-finished-screen";
+import { GameHeader } from "@/components/game/game-header";
 import { GameSkeleton } from "@/components/game/game-skeleton";
+import { HostDisconnectedOverlay } from "@/components/game/host-disconnected-overlay";
+import { MyTurnCard } from "@/components/game/my-turn-card";
+import { PlayerCard } from "@/components/game/player-card";
 import { PlayerProgressBar } from "@/components/game/player-progress-bar";
+import { TurnIndicatorBanner } from "@/components/game/turn-indicator-banner";
 import {
   type TurnResult,
   TurnResultOverlay,
 } from "@/components/game/turn-result-overlay";
+import { WaitingView } from "@/components/game/waiting-view";
 import { SpotifyPlayer } from "@/components/spotify-player";
 import { StealDecidePhase } from "@/components/steal-decide-phase";
 import { StealPhase } from "@/components/steal-phase";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { TimelineDropZone } from "@/components/timeline-drop-zone";
 import { TurnShuffleAnimation } from "@/components/turn-shuffle-animation";
 import {
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import type { TimelineSong } from "@/db/schema";
 import { useGameMutations } from "@/hooks/use-game-mutations";
 import { useGameSession } from "@/hooks/use-game-session";
 import { useGameState } from "@/hooks/use-game-state";
 import { usePlayerHeartbeat } from "@/hooks/use-player-heartbeat";
 import { usePlayerValidation } from "@/hooks/use-player-validation";
 import { useSession } from "@/lib/auth-client";
-import {
-  getPlayersSortedWithCurrentFirst,
-  getTimelineSortedByYear,
-} from "@/lib/game-selectors";
-
-function TokenDisplay({ count }: { count: number }) {
-  if (count === 0) {
-    return <span className="text-muted-foreground text-sm">No tokens</span>;
-  }
-
-  return (
-    <div className="flex items-center gap-0.5">
-      <span className="text-yellow-500">🪙</span>
-      <span className="text-sm font-medium">
-        <span className="hidden sm:inline">x</span>
-        {count}
-      </span>
-    </div>
-  );
-}
-
-function TimelineDisplay({ timeline }: { timeline: TimelineSong[] }) {
-  if (timeline.length === 0) {
-    return (
-      <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
-        <span>🎵</span>
-        <span>No songs yet — your musical journey starts here!</span>
-      </div>
-    );
-  }
-
-  const sortedTimeline = getTimelineSortedByYear(timeline);
-
-  return (
-    <div className="overflow-x-auto scroll-smooth">
-      <div className="flex gap-2 sm:gap-3 min-w-min pb-2 snap-x snap-mandatory">
-        {sortedTimeline.map((song) => (
-          <div
-            key={song.songId}
-            className="bg-gradient-to-br from-card to-muted/50 border-2 border-green-500/30 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-center min-w-[100px] sm:min-w-[120px] shrink-0 snap-start"
-          >
-            <div className="font-bold text-xl sm:text-2xl text-primary">
-              {song.year}
-            </div>
-            <div className="text-sm text-foreground line-clamp-2 max-w-[95px] sm:max-w-[115px]">
-              {song.name}
-            </div>
-            <div className="text-xs text-muted-foreground truncate max-w-[95px] sm:max-w-[115px]">
-              {song.artist}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function PlayerCard({
-  player,
-  isCurrentTurn,
-  turnNumber,
-}: {
-  player: {
-    id: string;
-    name: string;
-    avatar: string;
-    isHost: boolean;
-    tokens: number;
-    timeline: TimelineSong[] | null;
-    isConnected: boolean;
-  };
-  isCurrentTurn: boolean;
-  turnNumber: number;
-}) {
-  const isLowTokens = player.tokens < 2;
-
-  return (
-    <div
-      className={`rounded-lg p-3 sm:p-4 transition-all relative overflow-hidden ${
-        isCurrentTurn
-          ? "bg-primary/10 border-l-4 border-l-primary shadow-[0_0_15px_rgba(var(--primary-rgb,59,130,246),0.15)]"
-          : "bg-muted border-l-4 border-l-transparent"
-      } ${!player.isConnected ? "opacity-60" : ""}`}
-    >
-      {!player.isConnected && (
-        <div className="absolute inset-0 bg-gray-500/30 rounded-lg flex items-center justify-center backdrop-blur-[1px]">
-          <span className="text-[10px] sm:text-xs bg-gray-700 text-white px-2 py-1 rounded font-medium flex items-center gap-1.5">
-            <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
-            Reconnecting...
-          </span>
-        </div>
-      )}
-      <div className="flex items-center justify-between mb-2 sm:mb-3">
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <span
-            className={`text-[48px] sm:text-[56px] leading-none shrink-0 ${!player.isConnected ? "grayscale" : ""}`}
-          >
-            {player.avatar}
-          </span>
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-              <span className="font-semibold text-sm sm:text-base truncate max-w-[120px] sm:max-w-[180px]">
-                {player.name}
-              </span>
-              {player.isHost && (
-                <span className="text-[10px] sm:text-xs bg-primary text-primary-foreground px-1.5 sm:px-2 py-0.5 rounded shrink-0">
-                  Host
-                </span>
-              )}
-              {isCurrentTurn && player.isConnected && (
-                <span className="text-[10px] sm:text-xs bg-green-500 text-white px-1.5 sm:px-2 py-0.5 rounded animate-pulse shrink-0">
-                  Playing
-                </span>
-              )}
-            </div>
-            <div className="text-xs sm:text-sm text-muted-foreground">
-              Turn #{turnNumber}
-            </div>
-          </div>
-        </div>
-        <div className="text-right shrink-0 ml-2">
-          <div
-            className={isLowTokens ? "text-amber-500" : "text-muted-foreground"}
-          >
-            <TokenDisplay count={player.tokens} />
-          </div>
-          <div className="text-xs sm:text-sm text-muted-foreground mt-1">
-            {player.timeline?.length ?? 0} song
-            {(player.timeline?.length ?? 0) !== 1 ? "s" : ""}
-          </div>
-        </div>
-      </div>
-      <TimelineDisplay timeline={player.timeline ?? []} />
-    </div>
-  );
-}
-
-function TurnIndicatorBanner({
-  isMyTurn,
-  currentPlayerName,
-  currentPlayerAvatar,
-  phase,
-}: {
-  isMyTurn: boolean;
-  currentPlayerName: string;
-  currentPlayerAvatar: string;
-  phase: "placing" | "steal" | "results" | "waiting";
-}) {
-  const phaseLabels = {
-    placing: "Placing song",
-    steal: "Steal Phase",
-    results: "Results",
-    waiting: "Starting...",
-  };
-
-  return (
-    <div
-      className={`rounded-lg p-3 sm:p-4 text-center transition-all ${
-        isMyTurn
-          ? "bg-primary text-primary-foreground border-2 border-primary animate-[pulse_2s_ease-in-out_infinite]"
-          : "bg-muted/80 border border-border"
-      }`}
-    >
-      <div className="flex items-center justify-center gap-2 sm:gap-3">
-        <span className="text-2xl sm:text-3xl">{currentPlayerAvatar}</span>
-        <div>
-          <div
-            className={`text-lg sm:text-xl font-bold ${isMyTurn ? "" : "text-foreground"}`}
-          >
-            {isMyTurn ? "Your Turn!" : `${currentPlayerName}'s Turn`}
-          </div>
-          <div
-            className={`text-xs sm:text-sm ${isMyTurn ? "text-primary-foreground/80" : "text-muted-foreground"}`}
-          >
-            {phaseLabels[phase]}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+import { getPlayersSortedWithCurrentFirst } from "@/lib/game-selectors";
 
 export default function GamePage() {
   const params = useParams();
@@ -226,17 +48,13 @@ export default function GamePage() {
   );
 
   const sessionQuery = useGameSession({ pin });
-
-  const mutations = useGameMutations({
-    pin,
-    onTurnResult: setTurnResult,
-  });
+  const mutations = useGameMutations({ pin, onTurnResult: setTurnResult });
 
   const { playerId: currentPlayerId } = usePlayerValidation({
     pin,
     sessionData: sessionQuery.data,
     isSessionLoading: sessionQuery.isLoading,
-    requirePlayer: false, // allow spectator mode in game
+    requirePlayer: false,
   });
 
   usePlayerHeartbeat(currentPlayerId);
@@ -247,14 +65,12 @@ export default function GamePage() {
     authUserId: authSession?.user?.id,
   });
 
-  // Redirect back to lobby if game is not playing
   useEffect(() => {
     if (sessionQuery.data?.state === "lobby") {
       router.push(`/lobby/${pin}`);
     }
   }, [sessionQuery.data?.state, router, pin]);
 
-  // Reset playbackStartedAt when track changes (new turn)
   const currentTrackUri = sessionQuery.data?.currentSong?.uri;
   // biome-ignore lint/correctness/useExhaustiveDependencies: intentional reset on track change
   useEffect(() => {
@@ -314,29 +130,19 @@ export default function GamePage() {
     setTurnResult(null);
   }, [turnResult?.isNewRound, turnResult?.gameEnded]);
 
-  const handleTimeUp = useCallback(() => {
-    // Called when timer expires - turn already auto-submitted via TimelineDropZone
-  }, []);
+  const handleTimeUp = useCallback(() => {}, []);
 
   const handleSkipSong = useCallback(() => {
     if (!currentPlayerId || mutations.skipSong.isPending) return;
-    mutations.skipSong.mutate({
-      pin,
-      playerId: currentPlayerId,
-    });
+    mutations.skipSong.mutate({ pin, playerId: currentPlayerId });
   }, [mutations.skipSong, pin, currentPlayerId]);
 
   const handleGetFreeSong = useCallback(() => {
     if (!currentPlayerId || mutations.getFreeSong.isPending) return;
-    mutations.getFreeSong.mutate({
-      pin,
-      playerId: currentPlayerId,
-    });
+    mutations.getFreeSong.mutate({ pin, playerId: currentPlayerId });
   }, [mutations.getFreeSong, pin, currentPlayerId]);
 
-  if (sessionQuery.isLoading) {
-    return <GameSkeleton />;
-  }
+  if (sessionQuery.isLoading) return <GameSkeleton />;
 
   if (sessionQuery.error) {
     return (
@@ -352,8 +158,6 @@ export default function GamePage() {
   }
 
   const session = sessionQuery.data;
-
-  // Destructure computed game state
   const {
     currentPlayer,
     myPlayer,
@@ -384,6 +188,8 @@ export default function GamePage() {
     );
   }
 
+  const showAnimations = showShuffleAnimation || showRoundShuffleAnimation;
+
   return (
     <div className="min-h-screen p-4 overflow-x-hidden animate-in fade-in duration-150">
       {turnResult && (
@@ -398,97 +204,38 @@ export default function GamePage() {
         />
       )}
 
-      {/* Host Disconnected Overlay */}
-      {hostDisconnected && !isHost && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <Card className="w-full max-w-md mx-4">
-            <CardContent className="py-8 text-center">
-              <div className="text-5xl mb-4 animate-pulse">📡</div>
-              <div className="text-xl font-bold mb-2">Waiting for host...</div>
-              <div className="text-muted-foreground text-sm">
-                The host has disconnected. Game will resume when they reconnect.
-              </div>
-              <div className="mt-4 flex items-center justify-center gap-2 text-amber-500">
-                <div className="h-2 w-2 rounded-full bg-amber-500 animate-bounce" />
-                <div
-                  className="h-2 w-2 rounded-full bg-amber-500 animate-bounce"
-                  style={{ animationDelay: "0.1s" }}
-                />
-                <div
-                  className="h-2 w-2 rounded-full bg-amber-500 animate-bounce"
-                  style={{ animationDelay: "0.2s" }}
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+      {hostDisconnected && !isHost && <HostDisconnectedOverlay />}
 
       <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
-        {/* Game Header - compact on mobile */}
-        <Card>
-          <CardHeader className="text-center pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
-            <div className="flex items-center justify-between">
-              <div className="w-9" />
-              <CardTitle className="text-xl sm:text-2xl">Hitster</CardTitle>
-              <ThemeToggle />
-            </div>
-            <CardDescription className="text-xs sm:text-sm">
-              PIN: {session?.pin} • Round {session?.roundNumber}
-              {isStealPhase && (
-                <span className="ml-1 sm:ml-2 text-amber-500 font-medium">
-                  🎯 STEAL
-                </span>
-              )}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
-            <div className="flex justify-center gap-4 sm:gap-8 text-xs sm:text-sm">
-              <div>
-                <span className="text-muted-foreground">Goal:</span>{" "}
-                <span className="font-medium">{session?.songsToWin}</span>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Time:</span>{" "}
-                <span className="font-medium">{session?.turnDuration}s</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <GameHeader
+          pin={session?.pin ?? pin}
+          roundNumber={session?.roundNumber ?? 1}
+          songsToWin={session?.songsToWin ?? 10}
+          turnDuration={session?.turnDuration ?? 45}
+          isStealPhase={isStealPhase}
+        />
 
-        {/* Spotify Player - Host Only (plays continuously through turn + steal phases) */}
         {isHost && session?.state === "playing" && (
           <SpotifyPlayer
             isHost={isHost}
             trackUri={session?.currentSong?.uri ?? null}
-            shouldPlay={
-              !showShuffleAnimation &&
-              !showRoundShuffleAnimation &&
-              !!session?.currentSong
-            }
+            shouldPlay={!showAnimations && !!session?.currentSong}
             onPlaybackStarted={() => setPlaybackStartedAt(Date.now())}
-            onPlaybackError={(error) => {
-              console.error("Spotify playback error:", error);
-            }}
+            onPlaybackError={(error) =>
+              console.error("Spotify playback error:", error)
+            }
           />
         )}
 
-        {/* Mobile Turn Indicator Banner - prominent, always visible during gameplay */}
-        {!showShuffleAnimation &&
-          !showRoundShuffleAnimation &&
-          currentPlayer &&
-          session?.state === "playing" && (
-            <TurnIndicatorBanner
-              isMyTurn={isMyTurn}
-              currentPlayerName={currentPlayer.name}
-              currentPlayerAvatar={currentPlayer.avatar}
-              phase={
-                turnResult ? "results" : isStealPhase ? "steal" : "placing"
-              }
-            />
-          )}
+        {!showAnimations && currentPlayer && session?.state === "playing" && (
+          <TurnIndicatorBanner
+            isMyTurn={isMyTurn}
+            currentPlayerName={currentPlayer.name}
+            currentPlayerAvatar={currentPlayer.avatar}
+            phase={turnResult ? "results" : isStealPhase ? "steal" : "placing"}
+          />
+        )}
 
-        {/* Initial Shuffle Animation Overlay */}
         {showShuffleAnimation && session?.turnOrder && (
           <TurnShuffleAnimation
             players={session.players ?? []}
@@ -497,7 +244,6 @@ export default function GamePage() {
           />
         )}
 
-        {/* New Round Shuffle Animation */}
         {showRoundShuffleAnimation &&
           !showShuffleAnimation &&
           session?.turnOrder && (
@@ -509,35 +255,25 @@ export default function GamePage() {
             />
           )}
 
-        {/* Host Display - Shows active player's timeline prominently */}
-        {!showShuffleAnimation &&
-          !showRoundShuffleAnimation &&
-          isHost &&
-          currentPlayer &&
-          !isMyTurn && (
-            <>
-              <ActivePlayerTimeline
-                player={currentPlayer}
-                currentSong={
-                  isStealPhase ? null : (session?.currentSong ?? null)
-                }
-                turnStartedAt={
-                  isStealPhase ? null : (session?.turnStartedAt ?? null)
-                }
-                turnDuration={session?.turnDuration ?? 45}
-              />
-              {/* Player progress indicators for host TV display */}
-              <PlayerProgressBar
-                players={session?.players ?? []}
-                currentPlayerId={session?.currentPlayerId ?? null}
-                songsToWin={session?.songsToWin ?? 10}
-              />
-            </>
-          )}
+        {!showAnimations && isHost && currentPlayer && !isMyTurn && (
+          <>
+            <ActivePlayerTimeline
+              player={currentPlayer}
+              currentSong={isStealPhase ? null : (session?.currentSong ?? null)}
+              turnStartedAt={
+                isStealPhase ? null : (session?.turnStartedAt ?? null)
+              }
+              turnDuration={session?.turnDuration ?? 45}
+            />
+            <PlayerProgressBar
+              players={session?.players ?? []}
+              currentPlayerId={session?.currentPlayerId ?? null}
+              songsToWin={session?.songsToWin ?? 10}
+            />
+          </>
+        )}
 
-        {/* Steal Decide Phase - Players choose Steal or Skip */}
-        {!showShuffleAnimation &&
-          !showRoundShuffleAnimation &&
+        {!showAnimations &&
           isDecidePhase &&
           session?.stealDecidePhaseEndAt &&
           currentPlayer &&
@@ -559,9 +295,7 @@ export default function GamePage() {
             />
           )}
 
-        {/* Steal Place Phase - Stealers place their guesses */}
-        {!showShuffleAnimation &&
-          !showRoundShuffleAnimation &&
+        {!showAnimations &&
           isPlacePhase &&
           session?.currentSong &&
           session?.stealPlacePhaseEndAt &&
@@ -589,73 +323,37 @@ export default function GamePage() {
             />
           )}
 
-        {/* My Turn - Active Player View (only when NOT in steal phase) */}
-        {!showShuffleAnimation &&
-          !showRoundShuffleAnimation &&
+        {!showAnimations &&
           !isStealPhase &&
           isMyTurn &&
           session?.currentSong &&
           myPlayer && (
-            <Card className="border-2 border-primary">
-              <CardHeader className="text-center py-3 sm:py-4 px-3 sm:px-6">
-                <CardTitle className="text-green-500 text-lg sm:text-xl">
-                  Your Turn!
-                </CardTitle>
-                <CardDescription className="text-xs sm:text-sm">
-                  Place the mystery song in your timeline
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="px-2 sm:px-6 pb-4">
-                <TimelineDropZone
-                  timeline={myPlayer.timeline ?? []}
-                  currentSong={session.currentSong}
-                  onConfirm={handleConfirmTurn}
-                  onTimeUp={handleTimeUp}
-                  onSkip={handleSkipSong}
-                  onGetFreeSong={handleGetFreeSong}
-                  isSubmitting={mutations.confirmTurn.isPending}
-                  isSkipping={mutations.skipSong.isPending}
-                  isGettingFreeSong={mutations.getFreeSong.isPending}
-                  turnDuration={session.turnDuration}
-                  turnStartedAt={session.turnStartedAt}
-                  playbackStartedAt={playbackStartedAt}
-                  tokens={myPlayer.tokens}
-                  timerPaused={hostDisconnected}
-                />
-              </CardContent>
-            </Card>
+            <MyTurnCard
+              timeline={myPlayer.timeline ?? []}
+              currentSong={session.currentSong}
+              onConfirm={handleConfirmTurn}
+              onTimeUp={handleTimeUp}
+              onSkip={handleSkipSong}
+              onGetFreeSong={handleGetFreeSong}
+              isSubmitting={mutations.confirmTurn.isPending}
+              isSkipping={mutations.skipSong.isPending}
+              isGettingFreeSong={mutations.getFreeSong.isPending}
+              turnDuration={session.turnDuration}
+              turnStartedAt={session.turnStartedAt}
+              playbackStartedAt={playbackStartedAt}
+              tokens={myPlayer.tokens}
+              timerPaused={hostDisconnected}
+            />
           )}
 
-        {/* Waiting View - Not My Turn (only when NOT in steal phase) */}
-        {!showShuffleAnimation &&
-          !showRoundShuffleAnimation &&
-          !isStealPhase &&
-          !isMyTurn &&
-          currentPlayer && (
-            <Card className="bg-muted/50">
-              <CardContent className="py-4 sm:py-6 px-3 sm:px-6">
-                <div className="flex items-center justify-center gap-2 sm:gap-3">
-                  <span className="text-2xl sm:text-3xl">
-                    {currentPlayer.avatar}
-                  </span>
-                  <div className="text-center">
-                    <div className="text-xs sm:text-sm text-muted-foreground">
-                      Current Turn
-                    </div>
-                    <div className="text-lg sm:text-xl font-bold">
-                      {currentPlayer.name}
-                    </div>
-                  </div>
-                </div>
-                <div className="text-center mt-3 sm:mt-4 text-xs sm:text-sm text-muted-foreground">
-                  Waiting for {currentPlayer.name} to place...
-                </div>
-              </CardContent>
-            </Card>
-          )}
+        {!showAnimations && !isStealPhase && !isMyTurn && currentPlayer && (
+          <WaitingView
+            playerName={currentPlayer.name}
+            playerAvatar={currentPlayer.avatar}
+          />
+        )}
 
-        {/* Players List - current user always first */}
-        {!showShuffleAnimation && !showRoundShuffleAnimation && (
+        {!showAnimations && (
           <div className="space-y-4">
             <h2 className="text-lg font-semibold">Players</h2>
             <div className="grid gap-4">
