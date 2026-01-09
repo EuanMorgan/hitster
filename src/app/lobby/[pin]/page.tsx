@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
 import { useEffect, useState } from "react";
@@ -87,6 +87,9 @@ export default function LobbyPage() {
   const { data: authSession } = useSession();
 
   const sessionQuery = useGameSession({ pin });
+
+  // Get local network IP for QR code in dev mode
+  const localIPQuery = useQuery(trpc.game.getLocalIP.queryOptions());
 
   const startGame = useMutation({
     ...trpc.game.startGame.mutationOptions(),
@@ -180,7 +183,13 @@ export default function LobbyPage() {
   }
 
   const session = sessionQuery.data;
-  const joinUrl = `${env.NEXT_PUBLIC_APP_URL}/join?pin=${session?.pin}`;
+
+  // Use local network IP for QR code in dev mode (so phones on same WiFi can scan)
+  const baseUrl = localIPQuery.data?.ip
+    ? `http://${localIPQuery.data.ip}:3000`
+    : env.NEXT_PUBLIC_APP_URL;
+  const joinUrl = `${baseUrl}/join?pin=${session?.pin}`;
+
   const isHost = authSession?.user?.id === session?.hostId;
 
   return (
@@ -203,7 +212,7 @@ export default function LobbyPage() {
               <QRCodeSVG value={joinUrl} size={160} />
             </div>
             <p className="text-xs text-muted-foreground">
-              Scan to join or go to {env.NEXT_PUBLIC_APP_URL}/join
+              Scan to join or go to {baseUrl}/join
             </p>
           </div>
         </CardHeader>

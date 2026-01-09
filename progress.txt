@@ -1458,3 +1458,23 @@ Files changed:
 - src/app/globals.css (dark mode CSS variables)
 - vitest.config.ts (fixed e2e exclude pattern)
 - plans/prd.json (marked ui-polish #70 as passes: true)
+
+## 2026-01-09: QR code uses local network IP in dev mode
+
+PRD items: lobby #77 (QR code uses local network IP in dev mode)
+
+Changes:
+- Added getLocalNetworkIP() helper using node:os networkInterfaces
+- Added getLocalIP tRPC query endpoint (returns IP only in dev mode)
+- Lobby page queries getLocalIP, uses result to construct QR code URL
+- QR now shows http://192.168.x.x:3000/join instead of localhost
+
+Implementation:
+- getLocalNetworkIP() prefers 192.168.x.x addresses, falls back to any non-internal IPv4
+- Only active in NODE_ENV=development (returns null in production)
+- Lobby page falls back to NEXT_PUBLIC_APP_URL if no local IP detected
+
+Files changed:
+- src/trpc/routers/game.ts (getLocalNetworkIP helper, getLocalIP endpoint)
+- src/app/lobby/[pin]/page.tsx (query getLocalIP, compute joinUrl with local IP)
+- plans/prd.json (marked lobby #77 as passes: true)

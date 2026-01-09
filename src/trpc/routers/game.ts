@@ -1,3 +1,4 @@
+import { networkInterfaces } from "node:os";
 import { TRPCError } from "@trpc/server";
 import { and, desc, eq, ne } from "drizzle-orm";
 import { z } from "zod/v4";
@@ -78,6 +79,35 @@ function fuzzyMatch(guess: string, actual: string, tolerance = 0.2): boolean {
   const distance = levenshteinDistance(normalizedGuess, normalizedActual);
   const maxLength = Math.max(normalizedGuess.length, normalizedActual.length);
   return maxLength > 0 && distance / maxLength <= tolerance;
+}
+
+// Get local network IP for dev mode QR codes
+function getLocalNetworkIP(): string | null {
+  const nets = networkInterfaces();
+  for (const name of Object.keys(nets)) {
+    const netList = nets[name];
+    if (!netList) continue;
+    for (const net of netList) {
+      // Skip internal/loopback and IPv6
+      if (net.family === "IPv4" && !net.internal) {
+        // Prefer 192.168.x.x addresses
+        if (net.address.startsWith("192.168.")) {
+          return net.address;
+        }
+      }
+    }
+  }
+  // Fallback: return any non-internal IPv4
+  for (const name of Object.keys(nets)) {
+    const netList = nets[name];
+    if (!netList) continue;
+    for (const net of netList) {
+      if (net.family === "IPv4" && !net.internal) {
+        return net.address;
+      }
+    }
+  }
+  return null;
 }
 
 // Default playlist to use when none specified or as fallback
@@ -398,6 +428,15 @@ async function storeGameHistory(
 }
 
 export const gameRouter = createTRPCRouter({
+  // Get local network IP for QR codes in dev mode
+  getLocalIP: baseProcedure.query(() => {
+    if (env.NODE_ENV !== "development") {
+      return { ip: null };
+    }
+    const ip = getLocalNetworkIP();
+    return { ip };
+  }),
+
   validatePin: baseProcedure
     .input(z.object({ pin: z.string().length(4).toUpperCase() }))
     .query(async ({ ctx, input }) => {

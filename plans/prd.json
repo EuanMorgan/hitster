@@ -1226,7 +1226,7 @@
       "Other devices on same network can scan and join",
       "DONE: Phone on same WiFi can scan QR and reach game"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "ui",
