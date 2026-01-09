@@ -1,12 +1,6 @@
 import { YearLookupProgress } from "@/components/game/year-lookup-progress";
 import { ThemeToggle } from "@/components/theme-toggle";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 
 interface GameHeaderProps {
   pin: string;
@@ -30,43 +24,43 @@ export function GameHeader({
   yearLookupTotal = 0,
 }: GameHeaderProps) {
   return (
-    <Card>
-      <CardHeader className="text-center pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
-        <div className="flex items-center justify-between">
-          <div className="w-9" />
-          <CardTitle className="text-xl sm:text-2xl">Hitster</CardTitle>
-          <ThemeToggle />
-        </div>
-        <CardDescription className="text-xs sm:text-sm">
-          PIN: {pin} • Round {roundNumber}
-          {isStealPhase && (
-            <span className="ml-1 sm:ml-2 text-amber-500 font-medium">
-              🎯 STEAL
-            </span>
-          )}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
-        <div className="flex justify-center gap-4 sm:gap-8 text-xs sm:text-sm">
-          <div>
+    <Card className="p-3 sm:p-4">
+      <div className="flex items-center justify-between gap-2 text-xs sm:text-sm">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+          <span>
+            <span className="text-muted-foreground">PIN:</span>{" "}
+            <span className="font-bold">{pin}</span>
+          </span>
+          <span className="text-muted-foreground">•</span>
+          <span>
+            <span className="text-muted-foreground">Round</span>{" "}
+            <span className="font-medium">{roundNumber}</span>
+          </span>
+          <span className="text-muted-foreground">•</span>
+          <span>
             <span className="text-muted-foreground">Goal:</span>{" "}
             <span className="font-medium">{songsToWin}</span>
-          </div>
-          <div>
+          </span>
+          <span className="text-muted-foreground">•</span>
+          <span>
             <span className="text-muted-foreground">Time:</span>{" "}
             <span className="font-medium">{turnDuration}s</span>
-          </div>
+          </span>
+          {isStealPhase && (
+            <span className="text-amber-500 font-medium">🎯 STEAL</span>
+          )}
         </div>
-        {yearLookupStatus && yearLookupStatus !== "complete" && (
-          <div className="flex justify-center mt-2">
+        <div className="flex items-center gap-2">
+          {yearLookupStatus && yearLookupStatus !== "complete" && (
             <YearLookupProgress
               status={yearLookupStatus}
               progress={yearLookupProgress}
               total={yearLookupTotal}
             />
-          </div>
-        )}
-      </CardContent>
+          )}
+          <ThemeToggle />
+        </div>
+      </div>
     </Card>
   );
 }
