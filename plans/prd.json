@@ -1238,7 +1238,7 @@
       "Your turn: still shows prominent timeline for placing songs",
       "DONE: No duplicate timeline when watching, you're always top of player list"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "lobby",

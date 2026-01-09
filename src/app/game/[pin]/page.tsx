@@ -1467,40 +1467,30 @@ export default function GamePage() {
             </Card>
           )}
 
-        {/* My Timeline (when not my turn and not in steal phase) */}
-        {!showShuffleAnimation &&
-          !showRoundShuffleAnimation &&
-          !isStealPhase &&
-          !isMyTurn &&
-          myPlayer && (
-            <Card>
-              <CardHeader className="py-3 sm:py-4 px-3 sm:px-6">
-                <CardTitle className="text-base sm:text-lg">
-                  Your Timeline
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
-                <TimelineDisplay timeline={myPlayer.timeline ?? []} />
-                <div className="mt-2 text-xs sm:text-sm text-muted-foreground">
-                  {myPlayer.timeline?.length ?? 0} / {session?.songsToWin} songs
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-        {/* Players List */}
+        {/* Players List - current user always first */}
         {!showShuffleAnimation && !showRoundShuffleAnimation && (
           <div className="space-y-4">
             <h2 className="text-lg font-semibold">Players</h2>
             <div className="grid gap-4">
-              {session?.players.map((player, index) => (
-                <PlayerCard
-                  key={player.id}
-                  player={player}
-                  isCurrentTurn={player.id === session.currentPlayerId}
-                  turnNumber={index + 1}
-                />
-              ))}
+              {[...(session?.players ?? [])]
+                .sort((a, b) => {
+                  // Current user first
+                  if (a.id === currentPlayerId) return -1;
+                  if (b.id === currentPlayerId) return 1;
+                  return 0;
+                })
+                .map((player, index) => (
+                  <PlayerCard
+                    key={player.id}
+                    player={player}
+                    isCurrentTurn={player.id === session?.currentPlayerId}
+                    turnNumber={
+                      session?.turnOrder?.indexOf(player.id) !== undefined
+                        ? (session?.turnOrder?.indexOf(player.id) ?? 0) + 1
+                        : index + 1
+                    }
+                  />
+                ))}
             </div>
           </div>
         )}

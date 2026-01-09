@@ -1356,3 +1356,21 @@ Files changed:
 - src/app/lobby/[pin]/page.tsx (player list empty hint for waiting host)
 - src/app/dashboard/page.tsx (game history empty state with emoji)
 - plans/prd.json (marked ui-polish #68 as passes: true)
+
+## 2026-01-09: Remove duplicate 'Your Timeline' on other player's turn
+
+PRD items: ui #77 (Remove duplicate 'Your Timeline' on other player's turn)
+
+Changes:
+- Removed standalone "Your Timeline" Card section that showed when watching (not your turn, not steal phase)
+- Player list now sorts current user to top
+- Players list uses turnOrder index for accurate turn number display instead of visual index
+
+Key decisions:
+- Removed ~20 lines of redundant "Your Timeline" section - timeline already shown in PlayerCard
+- Sort preserves original player order except current user floats to top
+- Turn number now shows actual position in turnOrder, not arbitrary display index
+
+Files changed:
+- src/app/game/[pin]/page.tsx (removed duplicate timeline, added player sort, fixed turn numbers)
+- plans/prd.json (marked ui #77 as passes: true)
