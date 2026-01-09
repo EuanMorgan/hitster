@@ -1969,3 +1969,32 @@ Key decisions:
 Files changed:
 - src/lib/musicbrainz.ts (new - 190 lines)
 - plans/prd.json (marked both items as passes: true)
+
+## 2026-01-09: Background year lookup + progress UI
+
+PRD items: playlist/Background year lookup on game creation, playlist/Show year lookup progress in lobby UI
+
+Changes:
+- Added processYearLookups() async function in game.ts - runs in background, NOT awaited
+- Function loops through songs with ISRCs, calls getOriginalYearWithCache for each
+- Updates playlistSongs in DB with corrected years from MusicBrainz
+- Emits session updates every 5 songs for progress tracking
+- startGame mutation now sets yearLookupStatus='in_progress', progress=0, total=count
+- Added yearLookupStatus/Progress/Total to getSession response
+- Created YearLookupProgress component showing spinner + "Fetching song data... X/Y" + progress bar
+- Integrated into GameHeader (visible during gameplay)
+- Added shadcn Progress component
+
+Key decisions:
+- Lookup runs during gameplay (not lobby) since playlist loaded at game start
+- Background process doesn't block game - starts immediately with Spotify years as fallback
+- Progress updates throttled to every 5 songs to reduce noise
+- MusicBrainz rate limit (1 req/sec) means ~300 songs takes ~5 min to process
+
+Files changed:
+- src/trpc/routers/game.ts (processYearLookups function, startGame mutation)
+- src/components/game/year-lookup-progress.tsx (new)
+- src/components/game/game-header.tsx (added yearLookup props)
+- src/app/game/[pin]/page.tsx (pass yearLookup props to header)
+- src/components/ui/progress.tsx (new - shadcn)
+- plans/prd.json (marked 2 items as passes: true)

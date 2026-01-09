@@ -1324,30 +1324,30 @@
     "category": "playlist",
     "description": "Background year lookup on game creation",
     "steps": [
-      "In game.ts createGame mutation, after fetching playlist songs:",
+      "In game.ts startGame mutation, after fetching playlist songs:",
       "Set yearLookupStatus='in_progress', yearLookupTotal=songs.length, yearLookupProgress=0",
       "Create async function processYearLookups(sessionId, songs) - do NOT await it",
       "Loop through songs with ISRCs, call getOriginalYear for each",
       "Update song.year with MusicBrainz result if found, keep Spotify year as fallback",
       "Increment yearLookupProgress after each song, emit session update",
       "Set yearLookupStatus='complete' when done",
-      "DONE: Creating game shows yearLookupProgress incrementing in DB"
+      "DONE: Starting game shows yearLookupProgress incrementing in DB"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "playlist",
     "description": "Show year lookup progress in lobby UI",
     "steps": [
       "Add yearLookupStatus, yearLookupProgress, yearLookupTotal to session query response",
-      "In LobbyView, show progress indicator when yearLookupStatus is 'in_progress'",
+      "In GameHeader, show progress indicator when yearLookupStatus is 'in_progress'",
       "Display 'Fetching song data... X/Y' with progress bar",
       "Show checkmark and 'Song data ready' when status is 'complete'",
-      "Show '(Using approximate dates)' if status still 'in_progress' when starting",
-      "Start button always enabled - game can start with Spotify years as fallback",
-      "DONE: Creating game shows progress bar, completes after ~100 seconds for 100 songs"
+      "Progress shown during gameplay (playlist loaded at game start, not lobby)",
+      "Game starts immediately - year lookup runs in background without blocking",
+      "DONE: Starting game shows progress bar in header, updates as songs processed"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "refactor",

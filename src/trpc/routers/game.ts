@@ -2,6 +2,7 @@ import { networkInterfaces } from "node:os";
 import { TRPCError } from "@trpc/server";
 import { and, desc, eq, ne } from "drizzle-orm";
 import { z } from "zod/v4";
+import { db } from "@/db";
 import {
   type ActiveStealAttempt,
   account,
@@ -17,6 +18,7 @@ import {
 } from "@/db/schema";
 import { env } from "@/env";
 import { emitSessionUpdate, gameEvents } from "@/lib/game-events";
+import { getOriginalYearWithCache } from "@/lib/musicbrainz";
 import { baseProcedure, createTRPCRouter, protectedProcedure } from "../init";
 
 function shuffleArray<T>(array: T[]): T[] {
@@ -220,6 +222,89 @@ function extractPlaylistId(url: string): string | null {
     if (match) return match[1];
   }
   return null;
+}
+
+/**
+ * Background process to look up original release years via MusicBrainz
+ * Updates songs in-place and emits progress updates
+ * Should NOT be awaited - runs in background
+ */
+async function processYearLookups(
+  sessionId: string,
+  pin: string,
+  songs: PlaylistSong[],
+): Promise<void> {
+  const songsWithIsrc = songs.filter((s) => s.isrc);
+  const total = songsWithIsrc.length;
+
+  if (total === 0) {
+    await db
+      .update(gameSessions)
+      .set({
+        yearLookupStatus: "complete",
+        yearLookupProgress: 0,
+        yearLookupTotal: 0,
+        updatedAt: new Date(),
+      })
+      .where(eq(gameSessions.id, sessionId));
+    emitSessionUpdate(pin);
+    return;
+  }
+
+  let progress = 0;
+  let updatedCount = 0;
+
+  for (const song of songsWithIsrc) {
+    if (!song.isrc) continue;
+
+    try {
+      const originalYear = await getOriginalYearWithCache(
+        song.isrc,
+        song.spotifyYear,
+      );
+
+      if (originalYear !== null && originalYear !== song.year) {
+        // Update the song's year in the playlist
+        song.year = originalYear;
+        updatedCount++;
+      }
+    } catch (error) {
+      console.error(`MusicBrainz lookup failed for ${song.isrc}:`, error);
+    }
+
+    progress++;
+
+    // Update progress every song (rate limited by MusicBrainz anyway)
+    await db
+      .update(gameSessions)
+      .set({
+        yearLookupProgress: progress,
+        playlistSongs: songs,
+        updatedAt: new Date(),
+      })
+      .where(eq(gameSessions.id, sessionId));
+
+    // Emit update for UI progress bar (throttle to every 5 songs to reduce noise)
+    if (progress % 5 === 0 || progress === total) {
+      emitSessionUpdate(pin);
+    }
+  }
+
+  // Mark complete
+  await db
+    .update(gameSessions)
+    .set({
+      yearLookupStatus: "complete",
+      playlistSongs: songs,
+      updatedAt: new Date(),
+    })
+    .where(eq(gameSessions.id, sessionId));
+
+  emitSessionUpdate(pin);
+
+  console.log(
+    `Year lookup complete for session ${pin}: ${updatedCount}/${total} songs updated`,
+  );
 }
 
 // Fallback placeholder songs (used when Spotify API unavailable)
@@ -751,6 +836,10 @@ export const gameRouter = createTRPCRouter({
         playerStats: session.state === "finished" ? playerStats : null,
         gamesPlayed: session.gamesPlayed ?? 0,
         hostIsConnected,
+        // Year lookup progress (MusicBrainz ISRC lookups)
+        yearLookupStatus: session.yearLookupStatus ?? null,
+        yearLookupProgress: session.yearLookupProgress ?? 0,
+        yearLookupTotal: session.yearLookupTotal ?? 0,
         players: orderedPlayers.map((p) => ({
           id: p.id,
           name: p.name,
@@ -1145,6 +1234,9 @@ export const gameRouter = createTRPCRouter({
       };
       usedSongIds.push(firstTurnSong.songId);
 
+      // Count songs with ISRCs for year lookup
+      const songsWithIsrc = shuffledSongs.filter((s) => s.isrc);
+
       // Update game session state with loaded playlist
       await ctx.db
         .update(gameSessions)
@@ -1159,11 +1251,23 @@ export const gameRouter = createTRPCRouter({
           playlistSongs: shuffledSongs, // Store shuffled songs for the game
           usingFallbackPlaylist: playlistSongs === PLACEHOLDER_SONGS,
           gamesPlayed: (session.gamesPlayed ?? 0) + 1,
+          // Year lookup tracking
+          yearLookupStatus:
+            songsWithIsrc.length > 0 ? "in_progress" : "complete",
+          yearLookupProgress: 0,
+          yearLookupTotal: songsWithIsrc.length,
           updatedAt: new Date(),
         })
         .where(eq(gameSessions.id, session.id));
 
       emitSessionUpdate(pin);
+
+      // Start background year lookup (do NOT await - runs in background)
+      if (songsWithIsrc.length > 0) {
+        processYearLookups(session.id, pin, shuffledSongs).catch((error) => {
+          console.error("Background year lookup failed:", error);
+        });
+      }
 
       return {
         success: true,

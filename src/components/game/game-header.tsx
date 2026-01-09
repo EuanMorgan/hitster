@@ -1,3 +1,4 @@
+import { YearLookupProgress } from "@/components/game/year-lookup-progress";
 import { ThemeToggle } from "@/components/theme-toggle";
 import {
   Card,
@@ -13,6 +14,9 @@ interface GameHeaderProps {
   songsToWin: number;
   turnDuration: number;
   isStealPhase: boolean;
+  yearLookupStatus?: "pending" | "in_progress" | "complete" | null;
+  yearLookupProgress?: number;
+  yearLookupTotal?: number;
 }
 
 export function GameHeader({
@@ -21,6 +25,9 @@ export function GameHeader({
   songsToWin,
   turnDuration,
   isStealPhase,
+  yearLookupStatus,
+  yearLookupProgress = 0,
+  yearLookupTotal = 0,
 }: GameHeaderProps) {
   return (
     <Card>
@@ -50,6 +57,15 @@ export function GameHeader({
             <span className="font-medium">{turnDuration}s</span>
           </div>
         </div>
+        {yearLookupStatus && yearLookupStatus !== "complete" && (
+          <div className="flex justify-center mt-2">
+            <YearLookupProgress
+              status={yearLookupStatus}
+              progress={yearLookupProgress}
+              total={yearLookupTotal}
+            />
+          </div>
+        )}
       </CardContent>
     </Card>
   );

@@ -213,6 +213,9 @@ export default function GamePage() {
           songsToWin={session?.songsToWin ?? 10}
           turnDuration={session?.turnDuration ?? 45}
           isStealPhase={isStealPhase}
+          yearLookupStatus={session?.yearLookupStatus}
+          yearLookupProgress={session?.yearLookupProgress}
+          yearLookupTotal={session?.yearLookupTotal}
         />
 
         {isHost && session?.state === "playing" && (
