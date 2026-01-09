@@ -1215,7 +1215,7 @@
       "On refresh, sync turn timer to correct remaining time from server",
       "DONE: Single timer, syncs correctly after page refresh"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "lobby",

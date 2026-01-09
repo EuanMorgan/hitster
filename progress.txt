@@ -915,3 +915,19 @@ Key decision: Dual state approach (string for input value, number for actual set
 Files changed:
 - src/components/game-settings.tsx (rewrote input handling + added toast + auto-close)
 - plans/prd.json (marked ui #74, #75 as passes: true)
+
+## 2026-01-09: Simplified timer UI - removed song progress bar
+
+PRD items: gameplay #76 (Simplify timer UI - remove song progress bar)
+
+Changes:
+- Removed song progress bar from SpotifyPlayer (was showing "15s / 30s" with green bar)
+- Simplified to single-line status: "🎵 Now Playing • 🎶 Mystery Song"
+- Turn timer already synced correctly via turnStartedAt server timestamp
+- Auto-stop playback at duration still works (removed visual only)
+
+Key decision: Two countdowns were confusing - song progress bar (how long song plays) vs turn timer (how long to place). Removed redundant song progress since turn timer is what matters for gameplay.
+
+Files changed:
+- src/components/spotify-player.tsx (removed progress bar UI, kept playback logic)
+- plans/prd.json (marked gameplay #76 as passes: true)

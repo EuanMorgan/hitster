@@ -321,11 +321,6 @@ export function SpotifyPlayer({
     return null; // Non-hosts don't render the player
   }
 
-  const progressPercent =
-    durationMs > 0 ? (currentPosition / durationMs) * 100 : 0;
-  const elapsedSeconds = Math.floor(currentPosition / 1000);
-  const totalSeconds = Math.floor(durationMs / 1000);
-
   return (
     <div className="bg-zinc-900 rounded-lg p-4 text-white">
       {needsReauth ? (
@@ -351,28 +346,12 @@ export function SpotifyPlayer({
           <span>Loading song...</span>
         </div>
       ) : (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-zinc-400">
-              {isPlaying ? "🎵 Now Playing" : "⏸️ Paused"}
-            </span>
-            <span className="text-zinc-300 font-mono">
-              {elapsedSeconds}s / {totalSeconds}s
-            </span>
-          </div>
-
-          {/* Progress bar */}
-          <div className="h-2 bg-zinc-700 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-green-500 transition-all duration-100"
-              style={{ width: `${Math.min(progressPercent, 100)}%` }}
-            />
-          </div>
-
-          {/* Mystery song indicator */}
-          <div className="text-center text-zinc-400 text-sm">
-            🎶 Mystery Song
-          </div>
+        <div className="flex items-center gap-2 text-sm">
+          <span className="text-zinc-400">
+            {isPlaying ? "🎵 Now Playing" : "⏸️ Paused"}
+          </span>
+          <span className="text-zinc-500">•</span>
+          <span className="text-zinc-400">🎶 Mystery Song</span>
         </div>
       )}
     </div>
