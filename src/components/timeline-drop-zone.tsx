@@ -108,12 +108,25 @@ function DraggableSongCard({
 }
 
 function PlacedSongCard({ song }: { song: SafeCurrentTurnSong }) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } =
+    useDraggable({ id: "current-song" });
+
+  const style = { transform: CSS.Translate.toString(transform) };
+
   return (
-    <div className="bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-lg p-3 shadow-lg min-w-[70px] sm:min-w-[80px] min-h-[60px] animate-pulse">
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className={`bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-lg p-3 shadow-lg min-w-[70px] sm:min-w-[80px] min-h-[60px] cursor-grab active:cursor-grabbing touch-none ${
+        isDragging ? "opacity-50 scale-105" : ""
+      }`}
+    >
       <div className="text-center">
         <div className="text-xl mb-1">🎵</div>
         <div className="text-xs font-medium">Placed!</div>
-        <div className="text-[10px] opacity-75">???</div>
+        <div className="text-[10px] opacity-75">Drag to move</div>
       </div>
     </div>
   );
