@@ -19,6 +19,8 @@ for ((i=1; i<=$1; i++)); do
     3. If you made UI changes, you MUST use the Playwright MCP to visually verify the changes render correctly. \
     Navigate to the relevant page and take a snapshot. If it looks wrong, fix it before proceeding. \
     If Playwright fails to connect, restart the dev server and retry. \
+    IMPORTANT: If you need to visually verify a protected page (anything requiring login), first check if .auth/storage-state.json exists. \
+    If it does not exist, output <auth-required/> and stop working immediately. Do not attempt visual verification without auth. \
     4. Update the PRD with the work that was done. \
     IMPORTANT: Only set 'passes': true if ALL steps in the PRD are fully implemented. \
     If some steps are done but others remain, keep 'passes': false and note partial progress in progress.txt. \
@@ -41,6 +43,12 @@ for ((i=1; i<=$1; i++)); do
         echo "PRD complete, exiting."
         ./plans/notify.sh "Ralph is finished"
         exit 0
+    fi
+
+    if [[ "$result" == *"<auth-required/>"* ]]; then
+        echo "Auth required for Playwright. Run: bun run scripts/export-auth.ts"
+        ./plans/notify.sh "Ralph needs auth - run export-auth.ts"
+        exit 1
     fi
 
     if [[ "$result" == *"You've hit your limit"* ]]; then
