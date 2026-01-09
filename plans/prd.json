@@ -644,7 +644,7 @@
       "Aggregate stats across all games",
       "Visual charts/graphs for stats (AccuracyChart area chart + GamesActivityChart bar chart using shadcn charts)"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "statistics",

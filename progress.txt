@@ -1529,3 +1529,32 @@ Key decision: Code was already correct - no bug fix needed, just verification vi
 Files changed:
 - src/lib/__tests__/song-selection.test.ts (new - 5 unit tests for song selection logic)
 - plans/prd.json (marked playlist #103 as passes: true)
+
+## 2026-01-09: Dashboard visual charts for stats
+
+PRD items: statistics #35 (Host dashboard shows game history)
+
+Changes:
+- Added shadcn chart component via bunx shadcn@latest add chart
+- Added recharts dependency (via shadcn chart)
+- Updated getHostGameHistory to return chartData: { accuracy, activity }
+- AccuracyChart: accuracy % per game (area chart, green theme)
+- GamesActivityChart: games per day over last 30 days (bar chart, blue theme)
+- API computes per-game accuracy from finalStandings
+- Activity chart fills missing days with 0 for clean visualization
+- Both charts have tooltips, proper axes, and work in light/dark mode
+- Added noDangerouslySetInnerHtml: off to biome config (shadcn chart uses it for dynamic CSS)
+
+All 4 PRD steps verified:
+1. ✅ List of past games with dates - table with date, players, winner, turns, rounds
+2. ✅ Click to view detailed stats - rows are clickable, navigate to /dashboard/game/[id]
+3. ✅ Aggregate stats across all games - 3 stat cards: total games, total turns, avg accuracy
+4. ✅ Visual charts/graphs - AccuracyChart (area) + GamesActivityChart (bar) using shadcn charts
+
+Files changed:
+- package.json (recharts dependency via shadcn)
+- src/components/ui/chart.tsx (new - shadcn chart component)
+- src/trpc/routers/game.ts (added chartData to getHostGameHistory)
+- src/app/dashboard/page.tsx (added chart imports, configs, and components)
+- biome.json (disabled noDangerouslySetInnerHtml rule)
+- plans/prd.json (marked statistics #35 as passes: true)

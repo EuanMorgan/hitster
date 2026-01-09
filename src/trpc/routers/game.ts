@@ -888,6 +888,45 @@ export const gameRouter = createTRPCRouter({
       }
     }
 
+    // Build chart data
+    // AccuracyChart: accuracy per game over time (oldest first for chronological chart)
+    const accuracyChartData = [...history].reverse().map((game) => {
+      let correct = 0;
+      let total = 0;
+      for (const s of game.finalStandings ?? []) {
+        correct += s.correctPlacements;
+        total += s.totalPlacements;
+      }
+      return {
+        date: game.completedAt.toISOString().split("T")[0],
+        accuracy: total > 0 ? Math.round((correct / total) * 100) : 0,
+      };
+    });
+
+    // GamesActivityChart: games per day (last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const activityMap = new Map<string, number>();
+    for (const game of history) {
+      if (game.completedAt >= thirtyDaysAgo) {
+        const dateKey = game.completedAt.toISOString().split("T")[0];
+        activityMap.set(dateKey, (activityMap.get(dateKey) ?? 0) + 1);
+      }
+    }
+    // Fill in missing days with 0
+    const activityChartData: { date: string; games: number }[] = [];
+    for (
+      let d = new Date(thirtyDaysAgo);
+      d <= new Date();
+      d.setDate(d.getDate() + 1)
+    ) {
+      const dateKey = d.toISOString().split("T")[0];
+      activityChartData.push({
+        date: dateKey,
+        games: activityMap.get(dateKey) ?? 0,
+      });
+    }
+
     return {
       games: gamesWithWinners,
       stats: {
@@ -898,6 +937,10 @@ export const gameRouter = createTRPCRouter({
             : 0,
         totalPlacements,
         totalCorrectPlacements,
+      },
+      chartData: {
+        accuracy: accuracyChartData,
+        activity: activityChartData,
       },
     };
   }),
