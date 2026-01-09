@@ -1901,3 +1901,27 @@ Files changed:
 - src/hooks/use-spotify-playback.ts (new - 117 lines)
 - src/components/spotify-player.tsx (reduced from 325 to 114 lines)
 - plans/prd.json (marked 4 refactor items as passes: true)
+
+## 2026-01-09: Add ISRC field and year lookup schema changes
+
+PRD item: playlist/Add ISRC field and year lookup schema changes
+
+Changes:
+- Added isrc?: string to PlaylistSong, CurrentTurnSong, TimelineSong types
+- Added spotifyYear?: number to PlaylistSong for preserving original Spotify date
+- Created yearLookupStatusEnum with 'pending', 'in_progress', 'complete' values
+- Added yearLookupStatus, yearLookupProgress, yearLookupTotal fields to gameSessions
+- Created isrcYearCache table with isrc (PK), originalYear, spotifyYear, createdAt
+- Updated mock fixtures (fixtures.ts, db.ts) with new fields
+- Ran db:push to apply schema changes
+
+Key decisions:
+- ISRC varchar(12) to match standard format (CC-XXX-YY-NNNNN)
+- yearLookupStatus nullable to indicate "not started" state
+- spotifyYear stored for comparison/debugging with MusicBrainz results
+
+Files changed:
+- src/db/schema.ts (types + table + enum additions)
+- src/mocks/fixtures.ts (added yearLookup fields to game session fixtures)
+- src/mocks/db.ts (added yearLookup fields to seedGameSession)
+- plans/prd.json (marked as passes: true)

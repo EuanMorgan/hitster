@@ -123,12 +123,19 @@ export const gameStateEnum = pgEnum("game_state", [
 
 export const stealPhaseEnum = pgEnum("steal_phase", ["decide", "place"]);
 
+export const yearLookupStatusEnum = pgEnum("year_lookup_status", [
+  "pending",
+  "in_progress",
+  "complete",
+]);
+
 export type CurrentTurnSong = {
   songId: string;
   name: string;
   artist: string;
   year: number;
   uri?: string; // Spotify track URI for playback
+  isrc?: string; // ISRC code for MusicBrainz lookup
 };
 
 // Safe version of CurrentTurnSong that hides metadata during active gameplay
@@ -155,6 +162,8 @@ export type PlaylistSong = {
   artist: string;
   year: number;
   uri: string;
+  isrc?: string; // ISRC code for MusicBrainz lookup
+  spotifyYear?: number; // Original Spotify release date (before MusicBrainz correction)
 };
 
 export const gameSessions = pgTable(
@@ -195,6 +204,10 @@ export const gameSessions = pgTable(
     // Loaded playlist songs for the game
     playlistSongs: jsonb("playlist_songs").$type<PlaylistSong[]>(),
     usingFallbackPlaylist: boolean("using_fallback_playlist").default(false),
+    // Year lookup status (MusicBrainz ISRC lookups)
+    yearLookupStatus: yearLookupStatusEnum("year_lookup_status"),
+    yearLookupProgress: integer("year_lookup_progress").default(0),
+    yearLookupTotal: integer("year_lookup_total").default(0),
     // Party stats tracking (persists across rematches)
     gamesPlayed: integer("games_played").notNull().default(0),
     // Settings
@@ -267,6 +280,14 @@ export const gameHistory = pgTable("game_history", {
   completedAt: timestamp("completed_at").notNull().defaultNow(),
 });
 
+// ISRC Year Cache - stores MusicBrainz original release year lookups
+export const isrcYearCache = pgTable("isrc_year_cache", {
+  isrc: varchar("isrc", { length: 12 }).primaryKey(), // ISRC format: CC-XXX-YY-NNNNN (12 chars)
+  originalYear: integer("original_year").notNull(),
+  spotifyYear: integer("spotify_year"), // For comparison/debugging
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // Game relations
 export const gameSessionsRelations = relations(
   gameSessions,
@@ -327,6 +348,7 @@ export type TimelineSong = {
   year: number;
   addedAt: string;
   uri?: string; // Spotify track URI for playback
+  isrc?: string; // ISRC code for MusicBrainz lookup
 };
 
 export type StealAttempt = {
@@ -358,3 +380,5 @@ export type Turn = typeof turns.$inferSelect;
 export type NewTurn = typeof turns.$inferInsert;
 export type GameHistory = typeof gameHistory.$inferSelect;
 export type NewGameHistory = typeof gameHistory.$inferInsert;
+export type IsrcYearCache = typeof isrcYearCache.$inferSelect;
+export type NewIsrcYearCache = typeof isrcYearCache.$inferInsert;

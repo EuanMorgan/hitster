@@ -1277,7 +1277,7 @@
       "Run db:push to apply schema changes",
       "DONE: npm run typecheck passes, db:push succeeds"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "playlist",
