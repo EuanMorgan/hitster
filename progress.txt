@@ -1123,3 +1123,23 @@ Changes:
 Files changed:
 - src/app/lobby/[pin]/page.tsx (PIN styling, QR shadow, AnimatedDots, player animations)
 - plans/prd.json (marked ui-polish #62 as passes: true)
+
+## 2026-01-09: Player card visual hierarchy polish
+
+PRD items: ui-polish #63 (Player card visual hierarchy)
+
+Changes:
+- Active player: border-l-4 border-l-primary + subtle box-shadow glow
+- Avatar: text-[48px] mobile, text-[56px] desktop (was text-2xl/3xl)
+- Name: font-semibold + truncate already existed
+- Token count: wrapped in div with conditional class (text-amber-500 when <2 tokens)
+- Disconnected: grayscale filter kept, changed badge to "Reconnecting..." with animated dot
+
+Key decisions:
+- Used CSS shadow-[0_0_15px_rgba(var(--primary-rgb,59,130,246),0.15)] for subtle glow effect
+- Border-l-transparent on non-active cards to maintain layout consistency
+- Added overflow-hidden to prevent glow bleeding outside rounded corners
+
+Files changed:
+- src/app/game/[pin]/page.tsx (PlayerCard component)
+- plans/prd.json (marked ui-polish #63 as passes: true)

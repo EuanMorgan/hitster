@@ -1079,7 +1079,7 @@
       "Disconnected state: grayscale filter, 'Reconnecting...' badge",
       "DONE: Can instantly identify active player and player status at a glance"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "ui-polish",
