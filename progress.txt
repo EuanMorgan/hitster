@@ -1736,3 +1736,26 @@ Files changed:
 - src/app/lobby/[pin]/page.tsx (import hook, removed 13 lines of heartbeat code)
 - src/app/game/[pin]/page.tsx (import hook, removed 13 lines of heartbeat code)
 - plans/prd.json (marked refactor #92 as passes: true)
+
+## 2026-01-09: Extract player validation logic to custom hook
+
+PRD items: refactor #93 (Extract player validation logic to custom hook)
+
+Changes:
+- Created src/hooks/use-player-validation.ts (96 lines)
+- Hook reads from Zustand store, validates player against session data
+- Returns { playerId, isValidated, isLoading }
+- requirePlayer option: true for lobby (redirect if no player), false for game (spectator mode)
+- Updated lobby page: removed ~50 lines of duplicated validation code
+- Updated game page: same cleanup, replaced 2 useEffects with single hook call
+
+Key decisions:
+- requirePlayer param controls redirect behavior (lobby requires player, game allows spectators)
+- Hook handles both initial store validation and session-based validation
+- Redirect logic centralized in hook, pages just consume playerId
+
+Files changed:
+- src/hooks/use-player-validation.ts (new - 96 lines)
+- src/app/lobby/[pin]/page.tsx (removed validation logic, ~45 lines saved)
+- src/app/game/[pin]/page.tsx (removed validation logic, ~50 lines saved)
+- plans/prd.json (marked refactor #93 as passes: true)

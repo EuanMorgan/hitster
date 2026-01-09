@@ -27,8 +27,8 @@ import {
 import type { TimelineSong } from "@/db/schema";
 import { useGameSession } from "@/hooks/use-game-session";
 import { usePlayerHeartbeat } from "@/hooks/use-player-heartbeat";
+import { usePlayerValidation } from "@/hooks/use-player-validation";
 import { useSession } from "@/lib/auth-client";
-import { usePlayerStore } from "@/stores/player-store";
 import { useTRPC } from "@/trpc/client";
 
 function TokenDisplay({ count }: { count: number }) {
@@ -336,61 +336,14 @@ export default function GamePage() {
     },
   });
 
-  // Get current player from Zustand store
-  const storedPlayerId = usePlayerStore((state) => state.playerId);
-  const storedPin = usePlayerStore((state) => state.gamePin);
-  const setPlayer = usePlayerStore((state) => state.setPlayer);
-
-  const [currentPlayerId, setCurrentPlayerId] = useState<string | null>(null);
-  const [playerValidated, setPlayerValidated] = useState(false);
-
-  useEffect(() => {
-    // If stored PIN matches current game, use stored player ID
-    if (storedPlayerId && storedPin === pin) {
-      setCurrentPlayerId(storedPlayerId);
-      setPlayerValidated(true);
-    } else if (storedPlayerId && !storedPin) {
-      // Legacy: no PIN stored, assume player is valid (backward compatibility)
-      setCurrentPlayerId(storedPlayerId);
-      setPlayerValidated(true);
-    } else {
-      // No player ID or wrong game - will validate against session data
-      setCurrentPlayerId(storedPlayerId);
-      setPlayerValidated(false);
-    }
-  }, [pin, storedPlayerId, storedPin]);
+  const { playerId: currentPlayerId } = usePlayerValidation({
+    pin,
+    sessionData: sessionQuery.data,
+    isSessionLoading: sessionQuery.isLoading,
+    requirePlayer: false, // allow spectator mode in game
+  });
 
   usePlayerHeartbeat(currentPlayerId);
-
-  // Validate player belongs to this game session
-  useEffect(() => {
-    if (!sessionQuery.data || playerValidated) return;
-
-    const playerInSession = sessionQuery.data.players.find(
-      (p) => p.id === currentPlayerId,
-    );
-
-    if (playerInSession && currentPlayerId) {
-      // Player found in session - update store with correct PIN and mark validated
-      setPlayer({
-        playerId: currentPlayerId,
-        sessionId: sessionQuery.data.id,
-        gamePin: pin,
-      });
-      setPlayerValidated(true);
-    } else if (currentPlayerId) {
-      // Player ID exists but not in this session - redirect to join
-      router.push(`/join?pin=${pin}`);
-    }
-    // If no player ID at all, let them watch as spectator (handled by UI)
-  }, [
-    sessionQuery.data,
-    currentPlayerId,
-    playerValidated,
-    pin,
-    router,
-    setPlayer,
-  ]);
 
   // Redirect back to lobby if game is not playing
   useEffect(() => {

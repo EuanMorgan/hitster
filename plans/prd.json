@@ -1402,7 +1402,7 @@
       "Update game page: replace 2 validation useEffects with usePlayerValidation()",
       "DONE: Both pages use shared hook, ~50 lines of duplicated logic removed"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "refactor",
