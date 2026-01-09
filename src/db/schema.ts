@@ -1,10 +1,10 @@
 import { relations } from "drizzle-orm";
 import {
+  pgEnum as basePgEnum,
   boolean,
   index,
   integer,
   jsonb,
-  pgEnum as basePgEnum,
   pgTableCreator,
   text,
   timestamp,
