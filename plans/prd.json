@@ -1414,7 +1414,7 @@
       "Update game page import",
       "DONE: GameSkeleton in separate file, game page imports it"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "refactor",

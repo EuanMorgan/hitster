@@ -1580,3 +1580,18 @@ Changes:
 Files changed:
 - CLAUDE.md (added Component Standards section)
 - plans/prd.json (marked standards audit/migrate/document as passes: true)
+
+## 2026-01-09: Extract GameSkeleton to separate component file
+
+PRD items: refactor #94 (Extract GameSkeleton to separate component file)
+
+Changes:
+- Created src/components/game/game-skeleton.tsx with GameSkeleton component
+- Removed inline GameSkeleton from game page (~70 lines extracted)
+- Updated game page import to use new component path
+- Removed unused Skeleton import from game page (now only in extracted file)
+
+Files changed:
+- src/components/game/game-skeleton.tsx (new)
+- src/app/game/[pin]/page.tsx (import update, removed inline component)
+- plans/prd.json (marked refactor #94 as passes: true)
