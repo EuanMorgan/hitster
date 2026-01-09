@@ -1,2 +1,5 @@
+[phases.build]
+cmds = ["...", "cp -r public .next/standalone/public", "cp -r .next/static .next/standalone/.next/static"]
+
 [start]
 cmd = "bun run db:migrate && node .next/standalone/server.js"
