@@ -4,7 +4,10 @@ import "./src/env";
 const nextConfig: NextConfig = {
   reactCompiler: true,
   poweredByHeader: false,
-  compress: true,
+  /** We already do linting and typechecking as separate tasks in CI */
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   output: "standalone",
   images: {
     remotePatterns: [
