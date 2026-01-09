@@ -1535,5 +1535,71 @@
       "DONE: No writes to hitster_session_id, grep returns zero results"
     ],
     "passes": false
+  },
+  {
+    "category": "playlist",
+    "description": "Fix duplicate songs appearing in same game",
+    "steps": [
+      "Investigate how songs are selected - check game.ts drawNextSong or similar",
+      "Track ALL used song IDs across entire game session (not just current playlist)",
+      "When falling back from custom playlist to default, exclude already-used songs",
+      "Ensure usedSongIds persists in game session state",
+      "Add unit test: draw 50 songs, verify no duplicates in IDs",
+      "DONE: Play full game with playlist fallback, no song appears twice"
+    ],
+    "passes": false
+  },
+  {
+    "category": "refactor",
+    "description": "Extract Spotify SDK initialization to useSpotifySDK hook",
+    "steps": [
+      "Create src/hooks/use-spotify-sdk.ts",
+      "Move SDK script loading, player creation, event listeners from SpotifyPlayer",
+      "Use refs for callbacks to prevent re-initialization on prop changes",
+      "Only re-init when isHost changes or initial token arrives (boolean dep)",
+      "Return { player, deviceId, isReady, error }",
+      "Hook handles connect/disconnect lifecycle",
+      "DONE: SDK initializes once per session, device ID stable across re-renders"
+    ],
+    "passes": false
+  },
+  {
+    "category": "refactor",
+    "description": "Extract playback mutations to useSpotifyPlayback hook",
+    "steps": [
+      "Create src/hooks/use-spotify-playback.ts",
+      "Move playTrack, pausePlayback, transferPlayback mutations",
+      "Accept deviceId from useSpotifySDK",
+      "Track currentPlayingUri to prevent duplicate play calls",
+      "Handle reauth redirect on token errors",
+      "Return { play, pause, transfer, isLoading, error }",
+      "DONE: Playback control decoupled from SDK lifecycle"
+    ],
+    "passes": false
+  },
+  {
+    "category": "refactor",
+    "description": "Refactor SpotifyPlayer to compose extracted hooks",
+    "steps": [
+      "Replace 200+ lines of effects with useSpotifySDK + useSpotifyPlayback",
+      "Remove callback refs workaround (handled in hooks)",
+      "Keep only orchestration logic and UI rendering",
+      "Target: under 100 lines for SpotifyPlayer component",
+      "All lint errors resolved (no eslint-disable comments needed)",
+      "DONE: SpotifyPlayer under 100 lines, composes hooks cleanly"
+    ],
+    "passes": false
+  },
+  {
+    "category": "refactor",
+    "description": "Add SDK initialization guard to prevent duplicate instances",
+    "steps": [
+      "Track SDK initialization state in module-level variable",
+      "Prevent second initialization if already connected",
+      "Handle page visibility changes (pause/resume when tab hidden)",
+      "Clean up properly on component unmount",
+      "DONE: Only one Spotify player in device list regardless of re-renders"
+    ],
+    "passes": false
   }
 ]
