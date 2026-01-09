@@ -1348,5 +1348,192 @@
       "DONE: Creating game shows progress bar, completes after ~100 seconds for 100 songs"
     ],
     "passes": false
+  },
+  {
+    "category": "refactor",
+    "description": "Add Zustand with persist middleware for player state",
+    "steps": [
+      "Install zustand: bun add zustand",
+      "Create src/stores/player-store.ts with PlayerStore interface",
+      "Store shape: playerId, sessionId, gamePin, setPlayer(), clearPlayer()",
+      "Use persist middleware with storage key 'hitster-player'",
+      "Set skipHydration: true for SSR safety",
+      "Export usePlayerStore hook and usePlayerStoreHydration hook for manual hydration",
+      "DONE: bun run typecheck passes, store exports work"
+    ],
+    "passes": false
+  },
+  {
+    "category": "refactor",
+    "description": "Migrate localStorage writes to Zustand player store",
+    "steps": [
+      "Update src/components/create-game-button.tsx: replace 3 localStorage.setItem calls with usePlayerStore().setPlayer()",
+      "Update src/app/join/page.tsx: replace 3 localStorage.setItem calls with usePlayerStore().setPlayer()",
+      "Add hydration useEffect to app layout or provider",
+      "Remove hitster_player_id, hitster_session_id, hitster_game_pin keys (now single hitster-player key)",
+      "DONE: Creating/joining game persists player to single localStorage key"
+    ],
+    "passes": false
+  },
+  {
+    "category": "refactor",
+    "description": "Extract player heartbeat logic to custom hook",
+    "steps": [
+      "Create src/hooks/use-player-heartbeat.ts",
+      "Accept playerId param, send heartbeat mutation every 3s when playerId exists",
+      "Handle cleanup on unmount (clearInterval)",
+      "Update src/app/lobby/[pin]/page.tsx: replace heartbeat useEffect with usePlayerHeartbeat(currentPlayerId)",
+      "Update src/app/game/[pin]/page.tsx: replace heartbeat useEffect with usePlayerHeartbeat(currentPlayerId)",
+      "Remove biome-ignore comments from both pages",
+      "DONE: Heartbeat works, zero duplicated interval logic between pages"
+    ],
+    "passes": false
+  },
+  {
+    "category": "refactor",
+    "description": "Extract player validation logic to custom hook",
+    "steps": [
+      "Create src/hooks/use-player-validation.ts",
+      "Read playerId and gamePin from Zustand store (with hydration check)",
+      "Accept sessionData and currentPin params",
+      "Return { playerId, isValidated, isLoading }",
+      "Handle redirect to /join when player not found in session",
+      "Update lobby page: replace 2 validation useEffects with usePlayerValidation()",
+      "Update game page: replace 2 validation useEffects with usePlayerValidation()",
+      "DONE: Both pages use shared hook, ~50 lines of duplicated logic removed"
+    ],
+    "passes": false
+  },
+  {
+    "category": "refactor",
+    "description": "Extract GameSkeleton to separate component file",
+    "steps": [
+      "Create src/components/game/game-skeleton.tsx",
+      "Move GameSkeleton component from game page (lines 27-97)",
+      "Export as named export",
+      "Update game page import",
+      "DONE: GameSkeleton in separate file, game page imports it"
+    ],
+    "passes": false
+  },
+  {
+    "category": "refactor",
+    "description": "Extract TurnResultOverlay to separate component file",
+    "steps": [
+      "Create src/components/game/turn-result-overlay.tsx",
+      "Move TurnResultOverlay component and its types from game page (lines 423-571)",
+      "Keep TurnResult interface in same file or create types file",
+      "Export component and types",
+      "Update game page to import TurnResultOverlay",
+      "DONE: TurnResultOverlay in separate file (~150 lines extracted)"
+    ],
+    "passes": false
+  },
+  {
+    "category": "refactor",
+    "description": "Extract PlayerProgressBar to separate component file",
+    "steps": [
+      "Create src/components/game/player-progress-bar.tsx",
+      "Move PlayerProgressBar component from game page (lines 216-271)",
+      "Define props interface explicitly",
+      "Update game page to import PlayerProgressBar",
+      "DONE: PlayerProgressBar in separate file (~55 lines extracted)"
+    ],
+    "passes": false
+  },
+  {
+    "category": "refactor",
+    "description": "Extract ActivePlayerTimeline to separate component file",
+    "steps": [
+      "Create src/components/game/active-player-timeline.tsx",
+      "Move ActivePlayerTimeline component from game page (lines 273-421)",
+      "Include TimelineDisplay helper component it uses",
+      "Define props interface explicitly",
+      "Update game page to import ActivePlayerTimeline",
+      "DONE: ActivePlayerTimeline in separate file (~150 lines extracted)"
+    ],
+    "passes": false
+  },
+  {
+    "category": "refactor",
+    "description": "Extract game finished screen to separate component",
+    "steps": [
+      "Create src/components/game/game-finished-screen.tsx",
+      "Move finished game rendering from game page (lines 831-1052)",
+      "Include leaderboard, party stats, rematch button logic",
+      "Props: session data, handlers for rematch/home navigation",
+      "Update game page to conditionally render GameFinishedScreen",
+      "DONE: GameFinishedScreen in separate file (~220 lines extracted)"
+    ],
+    "passes": false
+  },
+  {
+    "category": "refactor",
+    "description": "Create pure selector functions for game data",
+    "steps": [
+      "Create src/lib/game-selectors.ts",
+      "Add getPlayersSortedByTimeline(players) - sort by timeline.length desc",
+      "Add getPlayersSortedByWins(players) - sort by wins desc",
+      "Add getTimelineSortedByYear(timeline) - sort by year asc",
+      "Add getCurrentPlayer(session) - find player matching currentPlayerId",
+      "Update game page: replace inline sort/find calls with selectors",
+      "Update GameFinishedScreen: use selectors",
+      "DONE: Zero inline .sort() calls in render, all use selectors"
+    ],
+    "passes": false
+  },
+  {
+    "category": "refactor",
+    "description": "Create useGameState hook for computed game values",
+    "steps": [
+      "Create src/hooks/use-game-state.ts",
+      "Accept session data and currentPlayerId",
+      "Return computed values: currentPlayer, myPlayer, isMyTurn, isStealPhase, isHost",
+      "Use selectors from game-selectors.ts",
+      "Update game page: replace inline derivations with useGameState()",
+      "Remove lines 1055-1063 inline data derivation",
+      "DONE: Game page uses hook for all computed state, cleaner render logic"
+    ],
+    "passes": false
+  },
+  {
+    "category": "refactor",
+    "description": "Consolidate game mutation handlers into hook",
+    "steps": [
+      "Create src/hooks/use-game-mutations.ts",
+      "Accept pin param",
+      "Return mutations: confirmTurn, submitSteal, resolveStealPhase, skipSong, freeSong, startRematch",
+      "Each mutation includes query invalidation (shared pattern)",
+      "Update game page: replace 6 individual useMutation calls with useGameMutations(pin)",
+      "Remove duplicated queryClient.invalidateQueries patterns",
+      "DONE: Single hook for all game mutations, consistent invalidation"
+    ],
+    "passes": false
+  },
+  {
+    "category": "refactor",
+    "description": "Simplify game page conditional rendering",
+    "steps": [
+      "Review remaining game page code after extractions",
+      "Group related conditional blocks into clearly named sections",
+      "Consider extracting WaitingForTurn and MyTurnView if still complex",
+      "Ensure game page is under 400 lines total",
+      "Remove any dead code or unused imports",
+      "Run bun run typecheck and bun run test",
+      "DONE: Game page under 400 lines, readable conditional flow"
+    ],
+    "passes": false
+  },
+  {
+    "category": "refactor",
+    "description": "Remove unused hitster_session_id localStorage key",
+    "steps": [
+      "hitster_session_id is written but never read (dead code)",
+      "Remove from create-game-button.tsx if still present after Zustand migration",
+      "Remove from join/page.tsx if still present",
+      "Verify Zustand store only persists needed fields",
+      "DONE: No writes to hitster_session_id, grep returns zero results"
+    ],
+    "passes": false
   }
 ]
