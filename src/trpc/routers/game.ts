@@ -3202,6 +3202,7 @@ export const gameRouter = createTRPCRouter({
           stealAttempts: [],
           isStealPhase: false,
           stealPhaseEndAt: null,
+          lastTurnResult: null,
           updatedAt: new Date(),
         })
         .where(eq(gameSessions.id, session.id));
