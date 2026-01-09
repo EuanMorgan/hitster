@@ -200,7 +200,7 @@ function StealTimer({
         🎯 STEAL PHASE
       </div>
       <div
-        className={`text-2xl sm:text-3xl font-mono font-bold ${colorClass} ${
+        className={`text-2xl sm:text-3xl font-mono tabular-nums font-bold ${colorClass} ${
           shouldPulse ? "animate-[pulse_1s_ease-in-out_infinite]" : ""
         }`}
       >

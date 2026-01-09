@@ -1171,3 +1171,32 @@ Files changed:
 - src/components/steal-phase.tsx (TimelineSongCard styling)
 - src/app/game/[pin]/page.tsx (TimelineDisplay styling)
 - plans/prd.json (marked ui-polish #64 as passes: true)
+
+## 2026-01-09: Timer urgency states polish
+
+PRD items: ui-polish #65 (Timer urgency states)
+
+Changes:
+- Added tabular-nums to all timer font classes (TurnTimer, StealTimer, ActivePlayerTimeline timer)
+- Added screen edge glow/vignette effect when timer <10s (inset box-shadow that intensifies as time decreases)
+- Fixed vitest.config.ts exclude patterns to properly exclude e2e directory
+
+Implementation:
+- TurnTimer: added fixed overlay with dynamic box-shadow based on timeLeft (0.1-0.4 opacity, 60-140px blur)
+- All timers now use font-mono tabular-nums for stable width during countdown
+- Effect intensifies progressively: at 10s subtle glow, at 1s strong red vignette
+
+All 6 PRD steps verified:
+1. ✅ Timer >50%: green text
+2. ✅ Timer 25-50%: amber text
+3. ✅ Timer <25%: red text + pulse
+4. ✅ Timer <10s: screen edge glow
+5. ✅ tabular-nums font
+6. ✅ Creates urgency through color progression
+
+Files changed:
+- src/components/timeline-drop-zone.tsx (TurnTimer tabular-nums + edge glow overlay)
+- src/components/steal-phase.tsx (StealTimer tabular-nums)
+- src/app/game/[pin]/page.tsx (ActivePlayerTimeline timer tabular-nums)
+- vitest.config.ts (fixed exclude patterns)
+- plans/prd.json (marked ui-polish #65 as passes: true)

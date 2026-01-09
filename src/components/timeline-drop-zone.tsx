@@ -247,33 +247,46 @@ function TurnTimer({
         : "bg-green-500";
   // Pulse at 1Hz during last 5 seconds (but not when paused)
   const shouldPulse = !isPaused && timeLeft <= 5 && timeLeft > 0;
+  // Show subtle screen edge glow when under 10 seconds (but not when paused)
+  const showEdgeGlow = !isPaused && timeLeft <= 10 && timeLeft > 0;
 
   return (
-    <div className="flex flex-col items-center gap-2">
-      <div
-        className={`text-3xl sm:text-4xl font-mono font-bold ${colorClass} ${
-          shouldPulse ? "animate-[pulse_1s_ease-in-out_infinite]" : ""
-        }`}
-      >
-        {timeLeft}s
-      </div>
-      {isPaused && (
-        <div className="text-xs sm:text-sm text-muted-foreground font-medium">
-          ⏸️ Paused
-        </div>
-      )}
-      {!isPaused && timeLeft <= 5 && timeLeft > 0 && (
-        <div className="text-xs sm:text-sm text-red-500 font-medium animate-bounce">
-          ⚠️ Time running out!
-        </div>
-      )}
-      <div className="w-full max-w-xs h-2 bg-muted rounded-full overflow-hidden">
+    <>
+      {/* Screen edge glow/vignette when timer < 10s */}
+      {showEdgeGlow && (
         <div
-          className={`h-full transition-all duration-1000 ${barColorClass}`}
-          style={{ width: `${percentage}%` }}
+          className="fixed inset-0 pointer-events-none z-40 transition-opacity duration-500"
+          style={{
+            boxShadow: `inset 0 0 ${60 + (10 - timeLeft) * 8}px ${20 + (10 - timeLeft) * 4}px rgba(239, 68, 68, ${0.1 + (10 - timeLeft) * 0.03})`,
+          }}
         />
+      )}
+      <div className="flex flex-col items-center gap-2">
+        <div
+          className={`text-3xl sm:text-4xl font-mono tabular-nums font-bold ${colorClass} ${
+            shouldPulse ? "animate-[pulse_1s_ease-in-out_infinite]" : ""
+          }`}
+        >
+          {timeLeft}s
+        </div>
+        {isPaused && (
+          <div className="text-xs sm:text-sm text-muted-foreground font-medium">
+            ⏸️ Paused
+          </div>
+        )}
+        {!isPaused && timeLeft <= 5 && timeLeft > 0 && (
+          <div className="text-xs sm:text-sm text-red-500 font-medium animate-bounce">
+            ⚠️ Time running out!
+          </div>
+        )}
+        <div className="w-full max-w-xs h-2 bg-muted rounded-full overflow-hidden">
+          <div
+            className={`h-full transition-all duration-1000 ${barColorClass}`}
+            style={{ width: `${percentage}%` }}
+          />
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 

@@ -395,7 +395,7 @@ function ActivePlayerTimeline({
       {timeRemaining !== null && (
         <div className="absolute top-4 right-4 flex flex-col items-center">
           <div
-            className={`text-5xl md:text-6xl font-mono font-bold ${timerColorClass} ${
+            className={`text-5xl md:text-6xl font-mono tabular-nums font-bold ${timerColorClass} ${
               shouldPulse ? "animate-[pulse_1s_ease-in-out_infinite]" : ""
             }`}
             style={{ minWidth: "80px", textAlign: "center" }}
