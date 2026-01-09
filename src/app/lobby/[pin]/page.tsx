@@ -18,6 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { env } from "@/env";
 import { useGameSession } from "@/hooks/use-game-session";
 import { useSession } from "@/lib/auth-client";
+import { usePlayerStore } from "@/stores/player-store";
 import { useTRPC } from "@/trpc/client";
 
 function AnimatedDots() {
@@ -98,14 +99,15 @@ export default function LobbyPage() {
     },
   });
 
-  // Get current player ID from localStorage and validate it belongs to this game
+  // Get current player from Zustand store
+  const storedPlayerId = usePlayerStore((state) => state.playerId);
+  const storedPin = usePlayerStore((state) => state.gamePin);
+  const setPlayer = usePlayerStore((state) => state.setPlayer);
+
   const [currentPlayerId, setCurrentPlayerId] = useState<string | null>(null);
   const [playerValidated, setPlayerValidated] = useState(false);
 
   useEffect(() => {
-    const storedPlayerId = localStorage.getItem("hitster_player_id");
-    const storedPin = localStorage.getItem("hitster_game_pin");
-
     // If stored PIN matches current game, use stored player ID
     if (storedPlayerId && storedPin === pin) {
       setCurrentPlayerId(storedPlayerId);
@@ -119,7 +121,7 @@ export default function LobbyPage() {
       setCurrentPlayerId(storedPlayerId);
       setPlayerValidated(false);
     }
-  }, [pin]);
+  }, [pin, storedPlayerId, storedPin]);
 
   // Heartbeat to track player presence
   const heartbeatMutation = useMutation({
@@ -144,9 +146,13 @@ export default function LobbyPage() {
       (p) => p.id === currentPlayerId,
     );
 
-    if (playerInSession) {
-      // Player found in session - update localStorage with correct PIN and mark validated
-      localStorage.setItem("hitster_game_pin", pin);
+    if (playerInSession && currentPlayerId) {
+      // Player found in session - update store with correct PIN and mark validated
+      setPlayer({
+        playerId: currentPlayerId,
+        sessionId: sessionQuery.data.id,
+        gamePin: pin,
+      });
       setPlayerValidated(true);
     } else if (currentPlayerId) {
       // Player ID exists but not in this session - redirect to join
@@ -156,7 +162,14 @@ export default function LobbyPage() {
     else if (!currentPlayerId && sessionQuery.data) {
       router.push(`/join?pin=${pin}`);
     }
-  }, [sessionQuery.data, currentPlayerId, playerValidated, pin, router]);
+  }, [
+    sessionQuery.data,
+    currentPlayerId,
+    playerValidated,
+    pin,
+    router,
+    setPlayer,
+  ]);
 
   // Redirect to game page when state changes to playing
   useEffect(() => {

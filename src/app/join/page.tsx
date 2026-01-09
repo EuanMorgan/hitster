@@ -16,6 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { usePlayerStore } from "@/stores/player-store";
 import { useTRPC } from "@/trpc/client";
 
 type Step = "pin" | "details";
@@ -32,6 +33,7 @@ function JoinPageContent() {
   const [error, setError] = useState("");
 
   const trpc = useTRPC();
+  const setPlayer = usePlayerStore((state) => state.setPlayer);
 
   const validatePinQuery = useQuery({
     ...trpc.game.validatePin.queryOptions({ pin }),
@@ -41,9 +43,11 @@ function JoinPageContent() {
   const joinGameMutation = useMutation(
     trpc.game.joinGame.mutationOptions({
       onSuccess: (data) => {
-        localStorage.setItem("hitster_player_id", data.playerId);
-        localStorage.setItem("hitster_session_id", data.sessionId);
-        localStorage.setItem("hitster_game_pin", pin);
+        setPlayer({
+          playerId: data.playerId,
+          sessionId: data.sessionId,
+          gamePin: pin,
+        });
         router.push(`/lobby/${pin}`);
       },
       onError: (err) => {

@@ -1686,3 +1686,31 @@ Files changed:
 - package.json (added zustand dependency)
 - src/stores/player-store.ts (new - 52 lines)
 - plans/prd.json (marked refactor Zustand store as passes: true)
+
+## 2026-01-09: Migrate localStorage writes to Zustand player store
+
+PRD items: refactor #91 (Migrate localStorage writes), refactor #104 (Remove unused hitster_session_id)
+
+Changes:
+- Created PlayerStoreProvider component for hydration in layout
+- Updated create-game-button.tsx: replaced 3 localStorage.setItem with setPlayer()
+- Updated join/page.tsx: replaced 3 localStorage.setItem with setPlayer()
+- Updated lobby/[pin]/page.tsx: read from Zustand, update store on validation
+- Updated game/[pin]/page.tsx: read from Zustand, update store on validation
+- Added PlayerStoreProvider to app layout.tsx wrapping children
+- All 3 old localStorage keys (hitster_player_id, hitster_session_id, hitster_game_pin) removed
+
+Key decisions:
+- Single 'hitster-player' localStorage key via Zustand persist middleware
+- PlayerStoreProvider triggers rehydrate() on mount for SSR safety
+- Both lobby and game pages use store for reads + update store on validation
+- Backward compat: still handles case where storedPin is null (legacy players)
+
+Files changed:
+- src/components/player-store-provider.tsx (new)
+- src/app/layout.tsx (added PlayerStoreProvider)
+- src/components/create-game-button.tsx (use setPlayer)
+- src/app/join/page.tsx (use setPlayer)
+- src/app/lobby/[pin]/page.tsx (read from store, update on validation)
+- src/app/game/[pin]/page.tsx (read from store, update on validation)
+- plans/prd.json (marked refactor #91, #104 as passes: true)

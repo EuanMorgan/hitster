@@ -1373,7 +1373,7 @@
       "Remove hitster_player_id, hitster_session_id, hitster_game_pin keys (now single hitster-player key)",
       "DONE: Creating/joining game persists player to single localStorage key"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "refactor",
@@ -1534,7 +1534,7 @@
       "Verify Zustand store only persists needed fields",
       "DONE: No writes to hitster_session_id, grep returns zero results"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "playlist",
