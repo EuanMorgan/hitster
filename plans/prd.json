@@ -1183,7 +1183,7 @@
       "Drop: brief scale pulse animation",
       "DONE: UI feels responsive and alive"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "ui",

@@ -130,6 +130,19 @@
   }
 }
 
+/* Drop pulse animation for drag-and-drop */
+@keyframes dropPulse {
+  0% {
+    transform: scale(1.1);
+  }
+  50% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 /* Custom toast styling - left border accent */
 [data-sonner-toaster] [data-sonner-toast] {
   --toast-border-radius: 0.5rem;

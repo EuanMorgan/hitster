@@ -38,7 +38,7 @@ function AnimatedDots() {
 function LobbySkeleton() {
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
-      <Card className="w-full max-w-md animate-in fade-in-0 duration-200">
+      <Card className="w-full max-w-md animate-in fade-in duration-150">
         <CardHeader className="text-center">
           <div className="flex items-center justify-between">
             <Skeleton className="h-7 w-28" />
@@ -185,7 +185,7 @@ export default function LobbyPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
-      <Card className="w-full max-w-md animate-in fade-in-0 duration-200">
+      <Card className="w-full max-w-md animate-in fade-in duration-150">
         <CardHeader className="text-center">
           <div className="flex items-center justify-between">
             <CardTitle>Game Lobby</CardTitle>
@@ -217,7 +217,7 @@ export default function LobbyPage() {
                 {session?.players.map((player, index) => (
                   <div
                     key={player.id}
-                    className={`flex items-center gap-2 p-2 rounded-lg bg-muted relative transition-all duration-200 hover:bg-muted/80 hover:scale-[1.02] animate-in fade-in-0 slide-in-from-bottom-2 ${
+                    className={`flex items-center gap-2 p-2 rounded-lg bg-muted relative transition-all duration-150 hover:bg-muted/80 hover:scale-[1.02] animate-in fade-in slide-in-from-bottom-2 ${
                       !player.isConnected ? "opacity-60" : ""
                     }`}
                     style={{

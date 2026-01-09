@@ -27,7 +27,7 @@ import { useTRPC } from "@/trpc/client";
 
 function GameSkeleton() {
   return (
-    <div className="min-h-screen p-4 animate-in fade-in-0 duration-200">
+    <div className="min-h-screen p-4 animate-in fade-in duration-150">
       <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
         {/* Header skeleton */}
         <Card>
@@ -1198,7 +1198,7 @@ export default function GamePage() {
     session?.state === "playing" && session?.hostIsConnected === false;
 
   return (
-    <div className="min-h-screen p-4 overflow-x-hidden animate-in fade-in-0 duration-200">
+    <div className="min-h-screen p-4 overflow-x-hidden animate-in fade-in duration-150">
       {turnResult && (
         <TurnResultOverlay
           result={turnResult}

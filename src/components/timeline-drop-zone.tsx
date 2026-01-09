@@ -95,8 +95,8 @@ function DraggableSongCard({
       style={style}
       {...attributes}
       {...listeners}
-      className={`bg-gradient-to-br from-primary to-primary/80 text-primary-foreground rounded-lg p-4 min-w-[100px] min-h-[80px] cursor-grab active:cursor-grabbing shadow-lg transition-all touch-none ${
-        isDragging ? "opacity-50 scale-105" : ""
+      className={`bg-gradient-to-br from-primary to-primary/80 text-primary-foreground rounded-lg p-4 min-w-[100px] min-h-[80px] cursor-grab active:cursor-grabbing shadow-lg transition-all duration-150 touch-none ${
+        isDragging ? "opacity-50" : ""
       }`}
     >
       <div className="text-center">
@@ -108,7 +108,13 @@ function DraggableSongCard({
   );
 }
 
-function PlacedSongCard({ song }: { song: SafeCurrentTurnSong }) {
+function PlacedSongCard({
+  song,
+  isNewlyPlaced = false,
+}: {
+  song: SafeCurrentTurnSong;
+  isNewlyPlaced?: boolean;
+}) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({ id: "current-song" });
 
@@ -120,9 +126,9 @@ function PlacedSongCard({ song }: { song: SafeCurrentTurnSong }) {
       style={style}
       {...attributes}
       {...listeners}
-      className={`bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-lg p-3 sm:p-4 shadow-lg min-w-[90px] sm:min-w-[110px] min-h-[70px] cursor-grab active:cursor-grabbing touch-none snap-start ${
-        isDragging ? "opacity-50 scale-105" : ""
-      }`}
+      className={`bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-lg p-3 sm:p-4 shadow-lg min-w-[90px] sm:min-w-[110px] min-h-[70px] cursor-grab active:cursor-grabbing touch-none snap-start transition-all duration-150 ${
+        isDragging ? "opacity-50" : ""
+      } ${isNewlyPlaced ? "animate-[dropPulse_300ms_ease-out]" : ""}`}
     >
       <div className="text-center">
         <div className="text-xl sm:text-2xl mb-1">🎵</div>
@@ -310,6 +316,7 @@ export function TimelineDropZone({
   const [activeId, setActiveId] = useState<string | null>(null);
   const [guessedName, setGuessedName] = useState("");
   const [guessedArtist, setGuessedArtist] = useState("");
+  const [isNewlyPlaced, setIsNewlyPlaced] = useState(false);
 
   const sortedTimeline = [...timeline].sort((a, b) => a.year - b.year);
 
@@ -354,6 +361,9 @@ export function TimelineDropZone({
         10,
       );
       setPlacementIndex(index);
+      // Trigger drop animation
+      setIsNewlyPlaced(true);
+      setTimeout(() => setIsNewlyPlaced(false), 300);
       // Vibrate on successful drop if device supports it
       if (navigator.vibrate) {
         navigator.vibrate(50);
@@ -405,7 +415,12 @@ export function TimelineDropZone({
               isActive={activeId !== null}
               year={sortedTimeline[0]?.year}
             />
-            {placementIndex === 0 && <PlacedSongCard song={currentSong} />}
+            {placementIndex === 0 && (
+              <PlacedSongCard
+                song={currentSong}
+                isNewlyPlaced={isNewlyPlaced}
+              />
+            )}
 
             {sortedTimeline.map((song, idx) => (
               <div key={song.songId} className="flex items-center gap-2">
@@ -416,7 +431,10 @@ export function TimelineDropZone({
                   year={sortedTimeline[idx + 1]?.year}
                 />
                 {placementIndex === idx + 1 && (
-                  <PlacedSongCard song={currentSong} />
+                  <PlacedSongCard
+                    song={currentSong}
+                    isNewlyPlaced={isNewlyPlaced}
+                  />
                 )}
               </div>
             ))}

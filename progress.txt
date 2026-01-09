@@ -1398,3 +1398,34 @@ Files changed:
 - src/app/dashboard/page.tsx (animate-in on content container)
 - src/app/dashboard/game/[id]/page.tsx (animate-in on skeleton + content containers)
 - plans/prd.json (marked ui-polish #69 as passes: true)
+
+## 2026-01-09: Implemented microinteractions pass
+
+PRD items: ui-polish #71 (Microinteractions pass)
+
+Changes:
+- Button already had active:scale-[0.98] from previous work
+- Card component: added interactive prop with hover:-translate-y-0.5 hover:shadow-md transition
+- Page transitions: standardized all pages to animate-in fade-in duration-150
+- Drag start: DragOverlay already had scale-105 shadow-xl, removed scale from original draggable cards
+- Drop animation: added dropPulse keyframe animation (scale 1.1→1), isNewlyPlaced state triggers animation
+- Fixed vitest config to only include src/**/*.test.{ts,tsx} (was picking up e2e tests)
+
+Key decisions:
+- Card interactive prop is opt-in (default false) to avoid hover on static containers
+- Draggable cards show opacity:50 when dragging, DragOverlay shows scaled version
+- Drop pulse animation lasts 300ms, triggered via setTimeout state reset
+
+Files changed:
+- vitest.config.ts (fixed include pattern)
+- src/components/ui/card.tsx (added interactive prop)
+- src/app/page.tsx (added fade-in animation)
+- src/app/join/page.tsx (standardized duration-150)
+- src/app/lobby/[pin]/page.tsx (standardized duration-150)
+- src/app/game/[pin]/page.tsx (standardized duration-150)
+- src/app/dashboard/page.tsx (standardized duration-150)
+- src/app/dashboard/game/[id]/page.tsx (standardized duration-150)
+- src/components/timeline-drop-zone.tsx (removed scale from draggables, added drop animation)
+- src/components/steal-phase.tsx (removed scale from draggable)
+- src/app/globals.css (added dropPulse keyframe)
+- plans/prd.json (marked ui-polish #71 as passes: true)

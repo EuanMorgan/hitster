@@ -89,7 +89,7 @@ function JoinPageContent() {
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
-      <Card className="w-full max-w-md animate-in fade-in-0 duration-200">
+      <Card className="w-full max-w-md animate-in fade-in duration-150">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Join Game</CardTitle>
@@ -207,7 +207,7 @@ function JoinPageContent() {
 function JoinPageLoading() {
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
-      <Card className="w-full max-w-md animate-in fade-in-0 duration-200">
+      <Card className="w-full max-w-md animate-in fade-in duration-150">
         <CardHeader>
           <div className="flex items-center justify-between">
             <Skeleton className="h-7 w-24" />

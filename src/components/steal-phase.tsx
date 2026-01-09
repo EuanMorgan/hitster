@@ -108,8 +108,8 @@ function StealSongCard({ isPlaced }: { isPlaced: boolean }) {
       style={style}
       {...attributes}
       {...listeners}
-      className={`bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-lg p-4 min-w-[100px] min-h-[80px] cursor-grab active:cursor-grabbing shadow-lg transition-all touch-none ${
-        isDragging ? "opacity-50 scale-105" : ""
+      className={`bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-lg p-4 min-w-[100px] min-h-[80px] cursor-grab active:cursor-grabbing shadow-lg transition-all duration-150 touch-none ${
+        isDragging ? "opacity-50" : ""
       }`}
     >
       <div className="text-center">

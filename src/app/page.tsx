@@ -18,7 +18,7 @@ export default async function Home() {
   return (
     <HydrateClient>
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-background to-primary/10 p-8">
-        <Card className="w-full max-w-md">
+        <Card className="w-full max-w-md animate-in fade-in duration-150">
           <CardHeader className="space-y-4 pb-6">
             <div className="flex items-center justify-between">
               <CardTitle className="text-3xl font-bold">Hitster</CardTitle>
