@@ -98,7 +98,7 @@
     "steps": [
       "Install @t3-oss/env-nextjs and zod",
       "Create src/env.ts with client and server env schemas",
-      "Define all required env vars (Spotify, DB, Auth, Pushover)",
+      "Define all required env vars (Spotify, DB, Auth)",
       "Add env validation to next.config.ts",
       "Update .env.example with all required variables",
       "Remove SPOTIFY_CLIENT_ID from .env, run 'bun run build', expect build fails with 'Missing environment variable: SPOTIFY_CLIENT_ID'"
@@ -811,5 +811,542 @@
       "Environment variable documentation"
     ],
     "passes": true
+  },
+  {
+    "category": "stealing",
+    "description": "Two-phase steal: schema changes",
+    "steps": [
+      "Add stealPhase field to gameSessions: 'decide' | 'place' | null",
+      "Add stealDecidePhaseEndAt timestamp field",
+      "Add stealPlacePhaseEndAt timestamp field",
+      "Add playerSkips array field to track who skipped",
+      "Add decidedStealers array to track who clicked steal in decide phase",
+      "Run db:push and verify schema updates",
+      "DONE: npm run typecheck passes with new fields"
+    ],
+    "passes": false
+  },
+  {
+    "category": "stealing",
+    "description": "Two-phase steal: backend mutations",
+    "steps": [
+      "Modify confirmTurn to set stealPhase='decide' and stealDecidePhaseEndAt=now+10s",
+      "Add decideToSteal mutation: deducts token, adds to decidedStealers array",
+      "Add skipSteal mutation: adds player to playerSkips array",
+      "Add transitionToPlacePhase: called when decide ends, sets stealPhase='place' and stealPlacePhaseEndAt=now+20s",
+      "Modify submitSteal to only work in 'place' phase, allow late-joiners who pay token",
+      "Modify resolveStealPhase to handle new two-phase data structure",
+      "If all eligible players skip, immediately call resolveStealPhase and advance turn",
+      "DONE: Can complete full steal flow via API calls"
+    ],
+    "passes": false
+  },
+  {
+    "category": "stealing",
+    "description": "Two-phase steal: decide phase UI",
+    "steps": [
+      "Show 'Steal (🪙1)' and 'Skip' buttons to non-active players during decide phase",
+      "Display 10s countdown timer for decide phase",
+      "Clicking Steal calls decideToSteal mutation and disables button",
+      "Clicking Skip calls skipSteal mutation and shows 'Skipped' state",
+      "Show 'X/Y players decided' indicator",
+      "Active player sees their timeline with placed song highlighted (glowing border)",
+      "DONE: Non-active player can click Steal or Skip, see timer, see active player's timeline"
+    ],
+    "passes": false
+  },
+  {
+    "category": "stealing",
+    "description": "Two-phase steal: place phase UI",
+    "steps": [
+      "After decide phase, show 20s place phase timer for players who clicked Steal",
+      "Stealers see active player's timeline (not their own) with drop zones",
+      "Active player's placed song highlighted distinctly",
+      "When stealer places, show their avatar/name on that position",
+      "Block positions already taken by other stealers (show who claimed it)",
+      "Late joiners can still click 'Steal' during place phase - immediately show timeline",
+      "Auto-submit placement when timer expires",
+      "DONE: Stealer can drag into active player's timeline, see other stealers' positions"
+    ],
+    "passes": false
+  },
+  {
+    "category": "stealing",
+    "description": "Steal phase skip functionality",
+    "steps": [
+      "Track eligible players count (all non-active players)",
+      "Track skipped players count from playerSkips array",
+      "When skipped count equals eligible count, immediately resolve steal phase",
+      "Show visual indicator: 'Skipped: 2/3 players'",
+      "Skip button disabled after clicking, shows checkmark",
+      "DONE: If all 3 non-active players skip, steal phase ends within 1 second"
+    ],
+    "passes": false
+  },
+  {
+    "category": "gameplay",
+    "description": "Spotify loading state and indicator",
+    "steps": [
+      "Add isLoading state to SpotifyPlayer, true when shouldPlay but not yet playing",
+      "Host sees spinner and 'Loading song...' text while buffering",
+      "Other players see 'Waiting for song...' message during load",
+      "onPlaybackStarted sets isLoading=false",
+      "DONE: Visible loading indicator appears before song plays, disappears when playing"
+    ],
+    "passes": false
+  },
+  {
+    "category": "gameplay",
+    "description": "Turn timer synced to playback start",
+    "steps": [
+      "Add playbackStartedAt state to track when song actually started",
+      "TurnTimer calculates remaining time from playbackStartedAt, not turnStartedAt",
+      "Timer shows full duration until playback starts",
+      "onPlaybackStarted callback sets playbackStartedAt=Date.now()",
+      "DONE: With 5s Spotify delay, player still gets full 45s turn after song starts"
+    ],
+    "passes": false
+  },
+  {
+    "category": "gameplay",
+    "description": "Prevent song restart on state changes",
+    "steps": [
+      "Add currentPlayingUri ref to track what's currently playing",
+      "Skip playTrack call if URI matches currentPlayingUri",
+      "Clear currentPlayingUri only when song should actually change (new turn)",
+      "Add console.log for debugging: 'Skipping duplicate play call for {uri}'",
+      "DONE: Song does not restart when game state updates during playback"
+    ],
+    "passes": false
+  },
+  {
+    "category": "ui",
+    "description": "Result overlay 5 seconds with continued playback",
+    "steps": [
+      "Change TurnResultOverlay timeout from 4000 to 5000ms",
+      "Verify song continues playing during result display (no pause call)",
+      "All players see overlay via subscription update",
+      "DONE: Result shows for 5 seconds, song audible throughout"
+    ],
+    "passes": false
+  },
+  {
+    "category": "ui",
+    "description": "Guess feedback with color highlighting",
+    "steps": [
+      "In result overlay, show 'Your guess: {guessedName}' with green bg if correct, red if wrong",
+      "Show 'Actual: {actualName}' below for comparison",
+      "Same pattern for artist: green/red highlight based on correctness",
+      "If guess bonus earned, show '+1 🪙' with brief scale animation",
+      "Text size min 16px for readability",
+      "DONE: Can clearly see green highlight on correct guess, red on wrong"
+    ],
+    "passes": false
+  },
+  {
+    "category": "ui",
+    "description": "Token display compact format",
+    "steps": [
+      "Replace repeated emoji with '🪙 x{count}' format",
+      "On mobile (<640px), use even shorter '🪙{count}' format",
+      "Max-width on token container prevents overflow",
+      "DONE: Player with 10 tokens shows '🪙 x10', no horizontal scroll on 320px viewport"
+    ],
+    "passes": false
+  },
+  {
+    "category": "ui",
+    "description": "Fix mobile horizontal scroll",
+    "steps": [
+      "Add overflow-x-hidden to main game container",
+      "Constrain PlayerCard max-width to 100%",
+      "Player name truncates with ellipsis if too long",
+      "Badges wrap to new line on very small screens",
+      "Remove -mx-2 negative margins or contain them properly",
+      "DONE: No horizontal scrollbar on 320px iPhone SE viewport in DevTools"
+    ],
+    "passes": false
+  },
+  {
+    "category": "ui",
+    "description": "Mobile timeline polish",
+    "steps": [
+      "Keep horizontal scroll on mobile (user can rotate phone)",
+      "Increase card min-width so song name/artist don't truncate aggressively",
+      "Year prominent (bold, large font), song name and artist readable",
+      "Smooth horizontal scroll with snap points",
+      "Touch-friendly drag-and-drop with clear drop zone indicators",
+      "Timeline scrolls to show new card when placed",
+      "DONE: Timeline readable on 375px, no truncation, smooth scroll and drag"
+    ],
+    "passes": false
+  },
+  {
+    "category": "ui",
+    "description": "Mobile turn indicator clarity",
+    "steps": [
+      "Add prominent banner at top: '{PlayerName}'s Turn' or 'Your Turn!' in contrasting color",
+      "Show current phase below: 'Placing song' / 'Steal Phase' / 'Results'",
+      "Your Turn banner uses primary color background, pulsing border",
+      "Other player's turn uses muted background",
+      "DONE: Immediately obvious whose turn it is and what phase on mobile"
+    ],
+    "passes": false
+  },
+  {
+    "category": "api",
+    "description": "Document subscription limitations",
+    "steps": [
+      "Test SSE on Vercel deployment with 2+ players",
+      "Measure average latency from mutation to UI update",
+      "Test background tab behavior on mobile Safari/Chrome",
+      "Document findings in README or CLAUDE.md",
+      "If latency >3s consistently, note that VPS deployment recommended",
+      "DONE: README has 'Real-time Performance' section with findings"
+    ],
+    "passes": false
+  },
+  {
+    "category": "api",
+    "description": "Player reconnection after refresh",
+    "steps": [
+      "Player refreshes page mid-game",
+      "Session cookie preserved, player auto-rejoins same game",
+      "Game state restored: timeline, tokens, current phase",
+      "If was active player, turn timer resumes (not reset)",
+      "Test: refresh during turn, during steal, during results",
+      "DONE: Can refresh browser and continue playing without data loss"
+    ],
+    "passes": false
+  },
+  {
+    "category": "ui",
+    "description": "Game over back to home button",
+    "steps": [
+      "Add 'Back to Home' button on game over screen",
+      "Button uses Link component to '/' route",
+      "Visible to all players (host and non-host)",
+      "Positioned in button row with Rematch button",
+      "DONE: Clicking 'Back to Home' navigates to home page"
+    ],
+    "passes": false
+  },
+  {
+    "category": "ui",
+    "description": "Winner confetti animation",
+    "steps": [
+      "Install: npm install @neoconfetti/react",
+      "Import Confetti component in game over screen",
+      "Trigger confetti when winner declared (gameEnded && winner)",
+      "Confetti renders for 4 seconds then stops",
+      "Use app theme colors for confetti pieces",
+      "DONE: Confetti explodes on screen when game ends"
+    ],
+    "passes": false
+  },
+  {
+    "category": "ui-polish",
+    "description": "Home page visual polish",
+    "steps": [
+      "Replace generic 'Welcome' with personality: 'Ready to test your music knowledge?'",
+      "Login button: larger, primary color, centered",
+      "Add subtle background gradient or pattern",
+      "Spacing: min 24px between sections",
+      "DONE: Home page feels polished, not like default template"
+    ],
+    "passes": false
+  },
+  {
+    "category": "ui-polish",
+    "description": "Lobby waiting state polish",
+    "steps": [
+      "PIN display: large monospace font, letter-spacing for readability",
+      "QR code: white background padding, subtle shadow",
+      "Waiting message with personality: 'Waiting for friends to join...' with animated dots",
+      "Player list: cards with subtle hover state, smooth enter animation",
+      "DONE: Lobby feels alive and polished while waiting"
+    ],
+    "passes": false
+  },
+  {
+    "category": "ui-polish",
+    "description": "Player card visual hierarchy",
+    "steps": [
+      "Active player card: colored left border (4px primary), subtle glow",
+      "Avatar: 48px on mobile, 56px on desktop",
+      "Name: font-semibold, truncate with ellipsis",
+      "Token count: right-aligned, muted color until low (<2 = warning color)",
+      "Disconnected state: grayscale filter, 'Reconnecting...' badge",
+      "DONE: Can instantly identify active player and player status at a glance"
+    ],
+    "passes": false
+  },
+  {
+    "category": "ui-polish",
+    "description": "Song card design polish",
+    "steps": [
+      "Year: bold, 24px minimum, high contrast",
+      "Song name: 14px, truncate at 2 lines with ellipsis",
+      "Artist: 12px, muted color, single line truncate",
+      "Card: subtle gradient background, 8px border-radius",
+      "Placed card: success green border when correct, red when wrong",
+      "DONE: Song cards readable, year prominent, correct/incorrect obvious"
+    ],
+    "passes": false
+  },
+  {
+    "category": "ui-polish",
+    "description": "Timer urgency states",
+    "steps": [
+      "Timer >50%: default text color",
+      "Timer 25-50%: amber/warning color",
+      "Timer <25%: red color, pulse animation",
+      "Timer <10s: add subtle screen edge glow/vignette",
+      "Font: tabular-nums for stable width during countdown",
+      "DONE: Timer creates urgency through color progression"
+    ],
+    "passes": false
+  },
+  {
+    "category": "ui-polish",
+    "description": "Button hierarchy and states",
+    "steps": [
+      "Primary action (Confirm, Start): filled primary color, hover darken",
+      "Secondary action (Skip, Settings): outline style, hover fill",
+      "Destructive action (Leave): red outline, hover red fill",
+      "Disabled state: 50% opacity, cursor-not-allowed",
+      "Loading state: spinner replaces text, maintains button width",
+      "All buttons: min 44px height for touch",
+      "DONE: Button importance clear from visual weight"
+    ],
+    "passes": false
+  },
+  {
+    "category": "ui-polish",
+    "description": "Toast and feedback styling",
+    "steps": [
+      "Success toast: green left border, checkmark icon",
+      "Error toast: red left border, X icon",
+      "Info toast: blue left border, info icon",
+      "Toast position: top-center on mobile, top-right on desktop",
+      "Animation: slide down + fade in, 300ms ease-out",
+      "DONE: Toasts feel polished and match app style"
+    ],
+    "passes": false
+  },
+  {
+    "category": "ui-polish",
+    "description": "Empty states with personality",
+    "steps": [
+      "Empty timeline: 'No songs yet - your musical journey starts here!'",
+      "No games played: 'Your game history is empty. Time to play!'",
+      "No players joined: 'Share the PIN and wait for friends to join'",
+      "Use appropriate emoji or illustration",
+      "Muted text color, centered",
+      "DONE: Empty states helpful and have character"
+    ],
+    "passes": false
+  },
+  {
+    "category": "ui-polish",
+    "description": "Loading skeleton polish",
+    "steps": [
+      "Skeleton matches layout of loaded content (same heights/widths)",
+      "Subtle shimmer animation left-to-right",
+      "Use for: player list, timeline cards, game history",
+      "Skeleton to content: crossfade transition 200ms",
+      "DONE: Loading states feel smooth, no layout shift on load"
+    ],
+    "passes": false
+  },
+  {
+    "category": "ui-polish",
+    "description": "Dark mode polish pass",
+    "steps": [
+      "Verify all text meets 4.5:1 contrast ratio in dark mode",
+      "Cards use dark surface color, not pure black",
+      "Borders visible but subtle in dark mode",
+      "No pure white text (use gray-100 instead)",
+      "Test all screens in dark mode",
+      "DONE: Dark mode polished and accessible"
+    ],
+    "passes": false
+  },
+  {
+    "category": "ui-polish",
+    "description": "Microinteractions pass",
+    "steps": [
+      "Buttons: scale(0.98) on active",
+      "Cards: subtle lift (translateY -2px, shadow increase) on hover",
+      "Page transitions: fade 150ms",
+      "Drag start: slight scale up (1.05), shadow increase",
+      "Drop: brief scale pulse animation",
+      "DONE: UI feels responsive and alive"
+    ],
+    "passes": false
+  },
+  {
+    "category": "ui",
+    "description": "Fix settings number inputs to allow clearing before typing",
+    "steps": [
+      "Number inputs block backspace when value at min (e.g., can't clear '1' to type '2')",
+      "Allow empty/intermediate states during editing",
+      "Only clamp to min/max on blur or form submit",
+      "DONE: Can backspace to clear input, type new value, min enforced on blur"
+    ],
+    "passes": false
+  },
+  {
+    "category": "ui",
+    "description": "Improve settings save UX with feedback",
+    "steps": [
+      "Show success toast when settings saved",
+      "Auto-close settings panel after successful save",
+      "DONE: Save shows toast confirmation and closes panel"
+    ],
+    "passes": false
+  },
+  {
+    "category": "gameplay",
+    "description": "Simplify timer UI - remove song progress bar",
+    "steps": [
+      "Remove song progress bar (confusing with two countdowns)",
+      "Keep only the round/turn timer",
+      "On refresh, sync turn timer to correct remaining time from server",
+      "DONE: Single timer, syncs correctly after page refresh"
+    ],
+    "passes": false
+  },
+  {
+    "category": "lobby",
+    "description": "QR code uses local network IP in dev mode",
+    "steps": [
+      "Detect local network IP (192.168.x.x) on server",
+      "In dev mode, generate QR with local IP instead of localhost",
+      "Other devices on same network can scan and join",
+      "DONE: Phone on same WiFi can scan QR and reach game"
+    ],
+    "passes": false
+  },
+  {
+    "category": "ui",
+    "description": "Remove duplicate 'Your Timeline' on other player's turn",
+    "steps": [
+      "When watching (not your turn), remove standalone 'Your Timeline' section",
+      "Player list shows all timelines - ensure current user is always first",
+      "Reduces redundancy and clutter",
+      "Your turn: still shows prominent timeline for placing songs",
+      "DONE: No duplicate timeline when watching, you're always top of player list"
+    ],
+    "passes": false
+  },
+  {
+    "category": "lobby",
+    "description": "Shuffle turns as optional setting",
+    "steps": [
+      "Add 'Shuffle turn order each round' toggle to game settings",
+      "Default to off (fixed turn order)",
+      "When on, shuffles player order at start of each round",
+      "DONE: Setting visible in lobby, respects toggle during gameplay"
+    ],
+    "passes": false
+  },
+  {
+    "category": "gameplay",
+    "description": "Continuous song playback across phases",
+    "steps": [
+      "Remove separate 'song play duration' setting",
+      "Song plays continuously through turn phase AND steal phase",
+      "Turn timer (45s) and steal timer (10s+20s) remain separate",
+      "Song only stops when next turn starts",
+      "Simplifies settings UI and playback logic",
+      "DONE: Song plays throughout all phases, no restart between phases"
+    ],
+    "passes": false
+  },
+  {
+    "category": "playlist",
+    "description": "Add ISRC field and year lookup schema changes",
+    "steps": [
+      "Add isrc?: string to PlaylistSong type in schema.ts",
+      "Add spotifyYear?: number to PlaylistSong (to preserve original Spotify date)",
+      "Add isrc?: string to CurrentTurnSong and TimelineSong types",
+      "Create yearLookupStatusEnum with values: pending, in_progress, complete",
+      "Add yearLookupStatus, yearLookupProgress, yearLookupTotal fields to gameSessions",
+      "Create isrcYearCache table with: isrc (PK), originalYear, spotifyYear, createdAt",
+      "Run db:push to apply schema changes",
+      "DONE: npm run typecheck passes, db:push succeeds"
+    ],
+    "passes": false
+  },
+  {
+    "category": "playlist",
+    "description": "Extract ISRC from Spotify playlist tracks API",
+    "steps": [
+      "In spotify.ts getPlaylistTracks, update TS type to include external_ids: { isrc?: string }",
+      "Extract isrc from track.external_ids?.isrc when mapping tracks",
+      "Store both isrc and spotifyYear (album.release_date) in PlaylistSong",
+      "In game.ts fetchPlaylistTracks helper, apply same changes",
+      "Update PLACEHOLDER_SONGS to include dummy ISRC values for testing",
+      "DONE: Console.log shows ISRC values when fetching real Spotify playlist"
+    ],
+    "passes": false
+  },
+  {
+    "category": "playlist",
+    "description": "Create MusicBrainz service with rate limiting",
+    "steps": [
+      "Create src/lib/musicbrainz.ts",
+      "Add rate limiter that enforces 1 request per second (MusicBrainz strict limit)",
+      "Implement getOriginalYear(isrc: string): Promise<number | null>",
+      "Call GET https://musicbrainz.org/ws/2/isrc/{ISRC}?fmt=json",
+      "Set User-Agent header: 'Hitster/1.0 (contact@example.com)' (required by MusicBrainz)",
+      "Parse response.recordings[].first-release-date, return earliest year found",
+      "Return null if no recordings found or API error",
+      "DONE: Manual test with known ISRC (e.g., GBUM71029604 for Bohemian Rhapsody) returns 1975"
+    ],
+    "passes": false
+  },
+  {
+    "category": "playlist",
+    "description": "Add ISRC year cache lookup and storage",
+    "steps": [
+      "In musicbrainz.ts, add getCachedYear(isrc: string): Promise<number | null>",
+      "Query isrcYearCache table for existing entry",
+      "Add cacheYear(isrc: string, originalYear: number, spotifyYear?: number)",
+      "Insert into isrcYearCache table on successful MusicBrainz lookup",
+      "Modify getOriginalYear to check cache first, only call API if not cached",
+      "DONE: Second lookup for same ISRC returns cached value (no API call in logs)"
+    ],
+    "passes": false
+  },
+  {
+    "category": "playlist",
+    "description": "Background year lookup on game creation",
+    "steps": [
+      "In game.ts createGame mutation, after fetching playlist songs:",
+      "Set yearLookupStatus='in_progress', yearLookupTotal=songs.length, yearLookupProgress=0",
+      "Create async function processYearLookups(sessionId, songs) - do NOT await it",
+      "Loop through songs with ISRCs, call getOriginalYear for each",
+      "Update song.year with MusicBrainz result if found, keep Spotify year as fallback",
+      "Increment yearLookupProgress after each song, emit session update",
+      "Set yearLookupStatus='complete' when done",
+      "DONE: Creating game shows yearLookupProgress incrementing in DB"
+    ],
+    "passes": false
+  },
+  {
+    "category": "playlist",
+    "description": "Show year lookup progress in lobby UI",
+    "steps": [
+      "Add yearLookupStatus, yearLookupProgress, yearLookupTotal to session query response",
+      "In LobbyView, show progress indicator when yearLookupStatus is 'in_progress'",
+      "Display 'Fetching song data... X/Y' with progress bar",
+      "Show checkmark and 'Song data ready' when status is 'complete'",
+      "Show '(Using approximate dates)' if status still 'in_progress' when starting",
+      "Start button always enabled - game can start with Spotify years as fallback",
+      "DONE: Creating game shows progress bar, completes after ~100 seconds for 100 songs"
+    ],
+    "passes": false
   }
 ]
