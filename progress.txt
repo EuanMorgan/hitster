@@ -881,3 +881,19 @@ Changes:
 Files changed:
 - src/app/game/[pin]/page.tsx (added Link import, Back to Home button)
 - plans/prd.json (marked ui #59 as passes: true)
+
+## 2026-01-09: Implemented winner confetti animation
+
+PRD items: ui #60 (Winner confetti animation)
+
+Changes:
+- Installed @neoconfetti/react package
+- Added Confetti component import to game page
+- Confetti renders on game over screen (state="finished")
+- Config: 200 particles, 4s duration, 0.6 force, theme-appropriate colors
+- Positioned at top center with fixed positioning
+
+Files changed:
+- package.json (added @neoconfetti/react dependency)
+- src/app/game/[pin]/page.tsx (added Confetti import + component in game over view)
+- plans/prd.json (marked ui #60 as passes: true)

@@ -1,5 +1,6 @@
 "use client";
 
+import { Confetti } from "@neoconfetti/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -757,6 +758,24 @@ export default function GamePage() {
 
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
+        {/* Winner confetti animation */}
+        <div className="fixed top-0 left-1/2 -translate-x-1/2 z-50">
+          <Confetti
+            particleCount={200}
+            colors={[
+              "#FFD700",
+              "#FF6B6B",
+              "#4ECDC4",
+              "#45B7D1",
+              "#96CEB4",
+              "#9B59B6",
+            ]}
+            duration={4000}
+            force={0.6}
+            stageWidth={window.innerWidth}
+            stageHeight={window.innerHeight}
+          />
+        </div>
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             {/* Winner celebration header */}
