@@ -1613,7 +1613,7 @@
       "List in this task's notes: components to migrate and shadcn components to add",
       "DONE: Audit complete, migration list documented"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "standards",
@@ -1626,7 +1626,7 @@
       "Remove deprecated custom component files after migration",
       "DONE: All identified components migrated to shadcn equivalents"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "standards",
@@ -1638,6 +1638,6 @@
       "Note: run 'bunx --bun shadcn@latest add <component>' to add new components",
       "DONE: CLAUDE.md has component standards section, devs know to check shadcn first"
     ],
-    "passes": false
+    "passes": true
   }
 ]

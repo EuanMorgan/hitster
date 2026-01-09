@@ -131,3 +131,48 @@ For automated testing with Spotify auth (ralph loop):
 **IMPORTANT**: Always use `http://127.0.0.1:3000` not `http://localhost:3000` when navigating with Playwright MCP. Spotify OAuth only allows loopback IP, and session cookies are bound to `127.0.0.1`.
 
 Re-run `bun auth:export` weekly when session expires.
+
+## Component Standards
+
+**Always check [shadcn/ui](https://ui.shadcn.com/docs/components) before building custom components.**
+
+### Adding shadcn Components
+
+```bash
+bunx --bun shadcn@latest add <component>
+```
+
+### Currently Installed
+
+- **Button** - Primary actions, variants: default, destructive, outline, secondary, ghost, link
+- **Card** - Content containers with optional interactive prop
+- **Input** - Text inputs with consistent styling
+- **Label** - Form labels
+- **Form** - React Hook Form integration
+- **Table** - Data tables
+- **Switch** - Toggle switches
+- **Skeleton** - Loading placeholders with shimmer animation
+- **Chart** - Recharts-based charting (area, bar, etc.)
+
+### Toast Notifications
+
+Uses `sonner` directly (not shadcn wrapper). Import and use:
+
+```tsx
+import { toast } from "sonner";
+
+toast.success("Settings saved");
+toast.error("Something went wrong");
+toast.info("Information message");
+```
+
+Toaster configured in `src/app/layout.tsx` with custom icons.
+
+### When to Build Custom
+
+Only build custom components when:
+- No shadcn equivalent exists
+- App-specific logic is tightly coupled (e.g., TimelineDropZone, SpotifyPlayer)
+- Significant customization beyond shadcn's capabilities needed
+
+Keep custom components in `src/components/`, shadcn primitives in `src/components/ui/`.

@@ -1558,3 +1558,25 @@ Files changed:
 - src/app/dashboard/page.tsx (added chart imports, configs, and components)
 - biome.json (disabled noDangerouslySetInnerHtml rule)
 - plans/prd.json (marked statistics #35 as passes: true)
+
+## 2026-01-09: shadcn component audit + documentation
+
+PRD items: standards (Audit + Migrate + Document shadcn policy)
+
+Audit findings:
+- sonner already installed directly (v2.0.7), not via shadcn wrapper
+- Toaster configured in layout.tsx with custom icons (CheckCircle2, XCircle, Info, AlertTriangle)
+- shadcn components in use: Button, Card, Input, Label, Form, Table, Switch, Skeleton, Chart
+- No dialogs/modals/dropdowns/tooltips/popovers in codebase - none needed
+- Custom components (AvatarSelector, SpotifyPlayer, TimelineDropZone) are app-specific, keep as-is
+
+Key decision: sonner direct import is fine - shadcn's sonner wrapper just re-exports it with Toaster component. Current setup already uses Toaster properly.
+
+Changes:
+- Added "Component Standards" section to CLAUDE.md
+- Documents shadcn-first policy, installed components, toast usage, when to build custom
+- All 3 standards PRD items marked as passes: true
+
+Files changed:
+- CLAUDE.md (added Component Standards section)
+- plans/prd.json (marked standards audit/migrate/document as passes: true)
