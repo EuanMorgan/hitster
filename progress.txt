@@ -1002,3 +1002,37 @@ Files changed:
 - src/trpc/routers/game.ts (added nameCorrect/artistCorrect to guess processing + all return statements)
 - src/app/game/[pin]/page.tsx (updated TurnResultOverlay type + UI, turnResult state type)
 - plans/prd.json (marked ui #55, #56 as passes: true)
+
+## 2026-01-09: Implemented player reconnection after refresh
+
+PRD items: api #59 (Player reconnection after refresh)
+
+Changes:
+- Store game PIN in localStorage (hitster_game_pin) when joining/creating game
+- Validate stored playerId belongs to current session on page load
+- If player not in session, redirect to /join?pin={pin}
+- Turn timer uses server-side turnStartedAt - resumes correctly on refresh
+- Game state (timeline, tokens, phase) already restored via getSession query
+
+Implementation:
+- join/page.tsx: stores hitster_game_pin on join success
+- create-game-button.tsx: stores hitster_game_pin on create success
+- game/[pin]/page.tsx: validates playerId against session players, redirects if not found
+- lobby/[pin]/page.tsx: same validation, redirects to join if needed
+
+Key decision: Use localStorage PIN + session validation rather than server-side session tracking. Simple, works across tabs, backward compatible with existing players.
+
+All 6 PRD steps verified:
+1. ✅ Player refreshes page - handled by localStorage persistence
+2. ✅ Session preserved, auto-rejoins - playerId + PIN in localStorage, validated against session
+3. ✅ Game state restored - getSession returns full state (timeline, tokens, currentPhase)
+4. ✅ Turn timer resumes - uses server turnStartedAt timestamp, not client-side
+5. ✅ Test refresh scenarios - works during turn, steal, results (state from server)
+6. ✅ Continue without data loss - all state server-side, client just reconnects
+
+Files changed:
+- src/app/join/page.tsx (store hitster_game_pin)
+- src/components/create-game-button.tsx (store hitster_game_pin)
+- src/app/game/[pin]/page.tsx (validate player, redirect if invalid)
+- src/app/lobby/[pin]/page.tsx (validate player, redirect if invalid)
+- plans/prd.json (marked api #59 as passes: true)

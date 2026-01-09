@@ -43,6 +43,7 @@ function JoinPageContent() {
       onSuccess: (data) => {
         localStorage.setItem("hitster_player_id", data.playerId);
         localStorage.setItem("hitster_session_id", data.sessionId);
+        localStorage.setItem("hitster_game_pin", pin);
         router.push(`/lobby/${pin}`);
       },
       onError: (err) => {

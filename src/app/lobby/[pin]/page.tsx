@@ -80,12 +80,28 @@ export default function LobbyPage() {
     },
   });
 
-  // Get current player ID from localStorage for heartbeat
+  // Get current player ID from localStorage and validate it belongs to this game
   const [currentPlayerId, setCurrentPlayerId] = useState<string | null>(null);
+  const [playerValidated, setPlayerValidated] = useState(false);
+
   useEffect(() => {
     const storedPlayerId = localStorage.getItem("hitster_player_id");
-    setCurrentPlayerId(storedPlayerId);
-  }, []);
+    const storedPin = localStorage.getItem("hitster_game_pin");
+
+    // If stored PIN matches current game, use stored player ID
+    if (storedPlayerId && storedPin === pin) {
+      setCurrentPlayerId(storedPlayerId);
+      setPlayerValidated(true);
+    } else if (storedPlayerId && !storedPin) {
+      // Legacy: no PIN stored, assume player is valid (backward compatibility)
+      setCurrentPlayerId(storedPlayerId);
+      setPlayerValidated(true);
+    } else {
+      // No player ID or wrong game - will validate against session data
+      setCurrentPlayerId(storedPlayerId);
+      setPlayerValidated(false);
+    }
+  }, [pin]);
 
   // Heartbeat to track player presence
   const heartbeatMutation = useMutation({
@@ -101,6 +117,28 @@ export default function LobbyPage() {
     const interval = setInterval(sendHeartbeat, 3000);
     return () => clearInterval(interval);
   }, [currentPlayerId]);
+
+  // Validate player belongs to this game session
+  useEffect(() => {
+    if (!sessionQuery.data || playerValidated) return;
+
+    const playerInSession = sessionQuery.data.players.find(
+      (p) => p.id === currentPlayerId,
+    );
+
+    if (playerInSession) {
+      // Player found in session - update localStorage with correct PIN and mark validated
+      localStorage.setItem("hitster_game_pin", pin);
+      setPlayerValidated(true);
+    } else if (currentPlayerId) {
+      // Player ID exists but not in this session - redirect to join
+      router.push(`/join?pin=${pin}`);
+    }
+    // If no player ID at all, redirect to join page for lobby
+    else if (!currentPlayerId && sessionQuery.data) {
+      router.push(`/join?pin=${pin}`);
+    }
+  }, [sessionQuery.data, currentPlayerId, playerValidated, pin, router]);
 
   // Redirect to game page when state changes to playing
   useEffect(() => {

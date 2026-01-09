@@ -1017,7 +1017,7 @@
       "Test: refresh during turn, during steal, during results",
       "DONE: Can refresh browser and continue playing without data loss"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "ui",
