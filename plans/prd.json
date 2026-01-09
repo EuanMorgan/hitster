@@ -1249,7 +1249,7 @@
       "When on, shuffles player order at start of each round",
       "DONE: Setting visible in lobby, respects toggle during gameplay"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "gameplay",
@@ -1599,6 +1599,44 @@
       "Handle page visibility changes (pause/resume when tab hidden)",
       "Clean up properly on component unmount",
       "DONE: Only one Spotify player in device list regardless of re-renders"
+    ],
+    "passes": false
+  },
+  {
+    "category": "standards",
+    "description": "Audit components for shadcn migration opportunities",
+    "steps": [
+      "Review src/components/ for custom implementations of common UI patterns",
+      "Check for: toast/notification, dialog/modal, popover, tooltip, alert, dropdown",
+      "Document findings: which components exist, what shadcn equivalents are available",
+      "Check if sonner is already installed (package.json) or if custom toast exists",
+      "List in this task's notes: components to migrate and shadcn components to add",
+      "DONE: Audit complete, migration list documented"
+    ],
+    "passes": false
+  },
+  {
+    "category": "standards",
+    "description": "Migrate to shadcn components (based on audit)",
+    "steps": [
+      "Add shadcn sonner for toasts: bunx --bun shadcn@latest add sonner",
+      "Add <Toaster /> to app/layout.tsx from @/components/ui/sonner",
+      "Replace custom toast implementations with sonner's toast() API",
+      "Add other shadcn components identified in audit: bunx --bun shadcn@latest add <component>",
+      "Remove deprecated custom component files after migration",
+      "DONE: All identified components migrated to shadcn equivalents"
+    ],
+    "passes": false
+  },
+  {
+    "category": "standards",
+    "description": "Document shadcn-first component policy",
+    "steps": [
+      "Add to CLAUDE.md: '## Component Standards' section",
+      "Document: always check https://ui.shadcn.com/docs/components before building custom",
+      "List commonly used shadcn components: Button, Card, Dialog, Input, Form, Toast (sonner), etc.",
+      "Note: run 'bunx --bun shadcn@latest add <component>' to add new components",
+      "DONE: CLAUDE.md has component standards section, devs know to check shadcn first"
     ],
     "passes": false
   }

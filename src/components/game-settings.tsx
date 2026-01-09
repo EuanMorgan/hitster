@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { useTRPC } from "@/trpc/client";
 
 type GameSettings = {
@@ -14,6 +15,7 @@ type GameSettings = {
   stealWindowDuration: number;
   maxPlayers: number;
   playlistUrl: string | null;
+  shuffleTurns: boolean;
 };
 
 type Props = {
@@ -111,7 +113,8 @@ export function GameSettings({ pin, initialSettings }: Props) {
     settings.turnDuration !== initialSettings.turnDuration ||
     settings.stealWindowDuration !== initialSettings.stealWindowDuration ||
     settings.maxPlayers !== initialSettings.maxPlayers ||
-    settings.playlistUrl !== initialSettings.playlistUrl;
+    settings.playlistUrl !== initialSettings.playlistUrl ||
+    settings.shuffleTurns !== initialSettings.shuffleTurns;
 
   if (!isOpen) {
     return (
@@ -178,6 +181,19 @@ export function GameSettings({ pin, initialSettings }: Props) {
           value={settings.playlistUrl || ""}
           onChange={(e) => handlePlaylistChange(e.target.value)}
           className="h-8 text-sm"
+        />
+      </div>
+
+      <div className="flex items-center justify-between">
+        <Label htmlFor="shuffleTurns" className="text-xs">
+          Shuffle turn order each round
+        </Label>
+        <Switch
+          id="shuffleTurns"
+          checked={settings.shuffleTurns}
+          onCheckedChange={(checked) =>
+            setSettings((prev) => ({ ...prev, shuffleTurns: checked }))
+          }
         />
       </div>
 

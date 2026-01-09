@@ -256,6 +256,7 @@ export default function LobbyPage() {
                     stealWindowDuration: session.stealWindowDuration,
                     maxPlayers: session.maxPlayers,
                     playlistUrl: session.playlistUrl,
+                    shuffleTurns: session.shuffleTurns,
                   }}
                 />
 

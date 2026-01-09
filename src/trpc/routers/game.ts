@@ -629,6 +629,7 @@ export const gameRouter = createTRPCRouter({
         stealWindowDuration: session.stealWindowDuration,
         maxPlayers: session.maxPlayers,
         playlistUrl: session.playlistUrl,
+        shuffleTurns: session.shuffleTurns,
         turnOrder: session.turnOrder,
         currentTurnIndex: session.currentTurnIndex,
         currentPlayerId:
@@ -690,6 +691,7 @@ export const gameRouter = createTRPCRouter({
         stealWindowDuration: z.number().int().min(5).max(20).optional(),
         maxPlayers: z.number().int().min(1).max(20).optional(),
         playlistUrl: z.string().url().nullable().optional(),
+        shuffleTurns: z.boolean().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -2186,7 +2188,7 @@ export const gameRouter = createTRPCRouter({
       const newUsedSongIds = [...(session.usedSongIds ?? []), nextSong.songId];
 
       let newTurnOrder = session.turnOrder;
-      if (isNewRound) {
+      if (isNewRound && session.shuffleTurns) {
         newTurnOrder = shuffleArray(session.turnOrder!);
       }
 

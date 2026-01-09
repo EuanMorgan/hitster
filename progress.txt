@@ -1307,3 +1307,31 @@ Files changed:
 - src/app/globals.css (custom toast CSS for borders, icons, dark mode)
 - src/app/layout.tsx (Toaster config with icons, animation class)
 - plans/prd.json (marked ui-polish #67 as passes: true)
+
+## 2026-01-09: Shuffle turns as optional setting
+
+PRD items: lobby #78 (Shuffle turns as optional setting)
+
+Changes:
+- Added shuffleTurns boolean to gameSessions schema (default: false)
+- Added shadcn Switch component for toggle UI
+- Added shuffleTurns to GameSettings component with toggle
+- Added to updateSettings mutation input validation
+- Added to getSession response
+- Made shuffle in resolveStealPhase conditional on shuffleTurns setting
+- Updated mocks/fixtures with shuffleTurns field
+
+Key decisions:
+- Default off (fixed turn order) - shuffle is opt-in
+- Shuffle only occurs at round boundary (when all players have had a turn)
+- Setting persists with session, syncs to all players via getSession
+
+Files changed:
+- src/db/schema.ts (shuffleTurns field)
+- src/components/ui/switch.tsx (new - shadcn component)
+- src/components/game-settings.tsx (Switch toggle)
+- src/trpc/routers/game.ts (updateSettings validation, getSession response, conditional shuffle)
+- src/app/lobby/[pin]/page.tsx (pass shuffleTurns to GameSettings)
+- src/mocks/db.ts (shuffleTurns default)
+- src/mocks/fixtures.ts (shuffleTurns on all sessions)
+- plans/prd.json (marked lobby #78 as passes: true)

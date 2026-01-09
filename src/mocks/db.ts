@@ -92,6 +92,7 @@ export function seedGameSession(
     playlistSongs: sessionData.playlistSongs ?? null,
     usingFallbackPlaylist: sessionData.usingFallbackPlaylist ?? false,
     gamesPlayed: sessionData.gamesPlayed ?? 0,
+    shuffleTurns: sessionData.shuffleTurns ?? false,
     createdAt: sessionData.createdAt ?? new Date(),
     updatedAt: sessionData.updatedAt ?? new Date(),
   };
