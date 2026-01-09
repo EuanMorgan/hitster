@@ -1561,7 +1561,7 @@
       "Hook handles connect/disconnect lifecycle",
       "DONE: SDK initializes once per session, device ID stable across re-renders"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "refactor",
@@ -1575,7 +1575,7 @@
       "Return { play, pause, transfer, isLoading, error }",
       "DONE: Playback control decoupled from SDK lifecycle"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "refactor",
@@ -1588,7 +1588,7 @@
       "All lint errors resolved (no eslint-disable comments needed)",
       "DONE: SpotifyPlayer under 100 lines, composes hooks cleanly"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "refactor",
@@ -1600,7 +1600,7 @@
       "Clean up properly on component unmount",
       "DONE: Only one Spotify player in device list regardless of re-renders"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "standards",

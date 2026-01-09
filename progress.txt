@@ -1874,3 +1874,30 @@ Files changed:
 - src/components/game/my-turn-card.tsx (new)
 - src/app/game/[pin]/page.tsx (reduced from 683 to 381 lines)
 - plans/prd.json (marked refactor #102 as passes: true)
+
+## 2026-01-09: Refactored SpotifyPlayer with extracted hooks
+
+PRD items: refactor (4 items - Spotify SDK refactoring)
+- Extract Spotify SDK initialization to useSpotifySDK hook
+- Extract playback mutations to useSpotifyPlayback hook
+- Refactor SpotifyPlayer to compose extracted hooks
+- Add SDK initialization guard to prevent duplicate instances
+
+Changes:
+- Created src/hooks/use-spotify-sdk.ts: SDK init, script loading, event listeners
+- Created src/hooks/use-spotify-playback.ts: play/pause mutations, duplicate call prevention
+- Refactored SpotifyPlayer from 325 lines to 114 lines
+- Module-level sdkInitialized guard prevents duplicate SDK instances
+- Callback refs in useSpotifySDK prevent re-initialization on prop changes
+- Removed unused useSpotifyPlaybackControl hook (dead code)
+
+Key decisions:
+- SDK init uses hasToken boolean dep instead of tokenData?.accessToken to satisfy linter
+- Loading state tracked in useSpotifyPlayback, not SDK hook
+- transferPlayback mutation moved to SDK hook (runs on device ready)
+
+Files changed:
+- src/hooks/use-spotify-sdk.ts (new - 227 lines)
+- src/hooks/use-spotify-playback.ts (new - 117 lines)
+- src/components/spotify-player.tsx (reduced from 325 to 114 lines)
+- plans/prd.json (marked 4 refactor items as passes: true)
