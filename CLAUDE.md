@@ -48,6 +48,7 @@ npm run db:migrate    # Run migrations
 ## Architecture
 
 ### Directory Structure
+
 - `src/app/` - Next.js App Router pages
 - `src/components/` - React components (UI in `ui/` subdirectory)
 - `src/trpc/` - tRPC setup (`init.ts`, `client.tsx`, `server.ts`)
@@ -60,15 +61,18 @@ npm run db:migrate    # Run migrations
 ### Key Patterns
 
 **tRPC**: Main API layer with type-safe procedures
+
 - `baseProcedure` - Public routes
 - `protectedProcedure` - Requires authenticated session
 - Game state updates use SSE subscriptions (`onSessionUpdate`)
 
 **Real-time Updates**: tRPC subscriptions with EventEmitter fallback
+
 - `useGameSession` hook manages subscription + polling fallback
 - `emitSessionUpdate(pin)` broadcasts changes to connected clients
 
 **Database Schema** (`src/db/schema.ts`):
+
 - `user`, `session`, `account`, `verification` - Better Auth tables
 - `gameSessions` - Game rooms with settings, turn state, playlist
 - `players` - Players in a game session
@@ -76,6 +80,7 @@ npm run db:migrate    # Run migrations
 - `gameHistory` - Completed game records
 
 **Game Flow**:
+
 1. Host creates game (gets 4-char PIN)
 2. Players join via PIN (lobby state)
 3. Host starts game → shuffles turns, assigns initial songs
@@ -85,15 +90,16 @@ npm run db:migrate    # Run migrations
 ### Environment Variables
 
 See `.env.example`. Key variables:
+
 - `DATABASE_URL` - PostgreSQL connection
 - `BETTER_AUTH_SECRET` - Auth encryption (min 32 chars)
 - `SPOTIFY_CLIENT_ID` / `SPOTIFY_CLIENT_SECRET` - Spotify OAuth
 - `NEXT_PUBLIC_APP_URL` - Base URL for callbacks
-- `SPOTIFY_REDIRECT_URI` - Use `127.0.0.1` locally, not `localhost`
 
 ### Testing
 
 Uses MSW for API mocking. Setup in `vitest.setup.ts` starts mock server.
+
 - Unit tests: `src/**/__tests__/*.test.{ts,tsx}`
 - E2E tests: `e2e/` directory with Playwright
 

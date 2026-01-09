@@ -6,6 +6,7 @@ import { chromium } from "playwright";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const AUTH_DIR = path.join(__dirname, "../.auth");
 const STORAGE_STATE_PATH = path.join(AUTH_DIR, "storage-state.json");
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://127.0.0.1:3000";
 
 async function exportAuth() {
   mkdirSync(AUTH_DIR, { recursive: true });
@@ -13,10 +14,10 @@ async function exportAuth() {
   const context = await browser.newContext();
   const page = await context.newPage();
 
-  console.log("Navigate to http://localhost:3000 and log in with Spotify.");
+  console.log(`Navigate to ${APP_URL} and log in with Spotify.`);
   console.log("Press Enter when done...");
 
-  await page.goto("http://localhost:3000");
+  await page.goto(APP_URL);
 
   await new Promise((resolve) => process.stdin.once("data", resolve));
 

@@ -10,12 +10,9 @@ export const env = createEnv({
     BETTER_AUTH_SECRET: z.string().min(32),
     SPOTIFY_CLIENT_ID: z.string().min(1),
     SPOTIFY_CLIENT_SECRET: z.string().min(1),
-    SPOTIFY_REDIRECT_URI: z.string().url().optional(),
-    PUSHOVER_USER_KEY: z.string().optional(),
-    PUSHOVER_API_TOKEN: z.string().optional(),
   },
   client: {
-    NEXT_PUBLIC_APP_URL: z.string().url(),
+    NEXT_PUBLIC_APP_URL: z.url(),
   },
   experimental__runtimeEnv: {
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,

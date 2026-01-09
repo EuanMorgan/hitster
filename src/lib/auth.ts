@@ -14,9 +14,7 @@ export const auth = betterAuth({
     spotify: {
       clientId: env.SPOTIFY_CLIENT_ID,
       clientSecret: env.SPOTIFY_CLIENT_SECRET,
-      redirectURI:
-        env.SPOTIFY_REDIRECT_URI ??
-        `${env.NEXT_PUBLIC_APP_URL}/api/auth/callback/spotify`,
+      redirectURI: `${env.NEXT_PUBLIC_APP_URL}/api/auth/callback/spotify`,
       scope: [
         "streaming",
         "user-read-email",
