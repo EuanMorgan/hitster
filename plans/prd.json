@@ -1029,7 +1029,7 @@
       "Positioned in button row with Rematch button",
       "DONE: Clicking 'Back to Home' navigates to home page"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "ui",

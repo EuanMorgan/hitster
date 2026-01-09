@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { SpotifyPlayer } from "@/components/spotify-player";
@@ -906,30 +907,36 @@ export default function GamePage() {
               </div>
             )}
 
-            {/* Rematch button for host */}
-            {isHost && (
-              <div>
-                <Button
-                  onClick={handleRematch}
-                  disabled={startRematchMutation.isPending}
-                  className="w-full"
-                  size="lg"
-                >
-                  {startRematchMutation.isPending
-                    ? "Starting..."
-                    : "🔄 Play Again"}
-                </Button>
-                <p className="mt-2 text-center text-xs text-muted-foreground">
-                  New players can join via PIN: {session.pin}
-                </p>
-              </div>
-            )}
+            {/* Action buttons */}
+            <div className="space-y-3">
+              {isHost && (
+                <div>
+                  <Button
+                    onClick={handleRematch}
+                    disabled={startRematchMutation.isPending}
+                    className="w-full"
+                    size="lg"
+                  >
+                    {startRematchMutation.isPending
+                      ? "Starting..."
+                      : "🔄 Play Again"}
+                  </Button>
+                  <p className="mt-2 text-center text-xs text-muted-foreground">
+                    New players can join via PIN: {session.pin}
+                  </p>
+                </div>
+              )}
 
-            {!isHost && (
-              <div className="text-center text-sm text-muted-foreground">
-                Waiting for host to start a rematch...
-              </div>
-            )}
+              {!isHost && (
+                <div className="text-center text-sm text-muted-foreground">
+                  Waiting for host to start a rematch...
+                </div>
+              )}
+
+              <Button asChild variant="outline" className="w-full" size="lg">
+                <Link href="/">🏠 Back to Home</Link>
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>

@@ -867,3 +867,17 @@ Implementation notes:
 Files changed:
 - src/components/spotify-player.tsx (added isLoading state, onLoadingChange prop, loading UI)
 - plans/prd.json (marked gameplay #50 as passes: true)
+
+## 2026-01-09: Implemented game over back to home button
+
+PRD items: ui #59 (Game over back to home button)
+
+Changes:
+- Added Link import from next/link to game page
+- Added "Back to Home" button using Link component with variant="outline"
+- Button visible to all players, positioned below rematch button in action buttons section
+- Uses asChild pattern with Link to '/' for proper navigation
+
+Files changed:
+- src/app/game/[pin]/page.tsx (added Link import, Back to Home button)
+- plans/prd.json (marked ui #59 as passes: true)
