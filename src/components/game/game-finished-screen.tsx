@@ -5,6 +5,10 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { TimelineSong } from "@/db/schema";
+import {
+  getPlayersSortedByTimeline,
+  getPlayersSortedByWins,
+} from "@/lib/game-selectors";
 
 interface PlayerStats {
   correctPlacements: number;
@@ -40,15 +44,11 @@ export function GameFinishedScreen({
   onRematch,
   isRematchPending,
 }: GameFinishedScreenProps) {
-  const sortedPlayers = [...players].sort(
-    (a, b) => (b.timeline?.length ?? 0) - (a.timeline?.length ?? 0),
-  );
+  const sortedPlayers = getPlayersSortedByTimeline(players);
   const winner = sortedPlayers[0];
 
   const totalGamesPlayed = gamesPlayed;
-  const sortedByWins = [...players].sort(
-    (a, b) => (b.wins ?? 0) - (a.wins ?? 0),
-  );
+  const sortedByWins = getPlayersSortedByWins(players);
   const partyMVP = sortedByWins[0];
   const hasPartyStats = players.some((p) => (p.wins ?? 0) > 0);
 

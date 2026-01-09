@@ -1759,3 +1759,25 @@ Files changed:
 - src/app/lobby/[pin]/page.tsx (removed validation logic, ~45 lines saved)
 - src/app/game/[pin]/page.tsx (removed validation logic, ~50 lines saved)
 - plans/prd.json (marked refactor #93 as passes: true)
+
+## 2026-01-09: Create pure selector functions for game data
+
+PRD items: refactor #99 (Create pure selector functions for game data)
+
+Changes:
+- Created src/lib/game-selectors.ts with 5 pure selector functions
+- getPlayersSortedByTimeline: sort players by timeline.length desc
+- getPlayersSortedByWins: sort players by wins desc
+- getPlayersSortedWithCurrentFirst: move current user to top
+- getTimelineSortedByYear: sort timeline by year asc
+- getCurrentPlayer: find player by id
+- Updated game page: replaced inline .sort() and .find() calls with selectors
+- Updated GameFinishedScreen: replaced inline .sort() calls with selectors
+
+Verified: grep for \.sort\( in both files returns no matches
+
+Files changed:
+- src/lib/game-selectors.ts (new - 58 lines)
+- src/app/game/[pin]/page.tsx (import selectors, replace inline sorts)
+- src/components/game/game-finished-screen.tsx (import selectors, replace inline sorts)
+- plans/prd.json (marked refactor #99 as passes: true)

@@ -29,6 +29,11 @@ import { useGameSession } from "@/hooks/use-game-session";
 import { usePlayerHeartbeat } from "@/hooks/use-player-heartbeat";
 import { usePlayerValidation } from "@/hooks/use-player-validation";
 import { useSession } from "@/lib/auth-client";
+import {
+  getCurrentPlayer,
+  getPlayersSortedWithCurrentFirst,
+  getTimelineSortedByYear,
+} from "@/lib/game-selectors";
 import { useTRPC } from "@/trpc/client";
 
 function TokenDisplay({ count }: { count: number }) {
@@ -57,7 +62,7 @@ function TimelineDisplay({ timeline }: { timeline: TimelineSong[] }) {
     );
   }
 
-  const sortedTimeline = [...timeline].sort((a, b) => a.year - b.year);
+  const sortedTimeline = getTimelineSortedByYear(timeline);
 
   return (
     <div className="overflow-x-auto scroll-smooth">
@@ -470,10 +475,14 @@ export default function GamePage() {
   }
 
   const isMyTurn = currentPlayerId === session?.currentPlayerId;
-  const currentPlayer = session?.players.find(
-    (p) => p.id === session.currentPlayerId,
+  const currentPlayer = getCurrentPlayer(
+    session?.players ?? [],
+    session?.currentPlayerId ?? null,
   );
-  const myPlayer = session?.players.find((p) => p.id === currentPlayerId);
+  const myPlayer = getCurrentPlayer(
+    session?.players ?? [],
+    currentPlayerId ?? null,
+  );
 
   // Two-phase steal system
   const stealPhase = session?.stealPhase ?? null;
@@ -774,25 +783,21 @@ export default function GamePage() {
           <div className="space-y-4">
             <h2 className="text-lg font-semibold">Players</h2>
             <div className="grid gap-4">
-              {[...(session?.players ?? [])]
-                .sort((a, b) => {
-                  // Current user first
-                  if (a.id === currentPlayerId) return -1;
-                  if (b.id === currentPlayerId) return 1;
-                  return 0;
-                })
-                .map((player, index) => (
-                  <PlayerCard
-                    key={player.id}
-                    player={player}
-                    isCurrentTurn={player.id === session?.currentPlayerId}
-                    turnNumber={
-                      session?.turnOrder?.indexOf(player.id) !== undefined
-                        ? (session?.turnOrder?.indexOf(player.id) ?? 0) + 1
-                        : index + 1
-                    }
-                  />
-                ))}
+              {getPlayersSortedWithCurrentFirst(
+                session?.players ?? [],
+                currentPlayerId ?? null,
+              ).map((player, index) => (
+                <PlayerCard
+                  key={player.id}
+                  player={player}
+                  isCurrentTurn={player.id === session?.currentPlayerId}
+                  turnNumber={
+                    session?.turnOrder?.indexOf(player.id) !== undefined
+                      ? (session?.turnOrder?.indexOf(player.id) ?? 0) + 1
+                      : index + 1
+                  }
+                />
+              ))}
             </div>
           </div>
         )}

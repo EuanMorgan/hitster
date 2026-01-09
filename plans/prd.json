@@ -1480,7 +1480,7 @@
       "Update GameFinishedScreen: use selectors",
       "DONE: Zero inline .sort() calls in render, all use selectors"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "refactor",
