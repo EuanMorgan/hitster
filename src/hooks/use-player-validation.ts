@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { usePlayerStore } from "@/stores/player-store";
 
 interface SessionData {
@@ -28,11 +28,7 @@ interface UsePlayerValidationReturn {
 
 /**
  * Hook for validating player belongs to a game session.
- * Handles:
- * - Reading player ID from Zustand store
- * - Validating player exists in session
- * - Updating store with correct session data
- * - Redirecting to join page if player not found
+ * Uses Zustand store as source of truth for player ID.
  */
 export function usePlayerValidation({
   pin,
@@ -46,63 +42,64 @@ export function usePlayerValidation({
   const storedPin = usePlayerStore((state) => state.gamePin);
   const setPlayer = usePlayerStore((state) => state.setPlayer);
 
-  const [currentPlayerId, setCurrentPlayerId] = useState<string | null>(null);
-  const [playerValidated, setPlayerValidated] = useState(false);
-
-  // Initial validation from store
-  useEffect(() => {
-    if (storedPlayerId && storedPin === pin) {
-      // Stored PIN matches current game
-      setCurrentPlayerId(storedPlayerId);
-      setPlayerValidated(true);
-    } else if (storedPlayerId && !storedPin) {
-      // Legacy: no PIN stored, assume valid (backward compat)
-      setCurrentPlayerId(storedPlayerId);
-      setPlayerValidated(true);
-    } else {
-      // No player ID or wrong game - validate against session
-      setCurrentPlayerId(storedPlayerId);
-      setPlayerValidated(false);
+  // Derive validation state from store + session
+  const validationState = useMemo(() => {
+    // Still loading session data
+    if (!sessionData) {
+      return { isValidated: false, shouldRedirect: false };
     }
-  }, [pin, storedPlayerId, storedPin]);
 
-  // Validate player against session data
-  useEffect(() => {
-    if (!sessionData || playerValidated) return;
-
-    const playerInSession = sessionData.players.find(
-      (p) => p.id === currentPlayerId,
+    // Check if stored player matches current game
+    const pinMatches = storedPin === pin || !storedPin; // Legacy: no PIN stored = assume valid
+    const playerInSession = sessionData.players.some(
+      (p) => p.id === storedPlayerId,
     );
 
-    if (playerInSession && currentPlayerId) {
-      // Player found - update store and mark validated
+    if (storedPlayerId && pinMatches && playerInSession) {
+      return { isValidated: true, shouldRedirect: false };
+    }
+
+    if (storedPlayerId && !playerInSession) {
+      // Player ID exists but not in this session
+      return { isValidated: false, shouldRedirect: true };
+    }
+
+    if (!storedPlayerId && requirePlayer) {
+      // No player ID and player is required
+      return { isValidated: false, shouldRedirect: true };
+    }
+
+    // No player ID, spectator mode allowed
+    return { isValidated: false, shouldRedirect: false };
+  }, [sessionData, storedPlayerId, storedPin, pin, requirePlayer]);
+
+  // Side effect: update store when validated
+  useEffect(() => {
+    if (validationState.isValidated && sessionData && storedPlayerId) {
       setPlayer({
-        playerId: currentPlayerId,
+        playerId: storedPlayerId,
         sessionId: sessionData.id,
         gamePin: pin,
       });
-      setPlayerValidated(true);
-    } else if (currentPlayerId) {
-      // Player ID exists but not in session - redirect to join
-      router.push(`/join?pin=${pin}`);
-    } else if (requirePlayer) {
-      // No player ID and requirePlayer=true - redirect to join
-      router.push(`/join?pin=${pin}`);
     }
-    // If no player ID and requirePlayer=false, allow spectator mode
   }, [
+    validationState.isValidated,
     sessionData,
-    currentPlayerId,
-    playerValidated,
+    storedPlayerId,
     pin,
-    router,
     setPlayer,
-    requirePlayer,
   ]);
 
+  // Side effect: redirect when needed
+  useEffect(() => {
+    if (validationState.shouldRedirect) {
+      router.push(`/join?pin=${pin}`);
+    }
+  }, [validationState.shouldRedirect, router, pin]);
+
   return {
-    playerId: currentPlayerId,
-    isValidated: playerValidated,
-    isLoading: isSessionLoading || (!playerValidated && !!storedPlayerId),
+    playerId: storedPlayerId,
+    isValidated: validationState.isValidated,
+    isLoading: isSessionLoading,
   };
 }

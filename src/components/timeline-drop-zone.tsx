@@ -14,7 +14,7 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { SafeCurrentTurnSong, TimelineSong } from "@/db/schema";
@@ -171,20 +171,29 @@ function TurnTimer({
   isPaused?: boolean;
 }) {
   const [timeLeft, setTimeLeft] = useState(turnDuration);
-  const [hasTriggered, setHasTriggered] = useState(false);
   const [pausedTimeLeft, setPausedTimeLeft] = useState<number | null>(null);
+  const hasTriggeredRef = useRef(false);
+  const onTimeUpRef = useRef(onTimeUp);
+
+  // Keep callback ref current
+  useEffect(() => {
+    onTimeUpRef.current = onTimeUp;
+  });
+
+  // Reset triggered state when turn changes
+  useEffect(() => {
+    hasTriggeredRef.current = false;
+  }, [turnStartedAt]);
 
   useEffect(() => {
     // No turn in progress - reset
     if (!turnStartedAt) {
       setTimeLeft(turnDuration);
-      setHasTriggered(false);
       setPausedTimeLeft(null);
       return;
     }
 
     // Use playbackStartedAt if available (host has synced playback), otherwise fall back to turnStartedAt
-    // This ensures non-host players still get a working timer
     const effectiveStartTime =
       playbackStartedAt ?? new Date(turnStartedAt).getTime();
 
@@ -204,15 +213,15 @@ function TurnTimer({
       setPausedTimeLeft(null);
     }
 
-    // Timer calculation - synced to playback start for hosts, server timestamp for non-hosts
+    // Timer calculation
     const updateTimer = () => {
       const elapsed = Math.floor((Date.now() - effectiveStartTime) / 1000);
       const remaining = Math.max(0, turnDuration - elapsed);
       setTimeLeft(remaining);
 
-      if (remaining === 0 && !hasTriggered) {
-        setHasTriggered(true);
-        onTimeUp();
+      if (remaining === 0 && !hasTriggeredRef.current) {
+        hasTriggeredRef.current = true;
+        onTimeUpRef.current();
       }
     };
 
@@ -223,16 +232,9 @@ function TurnTimer({
     turnDuration,
     turnStartedAt,
     playbackStartedAt,
-    onTimeUp,
-    hasTriggered,
     isPaused,
     pausedTimeLeft,
   ]);
-
-  // Reset hasTriggered when turn changes
-  useEffect(() => {
-    setHasTriggered(false);
-  }, []);
 
   const percentage = (timeLeft / turnDuration) * 100;
   // Color based on percentage: green >50%, amber 25-50%, red <25%

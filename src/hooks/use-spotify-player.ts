@@ -61,13 +61,19 @@ export function useSpotifyPlayer({
   const [isPlaying, setIsPlaying] = useState(false);
 
   // Track previous state for transition detection
-  const prevStateRef = useRef<{ trackUri: string | null; shouldPlay: boolean }>({
-    trackUri: null,
-    shouldPlay: false,
-  });
+  const prevStateRef = useRef<{ trackUri: string | null; shouldPlay: boolean }>(
+    {
+      trackUri: null,
+      shouldPlay: false,
+    },
+  );
 
   // Stable callback refs
-  const callbacksRef = useRef({ onPlaybackStarted, onPlaybackStopped, onError });
+  const callbacksRef = useRef({
+    onPlaybackStarted,
+    onPlaybackStopped,
+    onError,
+  });
   useEffect(() => {
     callbacksRef.current = { onPlaybackStarted, onPlaybackStopped, onError };
   });
@@ -83,10 +89,10 @@ export function useSpotifyPlayer({
 
   // Only mutation we need - starting a new track
   const playTrackMutation = useMutation(
-    trpc.spotify.playTrack.mutationOptions()
+    trpc.spotify.playTrack.mutationOptions(),
   );
   const transferMutation = useMutation(
-    trpc.spotify.transferPlayback.mutationOptions()
+    trpc.spotify.transferPlayback.mutationOptions(),
   );
 
   // Handle token errors
@@ -228,7 +234,7 @@ export function useSpotifyPlayer({
             setError(err.message);
             callbacksRef.current.onError?.(err.message);
           },
-        }
+        },
       );
       return;
     }

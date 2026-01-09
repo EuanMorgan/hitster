@@ -14,9 +14,10 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useCountdownTimer } from "@/hooks/use-countdown-timer";
 import type {
   ActiveStealAttempt,
   SafeCurrentTurnSong,
@@ -159,43 +160,12 @@ function StealTimer({
   stealWindowDuration: number;
   onTimeUp: () => void;
 }) {
-  const [timeLeft, setTimeLeft] = useState(stealWindowDuration);
-  const [hasTriggered, setHasTriggered] = useState(false);
-
-  useEffect(() => {
-    const endTime = new Date(stealPhaseEndAt).getTime();
-
-    const updateTimer = () => {
-      const remaining = Math.max(0, Math.ceil((endTime - Date.now()) / 1000));
-      setTimeLeft(remaining);
-
-      if (remaining === 0 && !hasTriggered) {
-        setHasTriggered(true);
-        onTimeUp();
-      }
-    };
-
-    updateTimer();
-    const interval = setInterval(updateTimer, 100);
-    return () => clearInterval(interval);
-  }, [stealPhaseEndAt, onTimeUp, hasTriggered]);
-
-  const percentage = (timeLeft / stealWindowDuration) * 100;
-  // Color based on percentage: green >50%, amber 25-50%, red <25%
-  const colorClass =
-    percentage <= 25
-      ? "text-red-500"
-      : percentage <= 50
-        ? "text-amber-500"
-        : "text-green-500";
-  const barColorClass =
-    percentage <= 25
-      ? "bg-red-500"
-      : percentage <= 50
-        ? "bg-amber-500"
-        : "bg-green-500";
-  // Pulse at 1Hz during last 5 seconds
-  const shouldPulse = timeLeft <= 5 && timeLeft > 0;
+  const { timeLeft, percentage, colorClass, barColorClass, shouldPulse } =
+    useCountdownTimer({
+      endTime: stealPhaseEndAt,
+      duration: stealWindowDuration,
+      onTimeUp,
+    });
 
   return (
     <div className="flex flex-col items-center gap-1.5 sm:gap-2">

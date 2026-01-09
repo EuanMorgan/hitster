@@ -111,12 +111,8 @@
           "name": "hitster_account_user_id_hitster_user_id_fk",
           "tableFrom": "hitster_account",
           "tableTo": "hitster_user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -182,12 +178,8 @@
           "name": "hitster_game_history_session_id_hitster_game_sessions_id_fk",
           "tableFrom": "hitster_game_history",
           "tableTo": "hitster_game_sessions",
-          "columnsFrom": [
-            "session_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["session_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -195,12 +187,8 @@
           "name": "hitster_game_history_host_id_hitster_user_id_fk",
           "tableFrom": "hitster_game_history",
           "tableTo": "hitster_user",
-          "columnsFrom": [
-            "host_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["host_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -208,12 +196,8 @@
           "name": "hitster_game_history_winner_id_hitster_players_id_fk",
           "tableFrom": "hitster_game_history",
           "tableTo": "hitster_players",
-          "columnsFrom": [
-            "winner_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["winner_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -485,12 +469,8 @@
           "name": "hitster_game_sessions_host_id_hitster_user_id_fk",
           "tableFrom": "hitster_game_sessions",
           "tableTo": "hitster_user",
-          "columnsFrom": [
-            "host_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["host_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -500,9 +480,7 @@
         "hitster_game_sessions_pin_unique": {
           "name": "hitster_game_sessions_pin_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "pin"
-          ]
+          "columns": ["pin"]
         }
       },
       "policies": {},
@@ -654,12 +632,8 @@
           "name": "hitster_players_session_id_hitster_game_sessions_id_fk",
           "tableFrom": "hitster_players",
           "tableTo": "hitster_game_sessions",
-          "columnsFrom": [
-            "session_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["session_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -667,12 +641,8 @@
           "name": "hitster_players_user_id_hitster_user_id_fk",
           "tableFrom": "hitster_players",
           "tableTo": "hitster_user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -760,12 +730,8 @@
           "name": "hitster_session_user_id_hitster_user_id_fk",
           "tableFrom": "hitster_session",
           "tableTo": "hitster_user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -775,9 +741,7 @@
         "hitster_session_token_unique": {
           "name": "hitster_session_token_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "token"
-          ]
+          "columns": ["token"]
         }
       },
       "policies": {},
@@ -910,12 +874,8 @@
           "name": "hitster_turns_session_id_hitster_game_sessions_id_fk",
           "tableFrom": "hitster_turns",
           "tableTo": "hitster_game_sessions",
-          "columnsFrom": [
-            "session_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["session_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -923,12 +883,8 @@
           "name": "hitster_turns_player_id_hitster_players_id_fk",
           "tableFrom": "hitster_turns",
           "tableTo": "hitster_players",
-          "columnsFrom": [
-            "player_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["player_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -996,9 +952,7 @@
         "hitster_user_email_unique": {
           "name": "hitster_user_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -1077,28 +1031,17 @@
     "public.hitster_game_state": {
       "name": "hitster_game_state",
       "schema": "public",
-      "values": [
-        "lobby",
-        "playing",
-        "finished"
-      ]
+      "values": ["lobby", "playing", "finished"]
     },
     "public.hitster_steal_phase": {
       "name": "hitster_steal_phase",
       "schema": "public",
-      "values": [
-        "decide",
-        "place"
-      ]
+      "values": ["decide", "place"]
     },
     "public.hitster_year_lookup_status": {
       "name": "hitster_year_lookup_status",
       "schema": "public",
-      "values": [
-        "pending",
-        "in_progress",
-        "complete"
-      ]
+      "values": ["pending", "in_progress", "complete"]
     }
   },
   "schemas": {},

@@ -59,7 +59,9 @@ export function useGameSession({ pin, enabled = true }: UseGameSessionOptions) {
     ),
   );
 
-  const isSubscribed = subscription.status === "pending";
+  // "pending" means connecting, we want to check if NOT in error/idle state
+  // When subscription is active (pending or receiving data), disable polling
+  const isSubscribed = subscription.status !== "error";
 
   // Query for session data
   const sessionQuery = useQuery({
