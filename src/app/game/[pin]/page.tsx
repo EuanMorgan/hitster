@@ -71,6 +71,15 @@ export default function GamePage() {
     }
   }, [sessionQuery.data?.state, router, pin]);
 
+  // Skip shuffle animations for solo games
+  const isSoloGame = (sessionQuery.data?.turnOrder?.length ?? 0) <= 1;
+  useEffect(() => {
+    if (isSoloGame) {
+      if (showShuffleAnimation) setShowShuffleAnimation(false);
+      if (showRoundShuffleAnimation) setShowRoundShuffleAnimation(false);
+    }
+  }, [isSoloGame, showShuffleAnimation, showRoundShuffleAnimation]);
+
   const currentTrackUri = sessionQuery.data?.currentSong?.uri;
   // biome-ignore lint/correctness/useExhaustiveDependencies: intentional reset on track change
   useEffect(() => {

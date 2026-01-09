@@ -30,6 +30,10 @@ function shuffleArray<T>(array: T[]): T[] {
   return shuffled;
 }
 
+function isSoloGame(players: { id: string }[]): boolean {
+  return players.length === 1;
+}
+
 // Normalize string for fuzzy matching
 function normalizeString(str: string): string {
   return str
@@ -553,6 +557,331 @@ async function storeGameHistory(
     gameData,
     completedAt: new Date(),
   });
+}
+
+type ResolveTurnParams = {
+  session: {
+    id: string;
+    pin: string;
+    songsToWin: number;
+    roundNumber: number | null;
+    turnOrder: string[] | null;
+    currentTurnIndex: number | null;
+    currentSong: CurrentTurnSong | null;
+    usedSongIds: string[] | null;
+    playlistSongs: PlaylistSong[] | null;
+    shuffleTurns: boolean;
+    usingFallbackPlaylist: boolean | null;
+    players: Player[];
+  };
+  dbClient: Parameters<Parameters<typeof baseProcedure.query>[0]>[0]["ctx"]["db"];
+  activePlayer: Player;
+  activePlayerPlacement: number;
+  guess: { guessedName: string | null; guessedArtist: string | null } | null;
+  stealAttempts: ActiveStealAttempt[];
+};
+
+async function resolveTurnCore(params: ResolveTurnParams) {
+  const { session, dbClient, activePlayer, activePlayerPlacement, guess, stealAttempts } = params;
+  const pin = session.pin;
+  const currentSong = session.currentSong!;
+  const songYear = currentSong.year;
+
+  // Validate active player's placement
+  const activeTimeline = activePlayer.timeline ?? [];
+  const sortedTimeline = [...activeTimeline].sort((a, b) => a.year - b.year);
+
+  let activePlayerCorrect = false;
+  if (sortedTimeline.length === 0) {
+    activePlayerCorrect = true;
+  } else if (activePlayerPlacement === 0) {
+    activePlayerCorrect = songYear <= sortedTimeline[0].year;
+  } else if (activePlayerPlacement >= sortedTimeline.length) {
+    activePlayerCorrect = songYear >= sortedTimeline[sortedTimeline.length - 1].year;
+  } else {
+    const before = sortedTimeline[activePlayerPlacement - 1];
+    const after = sortedTimeline[activePlayerPlacement];
+    activePlayerCorrect = songYear >= before.year && songYear <= after.year;
+  }
+
+  // Process guess
+  let guessWasCorrect = false;
+  let nameCorrect = false;
+  let artistCorrect = false;
+  if (guess?.guessedName || guess?.guessedArtist) {
+    nameCorrect = guess?.guessedName ? fuzzyMatch(guess.guessedName, currentSong.name) : false;
+    artistCorrect = guess?.guessedArtist ? fuzzyMatch(guess.guessedArtist, currentSong.artist) : false;
+    guessWasCorrect = nameCorrect && artistCorrect;
+  }
+
+  // Award token if guess was correct
+  if (guessWasCorrect) {
+    await dbClient
+      .update(players)
+      .set({ tokens: activePlayer.tokens + 1 })
+      .where(eq(players.id, activePlayer.id));
+  }
+
+  // Check steal attempts
+  let winningStealer: { playerId: string; playerName: string } | null = null;
+
+  if (!activePlayerCorrect && stealAttempts.length > 0) {
+    const sortedAttempts = [...stealAttempts].sort(
+      (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    );
+
+    for (const attempt of sortedAttempts) {
+      const stealer = session.players.find((p) => p.id === attempt.playerId);
+      if (!stealer) continue;
+
+      const stealerTimeline = stealer.timeline ?? [];
+      const sortedStealerTimeline = [...stealerTimeline].sort((a, b) => a.year - b.year);
+
+      let stealerCorrect = false;
+      if (sortedStealerTimeline.length === 0) {
+        stealerCorrect = true;
+      } else if (attempt.placementIndex === 0) {
+        stealerCorrect = songYear <= sortedStealerTimeline[0].year;
+      } else if (attempt.placementIndex >= sortedStealerTimeline.length) {
+        stealerCorrect = songYear >= sortedStealerTimeline[sortedStealerTimeline.length - 1].year;
+      } else {
+        const before = sortedStealerTimeline[attempt.placementIndex - 1];
+        const after = sortedStealerTimeline[attempt.placementIndex];
+        stealerCorrect = songYear >= before.year && songYear <= after.year;
+      }
+
+      if (stealerCorrect) {
+        winningStealer = { playerId: attempt.playerId, playerName: attempt.playerName };
+        break;
+      }
+    }
+  }
+
+  // Record the turn
+  await dbClient.insert(turns).values({
+    sessionId: session.id,
+    playerId: activePlayer.id,
+    roundNumber: session.roundNumber ?? 1,
+    songId: currentSong.songId,
+    songName: currentSong.name,
+    songArtist: currentSong.artist,
+    songYear: currentSong.year,
+    placementIndex: activePlayerPlacement,
+    wasCorrect: activePlayerCorrect,
+    guessedName: guess?.guessedName ?? null,
+    guessedArtist: guess?.guessedArtist ?? null,
+    guessWasCorrect,
+    stealAttempts: stealAttempts.map((a) => ({
+      playerId: a.playerId,
+      placementIndex: a.placementIndex,
+      wasCorrect: a.playerId === winningStealer?.playerId,
+      timestamp: a.timestamp,
+    })),
+    completedAt: new Date(),
+  });
+
+  // Determine who gets the song
+  let recipientId: string | null = null;
+  if (activePlayerCorrect) {
+    recipientId = activePlayer.id;
+  } else if (winningStealer) {
+    recipientId = winningStealer.playerId;
+  }
+
+  // Add song to recipient's timeline
+  let winnerId: string | undefined;
+  if (recipientId) {
+    const recipient = session.players.find((p) => p.id === recipientId);
+    if (recipient) {
+      const newSong: TimelineSong = {
+        songId: currentSong.songId,
+        name: currentSong.name,
+        artist: currentSong.artist,
+        year: currentSong.year,
+        uri: currentSong.uri,
+        addedAt: new Date().toISOString(),
+      };
+      const newTimeline = [...(recipient.timeline ?? []), newSong];
+
+      await dbClient.update(players).set({ timeline: newTimeline }).where(eq(players.id, recipientId));
+
+      // Check win condition
+      if (newTimeline.length >= session.songsToWin) {
+        winnerId = recipientId;
+
+        await dbClient
+          .update(players)
+          .set({ wins: recipient.wins + 1 })
+          .where(eq(players.id, recipientId));
+
+        await dbClient
+          .update(gameSessions)
+          .set({
+            state: "finished",
+            currentSong: null,
+            stealPhase: null,
+            stealDecidePhaseEndAt: null,
+            stealPlacePhaseEndAt: null,
+            decidedStealers: [],
+            playerSkips: [],
+            activePlayerPlacement: null,
+            activePlayerGuess: null,
+            stealAttempts: [],
+            isStealPhase: false,
+            stealPhaseEndAt: null,
+            updatedAt: new Date(),
+          })
+          .where(eq(gameSessions.id, session.id));
+
+        await storeGameHistory(dbClient, session.id, recipientId);
+        emitSessionUpdate(pin);
+
+        return {
+          activePlayerCorrect,
+          song: currentSong,
+          stolenBy: winningStealer,
+          recipientId,
+          gameEnded: true,
+          winnerId,
+          guessWasCorrect,
+          nameCorrect,
+          artistCorrect,
+          guessedName: guess?.guessedName ?? null,
+          guessedArtist: guess?.guessedArtist ?? null,
+        };
+      }
+    }
+  }
+
+  // Advance to next turn
+  const turnOrderLength = session.turnOrder?.length ?? 1;
+  const nextTurnIndex = ((session.currentTurnIndex ?? 0) + 1) % turnOrderLength;
+  const isNewRound = nextTurnIndex === 0;
+  const newRoundNumber = isNewRound ? (session.roundNumber ?? 1) + 1 : (session.roundNumber ?? 1);
+
+  // Draw next song
+  const usedSongIds = new Set(session.usedSongIds ?? []);
+  const songPool = session.playlistSongs ?? PLACEHOLDER_SONGS;
+  let availableSongs = songPool.filter((s) => !usedSongIds.has(s.songId));
+  let switchedToFallback = false;
+
+  if (availableSongs.length === 0 && !session.usingFallbackPlaylist) {
+    const fallbackAvailable = PLACEHOLDER_SONGS.filter((s) => !usedSongIds.has(s.songId));
+    if (fallbackAvailable.length > 0) {
+      availableSongs = fallbackAvailable;
+      switchedToFallback = true;
+    }
+  }
+
+  if (availableSongs.length === 0) {
+    // No more songs - determine winner by most songs
+    const sortedPlayers = [...session.players].sort(
+      (a, b) => (b.timeline?.length ?? 0) - (a.timeline?.length ?? 0)
+    );
+    const songExhaustionWinner = sortedPlayers[0];
+
+    if (songExhaustionWinner) {
+      await dbClient
+        .update(players)
+        .set({ wins: songExhaustionWinner.wins + 1 })
+        .where(eq(players.id, songExhaustionWinner.id));
+    }
+
+    await dbClient
+      .update(gameSessions)
+      .set({
+        state: "finished",
+        currentSong: null,
+        stealPhase: null,
+        stealDecidePhaseEndAt: null,
+        stealPlacePhaseEndAt: null,
+        decidedStealers: [],
+        playerSkips: [],
+        activePlayerPlacement: null,
+        activePlayerGuess: null,
+        stealAttempts: [],
+        isStealPhase: false,
+        stealPhaseEndAt: null,
+        updatedAt: new Date(),
+      })
+      .where(eq(gameSessions.id, session.id));
+
+    await storeGameHistory(dbClient, session.id, songExhaustionWinner?.id ?? null);
+    emitSessionUpdate(pin);
+
+    return {
+      activePlayerCorrect,
+      song: currentSong,
+      stolenBy: winningStealer,
+      recipientId,
+      gameEnded: true,
+      winnerId: songExhaustionWinner?.id,
+      reason: "No more songs available",
+      guessWasCorrect,
+      nameCorrect,
+      artistCorrect,
+      guessedName: guess?.guessedName ?? null,
+      guessedArtist: guess?.guessedArtist ?? null,
+    };
+  }
+
+  const nextSong = availableSongs[Math.floor(Math.random() * availableSongs.length)];
+  const newUsedSongIds = [...(session.usedSongIds ?? []), nextSong.songId];
+
+  // Skip shuffle for solo games
+  let newTurnOrder = session.turnOrder;
+  const isSolo = (session.turnOrder?.length ?? 0) <= 1;
+  if (isNewRound && session.shuffleTurns && !isSolo) {
+    newTurnOrder = shuffleArray(session.turnOrder!);
+  }
+
+  await dbClient
+    .update(gameSessions)
+    .set({
+      currentTurnIndex: nextTurnIndex,
+      turnOrder: newTurnOrder,
+      roundNumber: newRoundNumber,
+      currentSong: {
+        songId: nextSong.songId,
+        name: nextSong.name,
+        artist: nextSong.artist,
+        year: nextSong.year,
+        uri: nextSong.uri,
+      },
+      usedSongIds: newUsedSongIds,
+      turnStartedAt: new Date(),
+      stealPhase: null,
+      stealDecidePhaseEndAt: null,
+      stealPlacePhaseEndAt: null,
+      decidedStealers: [],
+      playerSkips: [],
+      activePlayerPlacement: null,
+      activePlayerGuess: null,
+      stealAttempts: [],
+      isStealPhase: false,
+      stealPhaseEndAt: null,
+      usingFallbackPlaylist: switchedToFallback ? true : session.usingFallbackPlaylist,
+      updatedAt: new Date(),
+    })
+    .where(eq(gameSessions.id, session.id));
+
+  emitSessionUpdate(pin);
+
+  return {
+    activePlayerCorrect,
+    song: currentSong,
+    stolenBy: winningStealer,
+    recipientId,
+    gameEnded: false,
+    nextPlayerId: newTurnOrder?.[nextTurnIndex],
+    isNewRound,
+    newRoundNumber,
+    guessWasCorrect,
+    nameCorrect,
+    artistCorrect,
+    guessedName: guess?.guessedName ?? null,
+    guessedArtist: guess?.guessedArtist ?? null,
+  };
 }
 
 export const gameRouter = createTRPCRouter({
@@ -1193,9 +1522,9 @@ export const gameRouter = createTRPCRouter({
         playlistWarning = "Using offline song library";
       }
 
-      // Shuffle turn order
+      // Set turn order (skip shuffle for solo games)
       const playerIds = connectedPlayers.map((p: Player) => p.id);
-      const turnOrder = shuffleArray(playerIds);
+      const turnOrder = isSoloGame(connectedPlayers) ? playerIds : shuffleArray(playerIds);
 
       // Shuffle available songs and assign one to each player
       const shuffledSongs = shuffleArray(playlistSongs);
@@ -1351,7 +1680,30 @@ export const gameRouter = createTRPCRouter({
         guessCorrect = nameMatch && artistMatch;
       }
 
-      // Start two-phase steal: begin with 'decide' phase (10s)
+      const activePlayer = session.players.find((p) => p.id === currentPlayerId);
+      if (!activePlayer) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Active player not found" });
+      }
+
+      // Solo game: skip steal phase entirely and resolve immediately
+      if (isSoloGame(session.players)) {
+        const result = await resolveTurnCore({
+          session,
+          dbClient: ctx.db,
+          activePlayer,
+          activePlayerPlacement: input.placementIndex,
+          guess: { guessedName, guessedArtist },
+          stealAttempts: [],
+        });
+
+        return {
+          stealPhaseStarted: false,
+          soloResolved: true,
+          ...result,
+        };
+      }
+
+      // Multiplayer: Start two-phase steal with 'decide' phase (10s)
       const decidePhaseEndAt = new Date(
         Date.now() + session.stealWindowDuration * 1000,
       );
