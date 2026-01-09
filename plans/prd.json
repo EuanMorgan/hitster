@@ -1305,7 +1305,7 @@
       "Return null if no recordings found or API error",
       "DONE: Manual test with known ISRC (e.g., GBUM71029604 for Bohemian Rhapsody) returns 1975"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "playlist",
@@ -1318,7 +1318,7 @@
       "Modify getOriginalYear to check cache first, only call API if not cached",
       "DONE: Second lookup for same ISRC returns cached value (no API call in logs)"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "playlist",

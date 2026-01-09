@@ -1947,3 +1947,25 @@ Files changed:
 - src/trpc/routers/spotify.ts (getPlaylistTracks)
 - src/mocks/handlers.ts (added external_ids to mock tracks)
 - plans/prd.json (marked as passes: true)
+
+## 2026-01-09: Create MusicBrainz service + cache
+
+PRD items: playlist/Create MusicBrainz service with rate limiting, playlist/Add ISRC year cache lookup and storage
+
+Changes:
+- Created src/lib/musicbrainz.ts with rate-limited MusicBrainz API client
+- Rate limiter: 1100ms between requests (MusicBrainz strict 1 req/sec limit)
+- User-Agent header required by MusicBrainz API
+- getOriginalYear(isrc): fetches first-release-date, returns earliest year
+- getCachedYear(isrc): queries isrcYearCache table
+- cacheYear(isrc, originalYear, spotifyYear?): inserts into cache
+- getOriginalYearWithCache(isrc, spotifyYear?): combines lookup + cache
+
+Key decisions:
+- 1100ms rate limit buffer (not exactly 1000ms) for safety
+- Cache on successful lookup only (not failures)
+- Return null on 404 or API error, no exceptions thrown
+
+Files changed:
+- src/lib/musicbrainz.ts (new - 190 lines)
+- plans/prd.json (marked both items as passes: true)
