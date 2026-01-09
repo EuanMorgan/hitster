@@ -122,16 +122,21 @@ function TimelineDisplay({ timeline }: { timeline: TimelineSong[] }) {
   const sortedTimeline = [...timeline].sort((a, b) => a.year - b.year);
 
   return (
-    <div className="overflow-x-auto">
-      <div className="flex gap-1.5 sm:gap-2 min-w-min pb-2">
+    <div className="overflow-x-auto scroll-smooth">
+      <div className="flex gap-2 sm:gap-3 min-w-min pb-2 snap-x snap-mandatory">
         {sortedTimeline.map((song) => (
           <div
             key={song.songId}
-            className="bg-primary/10 border border-primary/20 rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-center min-w-[65px] sm:min-w-[80px] shrink-0"
+            className="bg-primary/10 border border-primary/20 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-center min-w-[90px] sm:min-w-[110px] shrink-0 snap-start"
           >
-            <div className="font-bold text-base sm:text-lg">{song.year}</div>
-            <div className="text-[10px] sm:text-xs text-muted-foreground truncate max-w-[60px] sm:max-w-[100px]">
+            <div className="font-bold text-lg sm:text-xl text-primary">
+              {song.year}
+            </div>
+            <div className="text-xs sm:text-sm text-foreground truncate max-w-[85px] sm:max-w-[105px]">
               {song.name}
+            </div>
+            <div className="text-[10px] sm:text-xs text-muted-foreground truncate max-w-[85px] sm:max-w-[105px]">
+              {song.artist}
             </div>
           </div>
         ))}

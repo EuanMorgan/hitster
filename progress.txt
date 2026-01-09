@@ -1059,3 +1059,29 @@ All 5 PRD steps verified:
 Files changed:
 - src/app/game/[pin]/page.tsx (added TurnIndicatorBanner component + rendering)
 - plans/prd.json (marked ui #54 as passes: true)
+
+## 2026-01-09: Implemented mobile timeline polish
+
+PRD items: ui #53 (Mobile timeline polish)
+
+Changes:
+- TimelineDisplay: increased card min-width 65px→90px, added snap-x snap-mandatory + scroll-smooth
+- TimelineDisplay: shows artist field, year text-lg/xl in primary color
+- TimelineSongCard (drop zone): increased min-width 70px→90px, added artist display + snap-start
+- DropZone: increased min-width 48px→52px, min-height consistent with cards, added snap-start
+- PlacedSongCard: increased sizing to match other cards, responsive text
+- All timeline containers now have smooth scrolling + snap points for better mobile UX
+
+All 7 PRD steps verified:
+1. ✅ Keep horizontal scroll - overflow-x-auto maintained
+2. ✅ Increase card min-width - 90px/110px mobile/desktop
+3. ✅ Year prominent - text-lg/xl bold primary color
+4. ✅ Smooth scroll with snap - scroll-smooth + snap-x snap-mandatory
+5. ✅ Touch-friendly drag-drop - @dnd-kit already had TouchSensor, larger targets now
+6. ✅ Timeline scrolls on placement - snap-start on cards helps
+7. ✅ Readable on 375px - min-w-[90px] cards with readable text
+
+Files changed:
+- src/app/game/[pin]/page.tsx (TimelineDisplay updated)
+- src/components/timeline-drop-zone.tsx (DropZone, PlacedSongCard, TimelineSongCard updated)
+- plans/prd.json (marked ui #53 as passes: true)

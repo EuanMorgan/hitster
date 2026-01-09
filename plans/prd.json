@@ -979,7 +979,7 @@
       "Timeline scrolls to show new card when placed",
       "DONE: Timeline readable on 375px, no truncation, smooth scroll and drag"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "ui",

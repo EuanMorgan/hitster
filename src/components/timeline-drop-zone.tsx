@@ -54,7 +54,7 @@ function DropZone({
   return (
     <div
       ref={setNodeRef}
-      className={`flex flex-col items-center justify-center min-w-[48px] sm:min-w-[60px] min-h-[80px] sm:h-[100px] border-2 border-dashed rounded-lg transition-all ${
+      className={`flex flex-col items-center justify-center min-w-[52px] sm:min-w-[64px] min-h-[70px] sm:min-h-[90px] border-2 border-dashed rounded-lg transition-all snap-start ${
         isOver
           ? "border-primary bg-primary/20 scale-105"
           : isActive
@@ -62,7 +62,7 @@ function DropZone({
             : "border-muted-foreground/30"
       }`}
     >
-      <span className="text-xs text-muted-foreground">
+      <span className="text-xs sm:text-sm text-muted-foreground">
         {year ? `≤${year}` : "Drop"}
       </span>
     </div>
@@ -120,14 +120,14 @@ function PlacedSongCard({ song }: { song: SafeCurrentTurnSong }) {
       style={style}
       {...attributes}
       {...listeners}
-      className={`bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-lg p-3 shadow-lg min-w-[70px] sm:min-w-[80px] min-h-[60px] cursor-grab active:cursor-grabbing touch-none ${
+      className={`bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-lg p-3 sm:p-4 shadow-lg min-w-[90px] sm:min-w-[110px] min-h-[70px] cursor-grab active:cursor-grabbing touch-none snap-start ${
         isDragging ? "opacity-50 scale-105" : ""
       }`}
     >
       <div className="text-center">
-        <div className="text-xl mb-1">🎵</div>
-        <div className="text-xs font-medium">Placed!</div>
-        <div className="text-[10px] opacity-75">Drag to move</div>
+        <div className="text-xl sm:text-2xl mb-1">🎵</div>
+        <div className="text-xs sm:text-sm font-medium">Placed!</div>
+        <div className="text-[10px] sm:text-xs opacity-75">Drag to move</div>
       </div>
     </div>
   );
@@ -135,13 +135,16 @@ function PlacedSongCard({ song }: { song: SafeCurrentTurnSong }) {
 
 function TimelineSongCard({ song }: { song: TimelineSong }) {
   return (
-    <div className="bg-card border border-border rounded-lg p-2 sm:p-3 min-w-[70px] sm:min-w-[80px] min-h-[60px] shadow-sm">
+    <div className="bg-card border border-border rounded-lg p-3 sm:p-4 min-w-[90px] sm:min-w-[110px] min-h-[70px] shadow-sm snap-start">
       <div className="text-center">
-        <div className="font-bold text-base sm:text-lg text-primary">
+        <div className="font-bold text-lg sm:text-xl text-primary">
           {song.year}
         </div>
-        <div className="text-[10px] sm:text-xs text-muted-foreground truncate max-w-[65px] sm:max-w-[80px]">
+        <div className="text-xs sm:text-sm text-foreground truncate max-w-[85px] sm:max-w-[105px]">
           {song.name}
+        </div>
+        <div className="text-[10px] sm:text-xs text-muted-foreground truncate max-w-[85px] sm:max-w-[105px]">
+          {song.artist}
         </div>
       </div>
     </div>
@@ -382,8 +385,8 @@ export function TimelineDropZone({
           />
         </div>
 
-        <div className="overflow-x-auto pb-4">
-          <div className="flex items-center gap-2 min-w-min px-4">
+        <div className="overflow-x-auto pb-4 scroll-smooth">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-min px-4 snap-x snap-mandatory">
             <DropZone
               index={0}
               isActive={activeId !== null}
