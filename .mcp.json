@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@anthropic-ai/mcp-playwright@latest",
+        "--storage-state=.auth/storage-state.json"
+      ]
+    }
+  }
+}

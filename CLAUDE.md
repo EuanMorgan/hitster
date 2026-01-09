@@ -102,3 +102,14 @@ Uses MSW for API mocking. Setup in `vitest.setup.ts` starts mock server.
 - `docker-compose.yml` - Local dev with PostgreSQL (port 5433)
 - `docker-compose.prod.yml` - Production setup
 - `Dockerfile` - Production build
+
+### Playwright MCP Auth
+
+For automated testing with Spotify auth (ralph loop):
+
+1. Start dev server: `bun dev`
+2. Export auth: `bun auth:export` - browser opens, log in with Spotify, press Enter
+3. Auth state saved to `.auth/storage-state.json`
+4. Playwright MCP configured via `.mcp.json` to load this state
+
+Re-run `auth:export` weekly when session expires.

@@ -37,6 +37,9 @@ yarn-error.log*
 .env.local
 .env.*.local
 
+# auth state
+.auth/
+
 # vercel
 .vercel
 
