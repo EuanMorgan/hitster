@@ -1478,3 +1478,31 @@ Files changed:
 - src/trpc/routers/game.ts (getLocalNetworkIP helper, getLocalIP endpoint)
 - src/app/lobby/[pin]/page.tsx (query getLocalIP, compute joinUrl with local IP)
 - plans/prd.json (marked lobby #77 as passes: true)
+
+## 2026-01-09: Completed detailed stats - tokens earned/spent
+
+PRD items: statistics #36 (Detailed stats per game)
+
+Changes:
+- Added tokensEarned/tokensSpent tracking to getGameDetails procedure
+- tokensEarned = 2 (starting) + correctGuesses (bonus from turns)
+- tokensSpent = tokensEarned - tokensRemaining (captures all spending)
+- Updated game detail UI to show "+X / -Y" under remaining tokens
+
+Key decisions:
+- Computed tokensSpent from earned - remaining instead of tracking individual transactions
+- This approach captures skips, steals, free songs without schema changes
+- Format "+5 / -3" clearly shows token flow to users
+
+All 6 PRD steps verified:
+1. Winner and final standings - rankings table with trophy
+2. Accuracy percentage - X/Y (Z%) format
+3. Tokens earned/spent - NOW SHOWN as "+earned / -spent"
+4. Avg turn duration - column present
+5. Guesses correct - X/Y (Z%) format
+6. Steals successful - X/Y (Z%) format
+
+Files changed:
+- src/trpc/routers/game.ts (tokensEarned/tokensSpent fields in getGameDetails)
+- src/app/dashboard/game/[id]/page.tsx (UI to display earned/spent)
+- plans/prd.json (marked statistics #36 as passes: true)

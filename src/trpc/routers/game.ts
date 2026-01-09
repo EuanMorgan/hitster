@@ -2466,6 +2466,8 @@ export const gameRouter = createTRPCRouter({
           totalStealAttempts: number;
           successfulSteals: number;
           turnDurationsMs: number[];
+          tokensEarned: number;
+          tokensSpent: number;
         }
       > = {};
 
@@ -2484,6 +2486,8 @@ export const gameRouter = createTRPCRouter({
           totalStealAttempts: 0,
           successfulSteals: 0,
           turnDurationsMs: [],
+          tokensEarned: 2, // Everyone starts with 2 tokens
+          tokensSpent: 0,
         };
       }
 
@@ -2497,6 +2501,7 @@ export const gameRouter = createTRPCRouter({
           stat.totalGuesses++;
           if (turn.guessWasCorrect) {
             stat.correctGuesses++;
+            stat.tokensEarned++; // +1 token for correct guess
           }
         }
 
@@ -2525,43 +2530,49 @@ export const gameRouter = createTRPCRouter({
       // Format player stats for response
       const formattedPlayerStats = Object.values(playerStats)
         .sort((a, b) => b.timelineCount - a.timelineCount)
-        .map((stat) => ({
-          playerId: stat.playerId,
-          playerName: stat.playerName,
-          avatar: stat.avatar,
-          timelineCount: stat.timelineCount,
-          tokensRemaining: stat.tokensRemaining,
-          correctPlacements: stat.correctPlacements,
-          totalPlacements: stat.totalPlacements,
-          accuracy:
-            stat.totalPlacements > 0
-              ? Math.round(
-                  (stat.correctPlacements / stat.totalPlacements) * 100,
-                )
-              : 0,
-          correctGuesses: stat.correctGuesses,
-          totalGuesses: stat.totalGuesses,
-          guessAccuracy:
-            stat.totalGuesses > 0
-              ? Math.round((stat.correctGuesses / stat.totalGuesses) * 100)
-              : 0,
-          totalStealAttempts: stat.totalStealAttempts,
-          successfulSteals: stat.successfulSteals,
-          stealSuccessRate:
-            stat.totalStealAttempts > 0
-              ? Math.round(
-                  (stat.successfulSteals / stat.totalStealAttempts) * 100,
-                )
-              : 0,
-          avgTurnDurationSec:
-            stat.turnDurationsMs.length > 0
-              ? Math.round(
-                  stat.turnDurationsMs.reduce((a, b) => a + b, 0) /
-                    stat.turnDurationsMs.length /
-                    1000,
-                )
-              : null,
-        }));
+        .map((stat) => {
+          // tokensSpent = tokensEarned - tokensRemaining (captures skips, steals, free songs)
+          const tokensSpent = stat.tokensEarned - stat.tokensRemaining;
+          return {
+            playerId: stat.playerId,
+            playerName: stat.playerName,
+            avatar: stat.avatar,
+            timelineCount: stat.timelineCount,
+            tokensRemaining: stat.tokensRemaining,
+            tokensEarned: stat.tokensEarned,
+            tokensSpent: tokensSpent > 0 ? tokensSpent : 0,
+            correctPlacements: stat.correctPlacements,
+            totalPlacements: stat.totalPlacements,
+            accuracy:
+              stat.totalPlacements > 0
+                ? Math.round(
+                    (stat.correctPlacements / stat.totalPlacements) * 100,
+                  )
+                : 0,
+            correctGuesses: stat.correctGuesses,
+            totalGuesses: stat.totalGuesses,
+            guessAccuracy:
+              stat.totalGuesses > 0
+                ? Math.round((stat.correctGuesses / stat.totalGuesses) * 100)
+                : 0,
+            totalStealAttempts: stat.totalStealAttempts,
+            successfulSteals: stat.successfulSteals,
+            stealSuccessRate:
+              stat.totalStealAttempts > 0
+                ? Math.round(
+                    (stat.successfulSteals / stat.totalStealAttempts) * 100,
+                  )
+                : 0,
+            avgTurnDurationSec:
+              stat.turnDurationsMs.length > 0
+                ? Math.round(
+                    stat.turnDurationsMs.reduce((a, b) => a + b, 0) /
+                      stat.turnDurationsMs.length /
+                      1000,
+                  )
+                : null,
+          };
+        });
 
       // Game-wide aggregates
       let totalCorrectPlacements = 0;

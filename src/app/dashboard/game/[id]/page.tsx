@@ -278,9 +278,14 @@ export default function GameDetailPage() {
                       )}
                     </TableCell>
                     <TableCell className="text-center">
-                      <span className="tabular-nums">
-                        🪙 {player.tokensRemaining}
-                      </span>
+                      <div className="flex flex-col items-center gap-0.5">
+                        <span className="tabular-nums">
+                          🪙 {player.tokensRemaining}
+                        </span>
+                        <span className="text-muted-foreground text-xs tabular-nums">
+                          +{player.tokensEarned} / -{player.tokensSpent}
+                        </span>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
