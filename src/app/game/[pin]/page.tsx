@@ -81,10 +81,10 @@ export default function GamePage() {
   }, [sessionQuery.data?.state, router, pin]);
 
   const currentTrackUri = sessionQuery.data?.currentSong?.uri;
-  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional reset on track change
+  const turnStartedAt = sessionQuery.data?.turnStartedAt;
   useEffect(() => {
     setPlaybackStartedAt(null);
-  }, [currentTrackUri]);
+  }, [currentTrackUri, turnStartedAt]);
 
   const bonusTime = sessionQuery.data?.bonusTimeSeconds ?? 0;
   useEffect(() => {
