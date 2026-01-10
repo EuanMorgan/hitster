@@ -24,7 +24,9 @@ export function MyTimelineCard({ timeline }: MyTimelineCardProps) {
               className="flex-shrink-0 min-w-[70px] text-center p-2 bg-muted rounded-lg"
             >
               <div className="font-bold text-primary">{song.year}</div>
-              <div className="text-xs truncate max-w-[65px]">{song.name}</div>
+              <div className="text-xs truncate max-w-[65px]">
+                {song.displayName ?? song.name}
+              </div>
               <div className="text-[10px] text-muted-foreground truncate max-w-[65px]">
                 {song.artist}
               </div>

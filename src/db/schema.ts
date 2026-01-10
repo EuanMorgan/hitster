@@ -137,7 +137,8 @@ export const isrcLookupResultEnum = pgEnum("isrc_lookup_result", [
 
 export type CurrentTurnSong = {
   songId: string;
-  name: string;
+  name: string; // Original Spotify name
+  displayName: string; // Cleaned for display/matching
   artist: string;
   year: number;
   uri?: string; // Spotify track URI for playback
@@ -164,7 +165,7 @@ export type ActivePlayerGuess = {
 
 export type TurnResultData = {
   activePlayerCorrect: boolean;
-  song: { name: string; artist: string; year: number };
+  song: { name: string; displayName: string; artist: string; year: number };
   stolenBy?: { playerId: string; playerName: string } | null;
   recipientId?: string | null;
   gameEnded?: boolean;
@@ -181,7 +182,8 @@ export type TurnResultData = {
 
 export type PlaylistSong = {
   songId: string;
-  name: string;
+  name: string; // Original Spotify name
+  displayName: string; // Cleaned for display/matching
   artist: string;
   year: number;
   uri: string;
@@ -368,7 +370,8 @@ export const gameHistoryRelations = relations(gameHistory, ({ one }) => ({
 // Types
 export type TimelineSong = {
   songId: string;
-  name: string;
+  name: string; // Original Spotify name
+  displayName: string; // Cleaned for display/matching
   artist: string;
   year: number;
   addedAt: string;

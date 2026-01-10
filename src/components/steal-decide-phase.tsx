@@ -91,7 +91,7 @@ function TimelineSlot({
           {song.year}
         </div>
         <div className="text-[10px] sm:text-xs text-foreground line-clamp-1 max-w-[65px] sm:max-w-[75px]">
-          {song.name}
+          {song.displayName ?? song.name}
         </div>
         <div className="text-[9px] sm:text-[10px] text-muted-foreground truncate max-w-[65px] sm:max-w-[75px]">
           {song.artist}

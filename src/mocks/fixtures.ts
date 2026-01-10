@@ -99,6 +99,7 @@ export const fixtures = {
       currentSong: {
         songId: "track3",
         name: "Test Song",
+        displayName: "Test Song",
         artist: "Test Artist",
         year: 1995,
       },
@@ -120,6 +121,7 @@ export const fixtures = {
         {
           songId: "track3",
           name: "Test Song",
+          displayName: "Test Song",
           artist: "Test Artist",
           year: 1995,
           uri: "spotify:track:track3",
@@ -240,6 +242,7 @@ export const fixtures = {
     song1975: {
       songId: "track1",
       name: "Bohemian Rhapsody",
+      displayName: "Bohemian Rhapsody",
       artist: "Queen",
       year: 1975,
       addedAt: "2024-01-10T10:00:00Z",
@@ -248,6 +251,7 @@ export const fixtures = {
     song1983: {
       songId: "track2",
       name: "Billie Jean",
+      displayName: "Billie Jean",
       artist: "Michael Jackson",
       year: 1983,
       addedAt: "2024-01-10T10:05:00Z",
@@ -256,6 +260,7 @@ export const fixtures = {
     song1991: {
       songId: "track3",
       name: "Smells Like Teen Spirit",
+      displayName: "Smells Like Teen Spirit",
       artist: "Nirvana",
       year: 1991,
       addedAt: "2024-01-10T10:10:00Z",
@@ -264,6 +269,7 @@ export const fixtures = {
     song1968: {
       songId: "track4",
       name: "Hey Jude",
+      displayName: "Hey Jude",
       artist: "The Beatles",
       year: 1968,
       addedAt: "2024-01-10T10:15:00Z",
@@ -272,6 +278,7 @@ export const fixtures = {
     song2010: {
       songId: "track5",
       name: "Rolling in the Deep",
+      displayName: "Rolling in the Deep",
       artist: "Adele",
       year: 2010,
       addedAt: "2024-01-10T10:20:00Z",

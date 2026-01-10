@@ -166,7 +166,7 @@ export function ActivePlayerTimeline({
                     {song.year}
                   </div>
                   <div className="text-base font-medium truncate max-w-[160px]">
-                    {song.name}
+                    {song.displayName ?? song.name}
                   </div>
                   <div className="text-sm text-muted-foreground truncate max-w-[160px]">
                     {song.artist}

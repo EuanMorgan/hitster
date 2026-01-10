@@ -232,9 +232,11 @@ export function createMockDb() {
 export function createTimelineSong(
   overrides: Partial<TimelineSong> = {},
 ): TimelineSong {
+  const name = overrides.name ?? "Test Song";
   return {
     songId: overrides.songId ?? `song-${Date.now()}`,
-    name: overrides.name ?? "Test Song",
+    name,
+    displayName: overrides.displayName ?? name,
     artist: overrides.artist ?? "Test Artist",
     year: overrides.year ?? 2000,
     addedAt: overrides.addedAt ?? new Date().toISOString(),
@@ -249,9 +251,11 @@ export function createPlaylistSong(
   overrides: Partial<PlaylistSong> = {},
 ): PlaylistSong {
   const songId = overrides.songId ?? `song-${Date.now()}`;
+  const name = overrides.name ?? "Test Song";
   return {
     songId,
-    name: overrides.name ?? "Test Song",
+    name,
+    displayName: overrides.displayName ?? name,
     artist: overrides.artist ?? "Test Artist",
     year: overrides.year ?? 2000,
     uri: overrides.uri ?? `spotify:track:${songId}`,

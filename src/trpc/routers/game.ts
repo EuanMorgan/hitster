@@ -19,6 +19,7 @@ import {
 import { env } from "@/env";
 import { emitSessionUpdate, gameEvents } from "@/lib/game-events";
 import { getOriginalYearWithCache } from "@/lib/musicbrainz";
+import { cleanSongTitle } from "@/lib/song-utils";
 import { baseProcedure, createTRPCRouter, protectedProcedure } from "../init";
 
 function shuffleArray<T>(array: T[]): T[] {
@@ -67,9 +68,10 @@ function levenshteinDistance(a: string, b: string): number {
 }
 
 // Check if two strings match with fuzzy tolerance
+// Cleans both sides (strips remaster/edition info) before matching
 function fuzzyMatch(guess: string, actual: string, tolerance = 0.2): boolean {
-  const normalizedGuess = normalizeString(guess);
-  const normalizedActual = normalizeString(actual);
+  const normalizedGuess = normalizeString(cleanSongTitle(guess));
+  const normalizedActual = normalizeString(cleanSongTitle(actual));
 
   if (normalizedGuess === normalizedActual) return true;
   if (
@@ -85,13 +87,14 @@ function fuzzyMatch(guess: string, actual: string, tolerance = 0.2): boolean {
 
 type MatchType = "exact" | "fuzzy" | false;
 
+// Cleans both sides (strips remaster/edition info) before matching
 function getMatchType(
   guess: string,
   actual: string,
   tolerance = 0.2,
 ): MatchType {
-  const normalizedGuess = normalizeString(guess);
-  const normalizedActual = normalizeString(actual);
+  const normalizedGuess = normalizeString(cleanSongTitle(guess));
+  const normalizedActual = normalizeString(cleanSongTitle(actual));
 
   if (normalizedGuess === normalizedActual) return "exact";
   if (
@@ -220,6 +223,7 @@ async function fetchPlaylistTracks(
         tracks.push({
           songId: track.id,
           name: track.name,
+          displayName: cleanSongTitle(track.name),
           artist: track.artists?.map((a) => a.name).join(", ") || "Unknown",
           year,
           uri: track.uri,
@@ -332,16 +336,18 @@ async function processYearLookups(
 }
 
 // Fallback placeholder songs (used when Spotify API unavailable)
-const PLACEHOLDER_SONGS: PlaylistSong[] = [
-  {
-    songId: "7tFiyTwD0nx5a1eklYtX2J",
-    name: "Bohemian Rhapsody",
-    artist: "Queen",
-    year: 1975,
-    uri: "spotify:track:7tFiyTwD0nx5a1eklYtX2J",
-    isrc: "GBUM71029604",
-    spotifyYear: 1975,
-  },
+// Map to add displayName (same as name for these clean titles)
+const PLACEHOLDER_SONGS: PlaylistSong[] = (
+  [
+    {
+      songId: "7tFiyTwD0nx5a1eklYtX2J",
+      name: "Bohemian Rhapsody",
+      artist: "Queen",
+      year: 1975,
+      uri: "spotify:track:7tFiyTwD0nx5a1eklYtX2J",
+      isrc: "GBUM71029604",
+      spotifyYear: 1975,
+    },
   {
     songId: "40riOy7x9W7GXjyGp4pjAv",
     name: "Hotel California",
@@ -513,7 +519,8 @@ const PLACEHOLDER_SONGS: PlaylistSong[] = [
     isrc: "USAR19900181",
     spotifyYear: 1999,
   },
-];
+] as Omit<PlaylistSong, "displayName">[]
+).map((s) => ({ ...s, displayName: s.name }));
 
 function generatePin(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -736,6 +743,7 @@ async function resolveTurnCore(params: ResolveTurnParams) {
       const newSong: TimelineSong = {
         songId: currentSong.songId,
         name: currentSong.name,
+        displayName: currentSong.displayName,
         artist: currentSong.artist,
         year: currentSong.year,
         uri: currentSong.uri,
@@ -761,6 +769,7 @@ async function resolveTurnCore(params: ResolveTurnParams) {
           activePlayerCorrect,
           song: {
             name: currentSong.name,
+            displayName: currentSong.displayName,
             artist: currentSong.artist,
             year: currentSong.year,
           },
@@ -862,6 +871,7 @@ async function resolveTurnCore(params: ResolveTurnParams) {
       activePlayerCorrect,
       song: {
         name: currentSong.name,
+        displayName: currentSong.displayName,
         artist: currentSong.artist,
         year: currentSong.year,
       },
@@ -932,6 +942,7 @@ async function resolveTurnCore(params: ResolveTurnParams) {
     activePlayerCorrect,
     song: {
       name: currentSong.name,
+      displayName: currentSong.displayName,
       artist: currentSong.artist,
       year: currentSong.year,
     },
@@ -958,6 +969,7 @@ async function resolveTurnCore(params: ResolveTurnParams) {
       currentSong: {
         songId: nextSong.songId,
         name: nextSong.name,
+        displayName: nextSong.displayName,
         artist: nextSong.artist,
         year: nextSong.year,
         uri: nextSong.uri,
@@ -1657,6 +1669,7 @@ export const gameRouter = createTRPCRouter({
         const timelineSong: TimelineSong = {
           songId: song.songId,
           name: song.name,
+          displayName: song.displayName,
           artist: song.artist,
           year: song.year,
           uri: song.uri,
@@ -1677,6 +1690,7 @@ export const gameRouter = createTRPCRouter({
       const currentSong: CurrentTurnSong = {
         songId: firstTurnSong.songId,
         name: firstTurnSong.name,
+        displayName: firstTurnSong.displayName,
         artist: firstTurnSong.artist,
         year: firstTurnSong.year,
         uri: firstTurnSong.uri,
@@ -2407,6 +2421,7 @@ export const gameRouter = createTRPCRouter({
           currentSong: {
             songId: nextSong.songId,
             name: nextSong.name,
+            displayName: nextSong.displayName,
             artist: nextSong.artist,
             year: nextSong.year,
             uri: nextSong.uri,
@@ -2523,6 +2538,7 @@ export const gameRouter = createTRPCRouter({
       const newTimelineSong: TimelineSong = {
         songId: freeSong.songId,
         name: freeSong.name,
+        displayName: freeSong.displayName,
         artist: freeSong.artist,
         year: freeSong.year,
         uri: freeSong.uri,
@@ -2561,6 +2577,7 @@ export const gameRouter = createTRPCRouter({
           activePlayerCorrect: true,
           song: {
             name: freeSong.name,
+            displayName: freeSong.displayName,
             artist: freeSong.artist,
             year: freeSong.year,
           },
@@ -2885,6 +2902,7 @@ export const gameRouter = createTRPCRouter({
           const newSong: TimelineSong = {
             songId: session.currentSong.songId,
             name: session.currentSong.name,
+            displayName: session.currentSong.displayName,
             artist: session.currentSong.artist,
             year: session.currentSong.year,
             uri: session.currentSong.uri,
@@ -2912,6 +2930,7 @@ export const gameRouter = createTRPCRouter({
               activePlayerCorrect,
               song: {
                 name: session.currentSong.name,
+                displayName: session.currentSong.displayName,
                 artist: session.currentSong.artist,
                 year: session.currentSong.year,
               },
@@ -3016,6 +3035,7 @@ export const gameRouter = createTRPCRouter({
           activePlayerCorrect,
           song: {
             name: session.currentSong.name,
+            displayName: session.currentSong.displayName,
             artist: session.currentSong.artist,
             year: session.currentSong.year,
           },
@@ -3086,6 +3106,7 @@ export const gameRouter = createTRPCRouter({
         activePlayerCorrect,
         song: {
           name: session.currentSong.name,
+          displayName: session.currentSong.displayName,
           artist: session.currentSong.artist,
           year: session.currentSong.year,
         },
@@ -3112,6 +3133,7 @@ export const gameRouter = createTRPCRouter({
           currentSong: {
             songId: nextSong.songId,
             name: nextSong.name,
+            displayName: nextSong.displayName,
             artist: nextSong.artist,
             year: nextSong.year,
             uri: nextSong.uri,

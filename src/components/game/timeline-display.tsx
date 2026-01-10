@@ -25,7 +25,7 @@ export function TimelineDisplay({ timeline }: { timeline: TimelineSong[] }) {
               {song.year}
             </div>
             <div className="text-sm text-foreground line-clamp-2 max-w-[95px] sm:max-w-[115px]">
-              {song.name}
+              {song.displayName ?? song.name}
             </div>
             <div className="text-xs text-muted-foreground truncate max-w-[95px] sm:max-w-[115px]">
               {song.artist}

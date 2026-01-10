@@ -143,7 +143,7 @@ function TimelineSongCard({ song }: { song: TimelineSong }) {
           {song.year}
         </div>
         <div className="text-xs text-foreground line-clamp-1 max-w-[75px] sm:max-w-[95px]">
-          {song.name}
+          {song.displayName ?? song.name}
         </div>
         <div className="text-[10px] sm:text-xs text-muted-foreground truncate max-w-[75px] sm:max-w-[95px]">
           {song.artist}
@@ -329,6 +329,10 @@ export function StealPhase({
             key={dragKey}
             sensors={sensors}
             collisionDetection={closestCenter}
+            autoScroll={{
+              acceleration: 25,
+              threshold: { x: 0.25, y: 0 },
+            }}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
