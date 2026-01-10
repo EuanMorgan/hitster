@@ -14,7 +14,26 @@ export const createTRPCContext = cache(async () => {
 
 export type TRPCContext = Awaited<ReturnType<typeof createTRPCContext>>;
 
-const t = initTRPC.context<TRPCContext>().create();
+const t = initTRPC.context<TRPCContext>().create({
+  errorFormatter({ shape, error }) {
+    // Don't expose internal errors to client
+    const isInternalError =
+      error.code === "INTERNAL_SERVER_ERROR" ||
+      error.cause instanceof Error;
+
+    // Log the real error server-side
+    if (isInternalError && error.cause) {
+      console.error("tRPC internal error:", error.cause);
+    }
+
+    return {
+      ...shape,
+      message: isInternalError
+        ? "Something went wrong. Please try again."
+        : shape.message,
+    };
+  },
+});
 
 export const createTRPCRouter = t.router;
 export const createCallerFactory = t.createCallerFactory;
