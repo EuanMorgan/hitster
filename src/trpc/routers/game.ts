@@ -2242,17 +2242,24 @@ export const gameRouter = createTRPCRouter({
         timestamp: new Date().toISOString(),
       };
 
+      const updatedAttempts = [...existingAttempts, newAttempt];
+
       await ctx.db
         .update(gameSessions)
         .set({
-          stealAttempts: [...existingAttempts, newAttempt],
+          stealAttempts: updatedAttempts,
           updatedAt: new Date(),
         })
         .where(eq(gameSessions.id, session.id));
 
       emitSessionUpdate(pin);
 
-      return { success: true };
+      // Check if all decided stealers have placed
+      const allPlaced = decidedStealers.every((id) =>
+        updatedAttempts.some((a) => a.playerId === id),
+      );
+
+      return { success: true, allPlaced };
     }),
 
   skipSong: baseProcedure
