@@ -335,8 +335,10 @@ export function TimelineDropZone({
   // biome-ignore lint/correctness/useExhaustiveDependencies: intentional reset on song change
   useEffect(() => {
     setPlacementIndex(null);
+    setActiveId(null);
     setGuessedName("");
     setGuessedArtist("");
+    setDragKey((k) => k + 1);
   }, [currentSong.songId]);
 
   const sortedTimeline = [...timeline].sort((a, b) => a.year - b.year);
