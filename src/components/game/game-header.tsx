@@ -66,7 +66,11 @@ export function GameHeader({
     }
 
     if (spotify.error) {
-      return <span className="text-red-400 truncate max-w-[150px]">{spotify.error}</span>;
+      return (
+        <span className="text-red-400 truncate max-w-[150px]">
+          {spotify.error}
+        </span>
+      );
     }
 
     if (!spotify.isReady) {

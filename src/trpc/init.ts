@@ -18,8 +18,7 @@ const t = initTRPC.context<TRPCContext>().create({
   errorFormatter({ shape, error }) {
     // Don't expose internal errors to client
     const isInternalError =
-      error.code === "INTERNAL_SERVER_ERROR" ||
-      error.cause instanceof Error;
+      error.code === "INTERNAL_SERVER_ERROR" || error.cause instanceof Error;
 
     // Log the real error server-side
     if (isInternalError && error.cause) {

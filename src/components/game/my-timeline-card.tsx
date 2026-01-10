@@ -12,7 +12,8 @@ export function MyTimelineCard({ timeline }: MyTimelineCardProps) {
     <Card>
       <CardHeader className="py-2 pb-1">
         <CardTitle className="text-sm text-muted-foreground">
-          My Timeline ({timeline.length} {timeline.length === 1 ? 'song' : 'songs'})
+          My Timeline ({timeline.length}{" "}
+          {timeline.length === 1 ? "song" : "songs"})
         </CardTitle>
       </CardHeader>
       <CardContent className="py-2 pt-0">

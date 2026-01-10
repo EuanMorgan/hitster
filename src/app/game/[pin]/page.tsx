@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { ActivePlayerTimeline } from "@/components/game/active-player-timeline";
 import { GameFinishedScreen } from "@/components/game/game-finished-screen";
 import { GameHeader } from "@/components/game/game-header";
@@ -16,7 +17,6 @@ import {
   TurnResultOverlay,
 } from "@/components/game/turn-result-overlay";
 import { StealDecidePhase } from "@/components/steal-decide-phase";
-import { useSpotifyPlayer } from "@/hooks/use-spotify-player";
 import { StealPhase } from "@/components/steal-phase";
 import {
   Card,
@@ -29,8 +29,8 @@ import { useGameSession } from "@/hooks/use-game-session";
 import { useGameState } from "@/hooks/use-game-state";
 import { usePlayerHeartbeat } from "@/hooks/use-player-heartbeat";
 import { usePlayerValidation } from "@/hooks/use-player-validation";
+import { useSpotifyPlayer } from "@/hooks/use-spotify-player";
 import { useSession } from "@/lib/auth-client";
-import { toast } from "sonner";
 
 export default function GamePage() {
   const params = useParams();
@@ -88,7 +88,11 @@ export default function GamePage() {
 
   const bonusTime = sessionQuery.data?.bonusTimeSeconds ?? 0;
   useEffect(() => {
-    if (prevBonusTimeRef.current === 0 && bonusTime > 0 && !gameState.isMyTurn) {
+    if (
+      prevBonusTimeRef.current === 0 &&
+      bonusTime > 0 &&
+      !gameState.isMyTurn
+    ) {
       toast.info(`🪙 ${gameState.currentPlayer?.name ?? "Player"} bought +20s`);
     }
     prevBonusTimeRef.current = bonusTime;
