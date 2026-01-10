@@ -2,25 +2,25 @@
 const PATTERNS = [
   // Remaster: "- 2013 Remaster", "(Remastered 2020)", "[Remaster]"
   /\s*[-–]\s*(?:\d{4}\s*)?(?:Remaster(?:ed)?|Remastered(?:\s+\d{4})?)$/i,
-  /\s*[(\[](?:\d{4}\s+)?Remaster(?:ed)?(?:\s+\d{4})?[)\]]$/i,
+  /\s*[([](?:\d{4}\s+)?Remaster(?:ed)?(?:\s+\d{4})?[)\]]$/i,
 
   // Edition: "(Deluxe Edition)", "- Deluxe", "- Deluxe Edition", "[Bonus Track]"
-  /\s*[(\[](?:Deluxe|Special|Anniversary|Expanded|Extended|Collector'?s?|Legacy|Ultimate|Super Deluxe)\s*(?:Edition|Version)?[)\]]$/i,
+  /\s*[([](?:Deluxe|Special|Anniversary|Expanded|Extended|Collector'?s?|Legacy|Ultimate|Super Deluxe)\s*(?:Edition|Version)?[)\]]$/i,
   /\s*[-–]\s*(?:Deluxe|Bonus Track)(?:\s+(?:Edition|Version))?$/i,
 
   // Live/Acoustic: "(Live)", "[Acoustic Version]" - NOT "Live and Let Die"
-  /\s*[(\[](?:Live|Acoustic|Unplugged)(?:\s+(?:at\s+.+|from\s+.+|Version|Recording))?[)\]]$/i,
+  /\s*[([](?:Live|Acoustic|Unplugged)(?:\s+(?:at\s+.+|from\s+.+|Version|Recording))?[)\]]$/i,
   /\s*[-–]\s*(?:Live|Acoustic)\s*(?:Version)?$/i,
 
   // Remix/Edit: "(Radio Edit)", "[Extended Mix]"
-  /\s*[(\[](?:Radio\s+Edit|Single\s+Version|Album\s+Version|Extended\s+Mix|Club\s+Mix|Edit)[)\]]$/i,
+  /\s*[([](?:Radio\s+Edit|Single\s+Version|Album\s+Version|Extended\s+Mix|Club\s+Mix|Edit)[)\]]$/i,
 
   // Featured: "(feat. Artist)", "(ft. Someone)"
-  /\s*[(\[](?:feat\.?|ft\.?|featuring|with)\s+[^)\]]+[)\]]$/i,
+  /\s*[([](?:feat\.?|ft\.?|featuring|with)\s+[^)\]]+[)\]]$/i,
   /\s*[-–]\s*(?:feat\.?|ft\.?|featuring)\s+.+$/i,
 
   // Mono/Stereo: "(Mono)", "[Stereo Mix]"
-  /\s*[(\[](?:Mono|Stereo)(?:\s+(?:Mix|Version))?[)\]]$/i,
+  /\s*[([](?:Mono|Stereo)(?:\s+(?:Mix|Version))?[)\]]$/i,
 ];
 
 /**

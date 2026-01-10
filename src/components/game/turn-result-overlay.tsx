@@ -87,7 +87,8 @@ export function TurnResultOverlay({
                 </span>
               </div>
               <div className="text-sm text-muted-foreground mb-4">
-                Final song: {(result.song.displayName ?? result.song.name)} ({result.song.year})
+                Final song: {result.song.displayName ?? result.song.name} (
+                {result.song.year})
               </div>
             </>
           ) : (
@@ -107,7 +108,9 @@ export function TurnResultOverlay({
                   Song discarded - no one got it right
                 </div>
               )}
-              <div className="text-lg font-medium">{(result.song.displayName ?? result.song.name)}</div>
+              <div className="text-lg font-medium">
+                {result.song.displayName ?? result.song.name}
+              </div>
               <div className="text-muted-foreground">{result.song.artist}</div>
               <div className="text-2xl font-bold text-primary mt-2">
                 {result.song.year}
@@ -130,7 +133,8 @@ export function TurnResultOverlay({
                   </div>
                   {result.nameMatchType === "fuzzy" && result.guessedName && (
                     <div className="text-sm text-muted-foreground mb-1">
-                      "{result.guessedName}" → {(result.song.displayName ?? result.song.name)}
+                      "{result.guessedName}" →{" "}
+                      {result.song.displayName ?? result.song.name}
                     </div>
                   )}
                   {result.artistMatchType === "fuzzy" &&
@@ -164,7 +168,7 @@ export function TurnResultOverlay({
                         {!result.nameCorrect && (
                           <span className="text-muted-foreground">
                             {" "}
-                            (was: {(result.song.displayName ?? result.song.name)})
+                            (was: {result.song.displayName ?? result.song.name})
                           </span>
                         )}
                       </div>

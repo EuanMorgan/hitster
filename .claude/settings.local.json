@@ -8,7 +8,16 @@
       "mcp__playwright__browser_drag",
       "mcp__playwright__browser_snapshot",
       "mcp__playwright__browser_wait_for",
-      "mcp__playwright__browser_navigate"
+      "mcp__playwright__browser_navigate",
+      "mcp__sequential-thinking__sequentialthinking",
+      "mcp__playwright__browser_type",
+      "mcp__playwright__browser_tabs",
+      "mcp__playwright__browser_close",
+      "mcp__playwright__browser_fill_form",
+      "mcp__playwright__browser_run_code",
+      "mcp__playwright__browser_console_messages",
+      "mcp__context7__query-docs",
+      "mcp__context7__resolve-library-id"
     ]
   }
 }

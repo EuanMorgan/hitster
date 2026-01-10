@@ -82,6 +82,7 @@ export default function GamePage() {
 
   const currentTrackUri = sessionQuery.data?.currentSong?.uri;
   const turnStartedAt = sessionQuery.data?.turnStartedAt;
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reset playbackStartedAt when track or turn changes
   useEffect(() => {
     setPlaybackStartedAt(null);
   }, [currentTrackUri, turnStartedAt]);

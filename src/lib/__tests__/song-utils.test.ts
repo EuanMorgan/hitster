@@ -5,13 +5,13 @@ describe("cleanSongTitle", () => {
   describe("remaster patterns", () => {
     it("removes dash remaster with year", () => {
       expect(cleanSongTitle("Hotel California - 2013 Remaster")).toBe(
-        "Hotel California"
+        "Hotel California",
       );
     });
 
     it("removes parenthetical remaster with year", () => {
       expect(cleanSongTitle("Bohemian Rhapsody (Remastered 2011)")).toBe(
-        "Bohemian Rhapsody"
+        "Bohemian Rhapsody",
       );
     });
 
@@ -21,7 +21,7 @@ describe("cleanSongTitle", () => {
 
     it("removes bracketed remaster", () => {
       expect(cleanSongTitle("Stairway to Heaven [Remaster]")).toBe(
-        "Stairway to Heaven"
+        "Stairway to Heaven",
       );
     });
 
@@ -41,7 +41,7 @@ describe("cleanSongTitle", () => {
 
     it("removes expanded edition", () => {
       expect(cleanSongTitle("Abbey Road [Expanded Edition]")).toBe(
-        "Abbey Road"
+        "Abbey Road",
       );
     });
 
@@ -57,13 +57,13 @@ describe("cleanSongTitle", () => {
   describe("live/acoustic patterns", () => {
     it("removes parenthetical live", () => {
       expect(cleanSongTitle("Sultans of Swing (Live)")).toBe(
-        "Sultans of Swing"
+        "Sultans of Swing",
       );
     });
 
     it("removes live version", () => {
       expect(cleanSongTitle("Comfortably Numb - Live Version")).toBe(
-        "Comfortably Numb"
+        "Comfortably Numb",
       );
     });
 
@@ -73,7 +73,7 @@ describe("cleanSongTitle", () => {
 
     it("removes unplugged", () => {
       expect(cleanSongTitle("Tears in Heaven (Unplugged)")).toBe(
-        "Tears in Heaven"
+        "Tears in Heaven",
       );
     });
 
@@ -89,7 +89,7 @@ describe("cleanSongTitle", () => {
   describe("remix/edit patterns", () => {
     it("removes radio edit", () => {
       expect(cleanSongTitle("Blinding Lights (Radio Edit)")).toBe(
-        "Blinding Lights"
+        "Blinding Lights",
       );
     });
 
@@ -109,7 +109,7 @@ describe("cleanSongTitle", () => {
   describe("featured artist patterns", () => {
     it("removes feat. in parentheses", () => {
       expect(cleanSongTitle("Empire State of Mind (feat. Alicia Keys)")).toBe(
-        "Empire State of Mind"
+        "Empire State of Mind",
       );
     });
 
@@ -123,7 +123,7 @@ describe("cleanSongTitle", () => {
 
     it("removes with in brackets", () => {
       expect(cleanSongTitle("Under Pressure [with David Bowie]")).toBe(
-        "Under Pressure"
+        "Under Pressure",
       );
     });
   });
@@ -135,7 +135,7 @@ describe("cleanSongTitle", () => {
 
     it("removes stereo mix", () => {
       expect(cleanSongTitle("Here Comes the Sun [Stereo Mix]")).toBe(
-        "Here Comes the Sun"
+        "Here Comes the Sun",
       );
     });
   });
@@ -148,15 +148,15 @@ describe("cleanSongTitle", () => {
 
     it("removes multiple parenthetical suffixes at end", () => {
       expect(cleanSongTitle("Track (feat. Artist) (2020 Remaster)")).toBe(
-        "Track"
+        "Track",
       );
     });
 
     it("strips chained suffixes via multiple passes", () => {
       // First pass strips "- Deluxe Edition", second pass strips "(Remastered)"
-      expect(
-        cleanSongTitle("Song Title (Remastered) - Deluxe Edition")
-      ).toBe("Song Title");
+      expect(cleanSongTitle("Song Title (Remastered) - Deluxe Edition")).toBe(
+        "Song Title",
+      );
     });
   });
 
