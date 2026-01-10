@@ -15,8 +15,8 @@ import {
   type TurnResult,
   TurnResultOverlay,
 } from "@/components/game/turn-result-overlay";
-import { SpotifyPlayer } from "@/components/spotify-player";
 import { StealDecidePhase } from "@/components/steal-decide-phase";
+import { useSpotifyPlayer } from "@/hooks/use-spotify-player";
 import { StealPhase } from "@/components/steal-phase";
 import {
   Card,
@@ -93,6 +93,15 @@ export default function GamePage() {
     }
     prevBonusTimeRef.current = bonusTime;
   }, [bonusTime, gameState.isMyTurn, gameState.currentPlayer]);
+
+  // Spotify player for host
+  const spotify = useSpotifyPlayer({
+    enabled: gameState.isHost && sessionQuery.data?.state === "playing",
+    trackUri: sessionQuery.data?.currentSong?.uri ?? null,
+    shouldPlay: !!sessionQuery.data?.currentSong,
+    onPlaybackStarted: () => setPlaybackStartedAt(Date.now()),
+    onError: (error) => console.error("Spotify playback error:", error),
+  });
 
   const handleConfirmTurn = useCallback(
     (placementIndex: number, guessedName?: string, guessedArtist?: string) => {
@@ -236,21 +245,11 @@ export default function GamePage() {
           isHost={isHost}
           onEndGame={() => mutations.endGame.mutate({ pin })}
           isEndingGame={mutations.endGame.isPending}
+          spotify={isHost ? spotify : undefined}
         />
 
-        {isHost && session?.state === "playing" && (
-          <SpotifyPlayer
-            isHost={isHost}
-            trackUri={session?.currentSong?.uri ?? null}
-            shouldPlay={!!session?.currentSong}
-            onPlaybackStarted={() => setPlaybackStartedAt(Date.now())}
-            onPlaybackError={(error) =>
-              console.error("Spotify playback error:", error)
-            }
-          />
-        )}
-
-        {currentPlayer && session?.state === "playing" && (
+        {/* Show "Your Turn!" banner only when it's your turn */}
+        {currentPlayer && session?.state === "playing" && isMyTurn && (
           <TurnIndicatorBanner
             isMyTurn={isMyTurn}
             currentPlayerName={currentPlayer.name}
@@ -259,15 +258,6 @@ export default function GamePage() {
             turnStartedAt={session?.turnStartedAt}
             turnDuration={session?.turnDuration ?? 45}
             bonusTimeSeconds={session?.bonusTimeSeconds ?? 0}
-          />
-        )}
-
-        {/* Compact player progress - visible to all */}
-        {session?.state === "playing" && (
-          <PlayerProgressBar
-            players={session?.players ?? []}
-            currentPlayerId={session?.currentPlayerId ?? null}
-            songsToWin={session?.songsToWin ?? 10}
           />
         )}
 
@@ -354,6 +344,15 @@ export default function GamePage() {
             bonusTimeSeconds={session.bonusTimeSeconds ?? 0}
             tokens={myPlayer.tokens}
             timerPaused={hostDisconnected}
+          />
+        )}
+
+        {/* Player scores at bottom */}
+        {session?.state === "playing" && (
+          <PlayerProgressBar
+            players={session?.players ?? []}
+            currentPlayerId={session?.currentPlayerId ?? null}
+            songsToWin={session?.songsToWin ?? 10}
           />
         )}
       </div>

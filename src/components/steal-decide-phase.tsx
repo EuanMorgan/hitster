@@ -196,8 +196,8 @@ export function StealDecidePhase({
           {decidedCount}/{totalEligible} players decided
         </div>
 
-        {/* Action buttons for non-active players who haven't decided */}
-        {!isActivePlayer && !hasDecided && (
+        {/* Action buttons for non-active players who haven't decided and CAN steal */}
+        {!isActivePlayer && !hasDecided && canSteal && (
           <div className="flex justify-center gap-3 sm:gap-4 px-2">
             <Button
               variant="outline"

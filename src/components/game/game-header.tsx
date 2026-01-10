@@ -1,4 +1,4 @@
-import { Square } from "lucide-react";
+import { Pause, Play, Square } from "lucide-react";
 import { YearLookupProgress } from "@/components/game/year-lookup-progress";
 import { ThemeToggle } from "@/components/theme-toggle";
 import {
@@ -15,6 +15,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
+interface SpotifyState {
+  isReady: boolean;
+  isPlaying: boolean;
+  isLoading: boolean;
+  error: string | null;
+  needsReauth: boolean;
+  togglePlayback: () => void;
+}
+
 interface GameHeaderProps {
   pin: string;
   roundNumber: number;
@@ -27,6 +36,7 @@ interface GameHeaderProps {
   isHost?: boolean;
   onEndGame?: () => void;
   isEndingGame?: boolean;
+  spotify?: SpotifyState;
 }
 
 export function GameHeader({
@@ -41,7 +51,65 @@ export function GameHeader({
   isHost = false,
   onEndGame,
   isEndingGame = false,
+  spotify,
 }: GameHeaderProps) {
+  const renderSpotifyStatus = () => {
+    if (!isHost || !spotify) return null;
+
+    if (spotify.needsReauth) {
+      return (
+        <span className="text-amber-400 flex items-center gap-1">
+          <span className="animate-spin h-3 w-3 border-2 border-amber-500 border-t-transparent rounded-full" />
+          Reconnecting...
+        </span>
+      );
+    }
+
+    if (spotify.error) {
+      return <span className="text-red-400 truncate max-w-[150px]">{spotify.error}</span>;
+    }
+
+    if (!spotify.isReady) {
+      return (
+        <span className="text-muted-foreground flex items-center gap-1">
+          <span className="animate-spin h-3 w-3 border-2 border-green-500 border-t-transparent rounded-full" />
+          Connecting...
+        </span>
+      );
+    }
+
+    if (spotify.isLoading) {
+      return (
+        <span className="text-amber-400 flex items-center gap-1">
+          <span className="animate-spin h-3 w-3 border-2 border-amber-500 border-t-transparent rounded-full" />
+          Loading...
+        </span>
+      );
+    }
+
+    return (
+      <span className="flex items-center gap-1">
+        <span className="text-muted-foreground">
+          {spotify.isPlaying ? "Now Playing" : "Paused"}
+        </span>
+        <span className="text-muted-foreground">-</span>
+        <span className="text-muted-foreground">Mystery Song</span>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={spotify.togglePlayback}
+          className="h-6 w-6 ml-1"
+        >
+          {spotify.isPlaying ? (
+            <Pause className="h-3 w-3" />
+          ) : (
+            <Play className="h-3 w-3" />
+          )}
+        </Button>
+      </span>
+    );
+  };
+
   return (
     <Card className="p-3 sm:p-4">
       <div className="flex items-center justify-between gap-2 text-xs sm:text-sm">
@@ -67,6 +135,12 @@ export function GameHeader({
           </span>
           {isStealPhase && (
             <span className="text-amber-500 font-medium">🎯 STEAL</span>
+          )}
+          {isHost && spotify && (
+            <>
+              <span className="text-muted-foreground">•</span>
+              {renderSpotifyStatus()}
+            </>
           )}
         </div>
         <div className="flex items-center gap-2">

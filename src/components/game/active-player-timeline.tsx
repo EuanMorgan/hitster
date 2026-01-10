@@ -121,7 +121,7 @@ export function ActivePlayerTimeline({
               <span>
                 <TokenDisplay count={player.tokens} />
               </span>
-              <span>{player.timeline?.length ?? 0} songs in timeline</span>
+              <span>{player.timeline?.length ?? 0} {(player.timeline?.length ?? 0) === 1 ? 'song' : 'songs'} in timeline</span>
             </CardDescription>
           </div>
         </div>
@@ -141,7 +141,7 @@ export function ActivePlayerTimeline({
 
         <div className="space-y-3">
           <h4 className="text-lg font-medium text-muted-foreground">
-            Timeline ({sortedTimeline.length} songs)
+            Timeline ({sortedTimeline.length} {sortedTimeline.length === 1 ? 'song' : 'songs'})
           </h4>
           {sortedTimeline.length === 0 ? (
             <div className="flex flex-col items-center gap-2 text-muted-foreground p-6 text-center border-2 border-dashed rounded-xl">
