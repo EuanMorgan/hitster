@@ -162,8 +162,21 @@ export function useSpotifyPlayer({
       player.addListener("ready", ({ device_id }) => {
         console.log("Spotify player ready with device ID:", device_id);
         setDeviceId(device_id);
-        setIsReady(true);
-        transferMutation.mutate({ deviceId: device_id });
+        // Wait for device transfer to complete before marking ready
+        // This prevents playback from triggering before SDK is the active device
+        transferMutation.mutate(
+          { deviceId: device_id },
+          {
+            onSuccess: () => {
+              console.log("Device transfer successful, player is now ready");
+              setIsReady(true);
+            },
+            onError: (err) => {
+              console.error("Device transfer failed:", err);
+              setError("Failed to activate Spotify player. Try refreshing.");
+            },
+          },
+        );
       });
 
       player.addListener("not_ready", ({ device_id }) => {
