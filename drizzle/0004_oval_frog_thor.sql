@@ -1,0 +1,1 @@
+ALTER TABLE "hitster_game_sessions" ADD COLUMN "bonus_time_seconds" integer DEFAULT 0;
