@@ -129,6 +129,12 @@ export const yearLookupStatusEnum = pgEnum("year_lookup_status", [
   "complete",
 ]);
 
+export const isrcLookupResultEnum = pgEnum("isrc_lookup_result", [
+  "found",
+  "not_found",
+  "no_earlier_year",
+]);
+
 export type CurrentTurnSong = {
   songId: string;
   name: string;
@@ -298,11 +304,12 @@ export const gameHistory = pgTable("game_history", {
   completedAt: timestamp("completed_at").notNull().defaultNow(),
 });
 
-// ISRC Year Cache - stores MusicBrainz original release year lookups
+// ISRC Year Cache - stores MusicBrainz original release year lookups (including negative results)
 export const isrcYearCache = pgTable("isrc_year_cache", {
   isrc: varchar("isrc", { length: 12 }).primaryKey(), // ISRC format: CC-XXX-YY-NNNNN (12 chars)
-  originalYear: integer("original_year").notNull(),
-  spotifyYear: integer("spotify_year"), // For comparison/debugging
+  originalYear: integer("original_year"), // Nullable for negative results
+  spotifyYear: integer("spotify_year"),
+  lookupResult: isrcLookupResultEnum("lookup_result").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

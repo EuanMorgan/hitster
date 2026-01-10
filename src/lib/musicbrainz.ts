@@ -10,6 +10,21 @@ let lastRequestTime = 0;
 // Required by MusicBrainz - they reject requests without proper User-Agent
 const USER_AGENT = "Hitster/1.0 (https://github.com/hitster-game)";
 
+// TTL for negative cache results (days)
+const CACHE_TTL_DAYS = {
+  found: Number.POSITIVE_INFINITY,
+  not_found: 60,
+  no_earlier_year: 90,
+};
+
+type LookupResult = "found" | "not_found" | "no_earlier_year";
+
+type CacheResult =
+  | { status: "miss" }
+  | { status: "found"; year: number }
+  | { status: "not_found" }
+  | { status: "no_earlier_year" };
+
 type MusicBrainzRecording = {
   id: string;
   title: string;
@@ -40,24 +55,41 @@ async function rateLimitedFetch(url: string): Promise<Response> {
 }
 
 /**
- * Get cached year from database
+ * Get cached result from database (includes negative results with TTL)
  */
-export async function getCachedYear(isrc: string): Promise<number | null> {
+export async function getCachedResult(isrc: string): Promise<CacheResult> {
   const cached = await db
     .select()
     .from(isrcYearCache)
     .where(eq(isrcYearCache.isrc, isrc))
     .limit(1);
 
-  return cached[0]?.originalYear ?? null;
+  if (!cached[0]) return { status: "miss" };
+
+  const { originalYear, lookupResult, createdAt } = cached[0];
+
+  // Check TTL for negative results
+  if (lookupResult !== "found") {
+    const ageInDays =
+      (Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24);
+    const ttl = CACHE_TTL_DAYS[lookupResult];
+    if (ageInDays > ttl) return { status: "miss" }; // Expired
+  }
+
+  if (lookupResult === "found" && originalYear !== null) {
+    return { status: "found", year: originalYear };
+  }
+
+  return { status: lookupResult as "not_found" | "no_earlier_year" };
 }
 
 /**
- * Cache year lookup result in database
+ * Cache lookup result in database
  */
-export async function cacheYear(
+async function cacheResult(
   isrc: string,
-  originalYear: number,
+  lookupResult: LookupResult,
+  originalYear: number | null,
   spotifyYear?: number,
 ): Promise<void> {
   await db
@@ -66,8 +98,17 @@ export async function cacheYear(
       isrc,
       originalYear,
       spotifyYear,
+      lookupResult,
     })
-    .onConflictDoNothing();
+    .onConflictDoUpdate({
+      target: isrcYearCache.isrc,
+      set: {
+        originalYear,
+        spotifyYear,
+        lookupResult,
+        createdAt: new Date(),
+      },
+    });
 }
 
 /**
@@ -94,97 +135,73 @@ function extractEarliestYear(
 
 /**
  * Get original release year from MusicBrainz API via ISRC lookup
- * Returns null if ISRC not found or API error
- *
- * IMPORTANT: MusicBrainz has strict rate limit of 1 request/second
- */
-export async function getOriginalYear(isrc: string): Promise<number | null> {
-  // Check cache first
-  const cachedYear = await getCachedYear(isrc);
-  if (cachedYear !== null) {
-    return cachedYear;
-  }
-
-  try {
-    const url = `https://musicbrainz.org/ws/2/isrc/${encodeURIComponent(isrc)}?fmt=json`;
-    const response = await rateLimitedFetch(url);
-
-    if (!response.ok) {
-      if (response.status === 404) {
-        // ISRC not found in MusicBrainz
-        return null;
-      }
-      console.error(
-        `MusicBrainz API error: ${response.status} ${response.statusText}`,
-      );
-      return null;
-    }
-
-    const data = (await response.json()) as MusicBrainzResponse;
-
-    if (!data.recordings || data.recordings.length === 0) {
-      return null;
-    }
-
-    const year = extractEarliestYear(data.recordings);
-
-    // Cache result if found
-    if (year !== null) {
-      // Note: spotifyYear passed separately when calling from game logic
-      await cacheYear(isrc, year);
-    }
-
-    return year;
-  } catch (error) {
-    console.error("MusicBrainz lookup failed:", error);
-    return null;
-  }
-}
-
-/**
- * Get original release year, with caching of result
- * Useful when you want to also store the Spotify year for comparison
+ * Caches all results including negative ones (404s, no earlier year)
  */
 export async function getOriginalYearWithCache(
   isrc: string,
   spotifyYear?: number,
 ): Promise<number | null> {
-  // Check cache first
-  const cachedYear = await getCachedYear(isrc);
-  if (cachedYear !== null) {
-    return cachedYear;
+  // Check cache first (handles both positive and negative cached results)
+  const cached = await getCachedResult(isrc);
+
+  if (cached.status === "found") return cached.year;
+  if (cached.status === "not_found" || cached.status === "no_earlier_year") {
+    return null;
   }
 
+  // Cache miss - do API call
   try {
     const url = `https://musicbrainz.org/ws/2/isrc/${encodeURIComponent(isrc)}?fmt=json`;
     const response = await rateLimitedFetch(url);
 
     if (!response.ok) {
       if (response.status === 404) {
+        await cacheResult(isrc, "not_found", null, spotifyYear);
         return null;
       }
       console.error(
         `MusicBrainz API error: ${response.status} ${response.statusText}`,
       );
+      // Don't cache transient errors
       return null;
     }
 
     const data = (await response.json()) as MusicBrainzResponse;
 
     if (!data.recordings || data.recordings.length === 0) {
+      await cacheResult(isrc, "not_found", null, spotifyYear);
       return null;
     }
 
     const year = extractEarliestYear(data.recordings);
 
-    // Cache result if found, including Spotify year for comparison
-    if (year !== null) {
-      await cacheYear(isrc, year, spotifyYear);
+    if (year === null || (spotifyYear && year >= spotifyYear)) {
+      // MusicBrainz year is null or not earlier than Spotify - cache as no_earlier_year
+      await cacheResult(isrc, "no_earlier_year", year, spotifyYear);
+      return null;
     }
 
+    // Found a valid earlier year
+    await cacheResult(isrc, "found", year, spotifyYear);
     return year;
   } catch (error) {
     console.error("MusicBrainz lookup failed:", error);
+    // Network errors - don't cache (transient)
     return null;
   }
+}
+
+/**
+ * @deprecated Use getOriginalYearWithCache instead
+ */
+export async function getOriginalYear(isrc: string): Promise<number | null> {
+  return getOriginalYearWithCache(isrc);
+}
+
+/**
+ * @deprecated Use getCachedResult instead
+ */
+export async function getCachedYear(isrc: string): Promise<number | null> {
+  const result = await getCachedResult(isrc);
+  return result.status === "found" ? result.year : null;
 }

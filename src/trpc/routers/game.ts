@@ -287,8 +287,8 @@ async function processYearLookups(
         song.spotifyYear,
       );
 
-      if (originalYear !== null && originalYear !== song.year) {
-        // Update the song's year in the playlist
+      if (originalYear !== null && originalYear < song.year) {
+        // Only use MusicBrainz year if it's earlier than Spotify's (avoids remaster dates)
         song.year = originalYear;
         updatedCount++;
       }
