@@ -38,7 +38,6 @@ export default function GamePage() {
   const router = useRouter();
   const { data: authSession } = useSession();
   const [turnResult, setTurnResult] = useState<TurnResult | null>(null);
-  const shownResultRef = useRef<string | null>(null);
   const prevBonusTimeRef = useRef(0);
   const [playbackStartedAt, setPlaybackStartedAt] = useState<number | null>(
     null,
@@ -48,16 +47,17 @@ export default function GamePage() {
   const mutations = useGameMutations({ pin });
 
   // Show turn result from session when it changes
+  // Use sessionStorage to persist shown results across refresh
   const lastTurnResult = sessionQuery.data?.lastTurnResult;
   useEffect(() => {
-    if (
-      lastTurnResult &&
-      lastTurnResult.displayedAt !== shownResultRef.current
-    ) {
-      shownResultRef.current = lastTurnResult.displayedAt;
-      setTurnResult(lastTurnResult);
-    }
-  }, [lastTurnResult]);
+    if (!lastTurnResult) return;
+
+    const storageKey = `turnResult:${pin}:${lastTurnResult.displayedAt}`;
+    if (sessionStorage.getItem(storageKey)) return;
+
+    sessionStorage.setItem(storageKey, "true");
+    setTurnResult(lastTurnResult);
+  }, [lastTurnResult, pin]);
 
   const { playerId: currentPlayerId } = usePlayerValidation({
     pin,
