@@ -7,15 +7,14 @@ import { GameFinishedScreen } from "@/components/game/game-finished-screen";
 import { GameHeader } from "@/components/game/game-header";
 import { GameSkeleton } from "@/components/game/game-skeleton";
 import { HostDisconnectedOverlay } from "@/components/game/host-disconnected-overlay";
+import { MyTimelineCard } from "@/components/game/my-timeline-card";
 import { MyTurnCard } from "@/components/game/my-turn-card";
-import { PlayerCard } from "@/components/game/player-card";
 import { PlayerProgressBar } from "@/components/game/player-progress-bar";
 import { TurnIndicatorBanner } from "@/components/game/turn-indicator-banner";
 import {
   type TurnResult,
   TurnResultOverlay,
 } from "@/components/game/turn-result-overlay";
-import { WaitingView } from "@/components/game/waiting-view";
 import { SpotifyPlayer } from "@/components/spotify-player";
 import { StealDecidePhase } from "@/components/steal-decide-phase";
 import { StealPhase } from "@/components/steal-phase";
@@ -31,7 +30,6 @@ import { useGameState } from "@/hooks/use-game-state";
 import { usePlayerHeartbeat } from "@/hooks/use-player-heartbeat";
 import { usePlayerValidation } from "@/hooks/use-player-validation";
 import { useSession } from "@/lib/auth-client";
-import { getPlayersSortedWithCurrentFirst } from "@/lib/game-selectors";
 
 export default function GamePage() {
   const params = useParams();
@@ -248,25 +246,33 @@ export default function GamePage() {
             currentPlayerName={currentPlayer.name}
             currentPlayerAvatar={currentPlayer.avatar}
             phase={turnResult ? "results" : isStealPhase ? "steal" : "placing"}
+            turnStartedAt={session?.turnStartedAt}
+            turnDuration={session?.turnDuration ?? 45}
           />
         )}
 
-        {isHost && currentPlayer && !isMyTurn && (
-          <>
-            <ActivePlayerTimeline
-              player={currentPlayer}
-              currentSong={isStealPhase ? null : (session?.currentSong ?? null)}
-              turnStartedAt={
-                isStealPhase ? null : (session?.turnStartedAt ?? null)
-              }
-              turnDuration={session?.turnDuration ?? 45}
-            />
-            <PlayerProgressBar
-              players={session?.players ?? []}
-              currentPlayerId={session?.currentPlayerId ?? null}
-              songsToWin={session?.songsToWin ?? 10}
-            />
-          </>
+        {/* Compact player progress - visible to all */}
+        {session?.state === "playing" && (
+          <PlayerProgressBar
+            players={session?.players ?? []}
+            currentPlayerId={session?.currentPlayerId ?? null}
+            songsToWin={session?.songsToWin ?? 10}
+          />
+        )}
+
+        {/* Show active player's timeline for spectators during placing phase */}
+        {!isStealPhase && !isMyTurn && currentPlayer && (
+          <ActivePlayerTimeline
+            player={currentPlayer}
+            currentSong={session?.currentSong ?? null}
+            turnStartedAt={session?.turnStartedAt ?? null}
+            turnDuration={session?.turnDuration ?? 45}
+          />
+        )}
+
+        {/* Show spectator's own timeline when not their turn */}
+        {!isMyTurn && myPlayer?.timeline && myPlayer.timeline.length > 0 && (
+          <MyTimelineCard timeline={myPlayer.timeline} />
         )}
 
         {isDecidePhase &&
@@ -338,34 +344,6 @@ export default function GamePage() {
             timerPaused={hostDisconnected}
           />
         )}
-
-        {!isStealPhase && !isMyTurn && currentPlayer && (
-          <WaitingView
-            playerName={currentPlayer.name}
-            playerAvatar={currentPlayer.avatar}
-          />
-        )}
-
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold">Players</h2>
-          <div className="grid gap-4">
-            {getPlayersSortedWithCurrentFirst(
-              session?.players ?? [],
-              currentPlayerId ?? null,
-            ).map((player, index) => (
-              <PlayerCard
-                key={player.id}
-                player={player}
-                isCurrentTurn={player.id === session?.currentPlayerId}
-                turnNumber={
-                  session?.turnOrder?.indexOf(player.id) !== undefined
-                    ? (session?.turnOrder?.indexOf(player.id) ?? 0) + 1
-                    : index + 1
-                }
-              />
-            ))}
-          </div>
-        </div>
       </div>
     </div>
   );

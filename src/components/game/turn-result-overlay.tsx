@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
 import { X } from "lucide-react";
+import { useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 
 type MatchType = "exact" | "fuzzy" | false;
@@ -54,6 +54,7 @@ export function TurnResultOverlay({
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <Card className="w-full max-w-md mx-4 animate-in zoom-in-95 relative">
         <button
+          type="button"
           onClick={onClose}
           className="absolute top-3 right-3 p-1 rounded-full hover:bg-muted transition-colors"
           aria-label="Close"

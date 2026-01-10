@@ -1,8 +1,12 @@
+import { useCountdownTimer } from "@/hooks/use-countdown-timer";
+
 interface TurnIndicatorBannerProps {
   isMyTurn: boolean;
   currentPlayerName: string;
   currentPlayerAvatar: string;
   phase: "placing" | "steal" | "results" | "waiting";
+  turnStartedAt?: string | null;
+  turnDuration?: number;
 }
 
 export function TurnIndicatorBanner({
@@ -10,6 +14,8 @@ export function TurnIndicatorBanner({
   currentPlayerName,
   currentPlayerAvatar,
   phase,
+  turnStartedAt,
+  turnDuration = 45,
 }: TurnIndicatorBannerProps) {
   const phaseLabels = {
     placing: "Placing song",
@@ -17,6 +23,21 @@ export function TurnIndicatorBanner({
     results: "Results",
     waiting: "Starting...",
   };
+
+  // Calculate end time for spectator timer
+  const endTime = turnStartedAt
+    ? new Date(
+        new Date(turnStartedAt).getTime() + turnDuration * 1000,
+      ).toISOString()
+    : null;
+
+  const { timeLeft, colorClass } = useCountdownTimer({
+    endTime: endTime ?? "",
+    duration: turnDuration,
+    onTimeUp: () => {},
+  });
+
+  const showTimer = !isMyTurn && phase === "placing" && turnStartedAt;
 
   return (
     <div
@@ -40,6 +61,13 @@ export function TurnIndicatorBanner({
             {phaseLabels[phase]}
           </div>
         </div>
+        {showTimer && (
+          <div
+            className={`text-2xl sm:text-3xl font-mono font-bold ${colorClass} ml-2`}
+          >
+            {timeLeft}s
+          </div>
+        )}
       </div>
     </div>
   );
