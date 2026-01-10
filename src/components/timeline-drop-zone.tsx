@@ -80,7 +80,7 @@ function DropZone({
   );
 }
 
-function DraggableSongCard({ isPlaced }: { isPlaced: boolean }) {
+function SongCard({ isPlaced }: { isPlaced: boolean }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
       id: "current-song",
@@ -329,6 +329,7 @@ export function TimelineDropZone({
   const [guessedName, setGuessedName] = useState("");
   const [guessedArtist, setGuessedArtist] = useState("");
   const [isNewlyPlaced, setIsNewlyPlaced] = useState(false);
+  const [dragKey, setDragKey] = useState(0);
 
   // Reset placement state when a new song is drawn
   // biome-ignore lint/correctness/useExhaustiveDependencies: intentional reset on song change
@@ -403,10 +404,13 @@ export function TimelineDropZone({
 
   const handleReset = useCallback(() => {
     setPlacementIndex(null);
+    setActiveId(null);
+    setDragKey((k) => k + 1);
   }, []);
 
   return (
     <DndContext
+      key={dragKey}
       sensors={sensors}
       collisionDetection={closestCenter}
       onDragStart={handleDragStart}
@@ -423,7 +427,7 @@ export function TimelineDropZone({
         />
 
         <div className="flex justify-center">
-          <DraggableSongCard isPlaced={placementIndex !== null} />
+          <SongCard isPlaced={placementIndex !== null} />
         </div>
 
         <div className="overflow-x-auto pb-4 scroll-smooth">

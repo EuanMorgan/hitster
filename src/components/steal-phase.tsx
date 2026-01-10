@@ -222,6 +222,7 @@ export function StealPhase({
 }: StealPhaseProps) {
   const [placementIndex, setPlacementIndex] = useState<number | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [dragKey, setDragKey] = useState(0);
 
   const sortedTimeline = [...activePlayerTimeline].sort(
     (a, b) => a.year - b.year,
@@ -282,6 +283,8 @@ export function StealPhase({
 
   const handleReset = useCallback(() => {
     setPlacementIndex(null);
+    setActiveId(null);
+    setDragKey((k) => k + 1);
   }, []);
 
   // Build occupied positions map
@@ -323,6 +326,7 @@ export function StealPhase({
 
         {!isActivePlayer && canSteal && (
           <DndContext
+            key={dragKey}
             sensors={sensors}
             collisionDetection={closestCenter}
             onDragStart={handleDragStart}
