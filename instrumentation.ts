@@ -21,7 +21,7 @@ export async function register() {
               headers: {
                 Authorization: `Bearer ${process.env.CRON_SECRET}`,
               },
-            }
+            },
           );
           const data = await res.json();
           if (data.deleted > 0)
@@ -33,7 +33,7 @@ export async function register() {
 
       (globalThis as Record<symbol, NodeJS.Timeout>)[intervalKey] = setInterval(
         runCleanup,
-        5 * 60 * 1000
+        5 * 60 * 1000,
       );
       setTimeout(runCleanup, 10_000);
     }
