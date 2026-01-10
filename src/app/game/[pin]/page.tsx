@@ -30,6 +30,7 @@ import { useGameState } from "@/hooks/use-game-state";
 import { usePlayerHeartbeat } from "@/hooks/use-player-heartbeat";
 import { usePlayerValidation } from "@/hooks/use-player-validation";
 import { useSession } from "@/lib/auth-client";
+import { toast } from "sonner";
 
 export default function GamePage() {
   const params = useParams();
@@ -38,6 +39,7 @@ export default function GamePage() {
   const { data: authSession } = useSession();
   const [turnResult, setTurnResult] = useState<TurnResult | null>(null);
   const shownResultRef = useRef<string | null>(null);
+  const prevBonusTimeRef = useRef(0);
   const [playbackStartedAt, setPlaybackStartedAt] = useState<number | null>(
     null,
   );
@@ -83,6 +85,14 @@ export default function GamePage() {
   useEffect(() => {
     setPlaybackStartedAt(null);
   }, [currentTrackUri]);
+
+  const bonusTime = sessionQuery.data?.bonusTimeSeconds ?? 0;
+  useEffect(() => {
+    if (prevBonusTimeRef.current === 0 && bonusTime > 0 && !gameState.isMyTurn) {
+      toast.info(`🪙 ${gameState.currentPlayer?.name ?? "Player"} bought +20s`);
+    }
+    prevBonusTimeRef.current = bonusTime;
+  }, [bonusTime, gameState.isMyTurn, gameState.currentPlayer]);
 
   const handleConfirmTurn = useCallback(
     (placementIndex: number, guessedName?: string, guessedArtist?: string) => {
@@ -248,6 +258,7 @@ export default function GamePage() {
             phase={turnResult ? "results" : isStealPhase ? "steal" : "placing"}
             turnStartedAt={session?.turnStartedAt}
             turnDuration={session?.turnDuration ?? 45}
+            bonusTimeSeconds={session?.bonusTimeSeconds ?? 0}
           />
         )}
 
@@ -267,6 +278,7 @@ export default function GamePage() {
             currentSong={session?.currentSong ?? null}
             turnStartedAt={session?.turnStartedAt ?? null}
             turnDuration={session?.turnDuration ?? 45}
+            bonusTimeSeconds={session?.bonusTimeSeconds ?? 0}
           />
         )}
 

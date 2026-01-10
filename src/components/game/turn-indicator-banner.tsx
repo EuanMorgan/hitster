@@ -7,6 +7,7 @@ interface TurnIndicatorBannerProps {
   phase: "placing" | "steal" | "results" | "waiting";
   turnStartedAt?: string | null;
   turnDuration?: number;
+  bonusTimeSeconds?: number;
 }
 
 export function TurnIndicatorBanner({
@@ -16,6 +17,7 @@ export function TurnIndicatorBanner({
   phase,
   turnStartedAt,
   turnDuration = 45,
+  bonusTimeSeconds = 0,
 }: TurnIndicatorBannerProps) {
   const phaseLabels = {
     placing: "Placing song",
@@ -25,15 +27,16 @@ export function TurnIndicatorBanner({
   };
 
   // Calculate end time for spectator timer
+  const effectiveDuration = turnDuration + bonusTimeSeconds;
   const endTime = turnStartedAt
     ? new Date(
-        new Date(turnStartedAt).getTime() + turnDuration * 1000,
+        new Date(turnStartedAt).getTime() + effectiveDuration * 1000,
       ).toISOString()
     : null;
 
   const { timeLeft, colorClass } = useCountdownTimer({
     endTime: endTime ?? "",
-    duration: turnDuration,
+    duration: effectiveDuration,
     onTimeUp: () => {},
   });
 

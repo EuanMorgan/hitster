@@ -37,6 +37,7 @@ export interface ActivePlayerTimelineProps {
   currentSong: SafeCurrentTurnSong | null;
   turnStartedAt: string | null;
   turnDuration: number;
+  bonusTimeSeconds?: number;
 }
 
 export function ActivePlayerTimeline({
@@ -44,11 +45,13 @@ export function ActivePlayerTimeline({
   currentSong,
   turnStartedAt,
   turnDuration,
+  bonusTimeSeconds = 0,
 }: ActivePlayerTimelineProps) {
   const sortedTimeline = [...(player.timeline ?? [])].sort(
     (a, b) => a.year - b.year,
   );
 
+  const effectiveDuration = turnDuration + bonusTimeSeconds;
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
 
   useEffect(() => {
@@ -61,17 +64,17 @@ export function ActivePlayerTimeline({
       const elapsed = Math.floor(
         (Date.now() - new Date(turnStartedAt).getTime()) / 1000,
       );
-      const remaining = Math.max(0, turnDuration - elapsed);
+      const remaining = Math.max(0, effectiveDuration - elapsed);
       setTimeRemaining(remaining);
     };
 
     updateTimer();
     const interval = setInterval(updateTimer, 1000);
     return () => clearInterval(interval);
-  }, [turnStartedAt, turnDuration]);
+  }, [turnStartedAt, effectiveDuration]);
 
   const timerPercentage =
-    timeRemaining !== null ? (timeRemaining / turnDuration) * 100 : 100;
+    timeRemaining !== null ? (timeRemaining / effectiveDuration) * 100 : 100;
   const timerColorClass =
     timerPercentage <= 25
       ? "text-red-500"
