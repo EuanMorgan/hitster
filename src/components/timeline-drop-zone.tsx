@@ -30,12 +30,15 @@ interface TimelineDropZoneProps {
   onTimeUp: () => void;
   onSkip?: () => void;
   onGetFreeSong?: () => void;
+  onBuyTime?: () => void;
   isSubmitting: boolean;
   isSkipping?: boolean;
   isGettingFreeSong?: boolean;
+  isBuyingTime?: boolean;
   turnDuration: number;
   turnStartedAt: string | null;
   playbackStartedAt: number | null;
+  bonusTimeSeconds?: number;
   tokens: number;
   timerPaused?: boolean;
 }
@@ -161,16 +164,19 @@ function TurnTimer({
   turnDuration,
   turnStartedAt,
   playbackStartedAt,
+  bonusTimeSeconds = 0,
   onTimeUp,
   isPaused = false,
 }: {
   turnDuration: number;
   turnStartedAt: string | null;
   playbackStartedAt: number | null;
+  bonusTimeSeconds?: number;
   onTimeUp: () => void;
   isPaused?: boolean;
 }) {
-  const [timeLeft, setTimeLeft] = useState(turnDuration);
+  const effectiveDuration = turnDuration + bonusTimeSeconds;
+  const [timeLeft, setTimeLeft] = useState(effectiveDuration);
   const [pausedTimeLeft, setPausedTimeLeft] = useState<number | null>(null);
   const hasTriggeredRef = useRef(false);
   const onTimeUpRef = useRef(onTimeUp);
@@ -189,7 +195,7 @@ function TurnTimer({
   useEffect(() => {
     // No turn in progress - reset
     if (!turnStartedAt) {
-      setTimeLeft(turnDuration);
+      setTimeLeft(effectiveDuration);
       setPausedTimeLeft(null);
       return;
     }
@@ -202,7 +208,7 @@ function TurnTimer({
     if (isPaused) {
       if (pausedTimeLeft === null) {
         const elapsed = Math.floor((Date.now() - effectiveStartTime) / 1000);
-        const remaining = Math.max(0, turnDuration - elapsed);
+        const remaining = Math.max(0, effectiveDuration - elapsed);
         setPausedTimeLeft(remaining);
         setTimeLeft(remaining);
       }
@@ -217,7 +223,7 @@ function TurnTimer({
     // Timer calculation
     const updateTimer = () => {
       const elapsed = Math.floor((Date.now() - effectiveStartTime) / 1000);
-      const remaining = Math.max(0, turnDuration - elapsed);
+      const remaining = Math.max(0, effectiveDuration - elapsed);
       setTimeLeft(remaining);
 
       if (remaining === 0 && !hasTriggeredRef.current) {
@@ -230,14 +236,14 @@ function TurnTimer({
     const interval = setInterval(updateTimer, 1000);
     return () => clearInterval(interval);
   }, [
-    turnDuration,
+    effectiveDuration,
     turnStartedAt,
     playbackStartedAt,
     isPaused,
     pausedTimeLeft,
   ]);
 
-  const percentage = (timeLeft / turnDuration) * 100;
+  const percentage = (timeLeft / effectiveDuration) * 100;
   // Color based on percentage: green >50%, amber 25-50%, red <25%
   // Use gray/muted when paused
   const colorClass = isPaused
@@ -306,12 +312,15 @@ export function TimelineDropZone({
   onTimeUp,
   onSkip,
   onGetFreeSong,
+  onBuyTime,
   isSubmitting,
   isSkipping,
   isGettingFreeSong,
+  isBuyingTime,
   turnDuration,
   turnStartedAt,
   playbackStartedAt,
+  bonusTimeSeconds = 0,
   tokens,
   timerPaused = false,
 }: TimelineDropZoneProps) {
@@ -408,6 +417,7 @@ export function TimelineDropZone({
           turnDuration={turnDuration}
           turnStartedAt={turnStartedAt}
           playbackStartedAt={playbackStartedAt}
+          bonusTimeSeconds={bonusTimeSeconds}
           onTimeUp={handleTimeUp}
           isPaused={timerPaused}
         />
@@ -464,7 +474,8 @@ export function TimelineDropZone({
                     tokens < 1 ||
                     isSkipping ||
                     isSubmitting ||
-                    isGettingFreeSong
+                    isGettingFreeSong ||
+                    isBuyingTime
                   }
                   className="gap-1.5 sm:gap-2 min-h-[44px] px-3 sm:px-4 text-sm"
                 >
@@ -489,7 +500,8 @@ export function TimelineDropZone({
                     tokens < 3 ||
                     isGettingFreeSong ||
                     isSubmitting ||
-                    isSkipping
+                    isSkipping ||
+                    isBuyingTime
                   }
                   className="gap-1.5 sm:gap-2 min-h-[44px] px-3 sm:px-4 text-sm"
                 >
@@ -501,6 +513,32 @@ export function TimelineDropZone({
                       <span className="hidden xs:inline">Free Song</span>
                       <span className="xs:hidden">Free</span>
                       <span className="text-xs opacity-75">(3)</span>
+                    </>
+                  )}
+                </Button>
+              )}
+              {/* Buy extra time button */}
+              {onBuyTime && (
+                <Button
+                  variant="outline"
+                  onClick={onBuyTime}
+                  disabled={
+                    tokens < 1 ||
+                    isBuyingTime ||
+                    isSubmitting ||
+                    isSkipping ||
+                    isGettingFreeSong ||
+                    bonusTimeSeconds > 0
+                  }
+                  className="gap-1.5 sm:gap-2 min-h-[44px] px-3 sm:px-4 text-sm"
+                >
+                  {isBuyingTime ? (
+                    "Buying..."
+                  ) : (
+                    <>
+                      <span>🪙</span>
+                      <span>+20s</span>
+                      <span className="text-xs opacity-75">(1)</span>
                     </>
                   )}
                 </Button>

@@ -148,6 +148,11 @@ export default function GamePage() {
     mutations.getFreeSong.mutate({ pin, playerId: currentPlayerId });
   }, [mutations.getFreeSong, pin, currentPlayerId]);
 
+  const handleBuyExtraTime = useCallback(() => {
+    if (!currentPlayerId || mutations.buyExtraTime.isPending) return;
+    mutations.buyExtraTime.mutate({ pin, playerId: currentPlayerId });
+  }, [mutations.buyExtraTime, pin, currentPlayerId]);
+
   if (sessionQuery.isLoading) return <GameSkeleton />;
 
   if (sessionQuery.error) {
@@ -320,12 +325,15 @@ export default function GamePage() {
             onTimeUp={handleTimeUp}
             onSkip={handleSkipSong}
             onGetFreeSong={handleGetFreeSong}
+            onBuyTime={handleBuyExtraTime}
             isSubmitting={mutations.confirmTurn.isPending}
             isSkipping={mutations.skipSong.isPending}
             isGettingFreeSong={mutations.getFreeSong.isPending}
+            isBuyingTime={mutations.buyExtraTime.isPending}
             turnDuration={session.turnDuration}
             turnStartedAt={session.turnStartedAt}
             playbackStartedAt={playbackStartedAt}
+            bonusTimeSeconds={session.bonusTimeSeconds ?? 0}
             tokens={myPlayer.tokens}
             timerPaused={hostDisconnected}
           />

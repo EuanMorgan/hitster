@@ -77,6 +77,11 @@ export function useGameMutations({ pin }: UseGameMutationsOptions) {
     onSuccess: invalidateSession,
   });
 
+  const buyExtraTime = useMutation({
+    ...trpc.game.buyExtraTime.mutationOptions(),
+    onSuccess: invalidateSession,
+  });
+
   const startRematch = useMutation({
     ...trpc.game.startRematch.mutationOptions(),
     onSuccess: () => {
@@ -98,6 +103,7 @@ export function useGameMutations({ pin }: UseGameMutationsOptions) {
     resolveStealPhase,
     skipSong,
     getFreeSong,
+    buyExtraTime,
     startRematch,
     endGame,
   };

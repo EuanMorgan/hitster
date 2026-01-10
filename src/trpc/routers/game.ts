@@ -964,6 +964,7 @@ async function resolveTurnCore(params: ResolveTurnParams) {
       },
       usedSongIds: newUsedSongIds,
       turnStartedAt: new Date(),
+      bonusTimeSeconds: 0,
       stealPhase: null,
       stealDecidePhaseEndAt: null,
       stealPlacePhaseEndAt: null,
@@ -1261,6 +1262,7 @@ export const gameRouter = createTRPCRouter({
             : session.currentSong
           : null,
         turnStartedAt: session.turnStartedAt?.toISOString() ?? null,
+        bonusTimeSeconds: session.bonusTimeSeconds ?? 0,
         roundNumber: session.roundNumber ?? 1,
         // Two-phase steal fields
         stealPhase: session.stealPhase ?? null,
@@ -1694,6 +1696,7 @@ export const gameRouter = createTRPCRouter({
           usedSongIds,
           currentSong,
           turnStartedAt: new Date(),
+          bonusTimeSeconds: 0,
           roundNumber: 1,
           playlistSongs: shuffledSongs, // Store shuffled songs for the game
           usingFallbackPlaylist: playlistSongs === PLACEHOLDER_SONGS,
@@ -2403,6 +2406,7 @@ export const gameRouter = createTRPCRouter({
           },
           usedSongIds: [...usedSongIds],
           turnStartedAt: new Date(),
+          bonusTimeSeconds: 0,
           updatedAt: new Date(),
         })
         .where(eq(gameSessions.id, session.id));
@@ -2600,6 +2604,97 @@ export const gameRouter = createTRPCRouter({
         tokensRemaining: player.tokens - 3,
         newTimelineCount: newTimeline.length,
         gameEnded: false,
+      };
+    }),
+
+  buyExtraTime: baseProcedure
+    .input(
+      z.object({
+        pin: z.string().length(4),
+        playerId: z.string().uuid(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const pin = input.pin.toUpperCase();
+
+      const session = await ctx.db.query.gameSessions.findFirst({
+        where: eq(gameSessions.pin, pin),
+        with: {
+          players: {
+            where: eq(players.isConnected, true),
+          },
+        },
+      });
+
+      if (!session) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Game not found" });
+      }
+
+      if (session.state !== "playing") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Game is not in progress",
+        });
+      }
+
+      if (session.stealPhase !== null) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Cannot buy time during steal phase",
+        });
+      }
+
+      const currentPlayerId =
+        session.turnOrder && session.currentTurnIndex !== null
+          ? session.turnOrder[session.currentTurnIndex]
+          : null;
+
+      if (input.playerId !== currentPlayerId) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "It's not your turn",
+        });
+      }
+
+      const player = session.players.find((p) => p.id === input.playerId);
+      if (!player) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Player not found" });
+      }
+
+      if (player.tokens < 1) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Not enough tokens",
+        });
+      }
+
+      const currentBonus = session.bonusTimeSeconds ?? 0;
+      if (currentBonus > 0) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Already purchased extra time this turn",
+        });
+      }
+
+      await ctx.db
+        .update(players)
+        .set({ tokens: player.tokens - 1 })
+        .where(eq(players.id, input.playerId));
+
+      await ctx.db
+        .update(gameSessions)
+        .set({
+          bonusTimeSeconds: 20,
+          updatedAt: new Date(),
+        })
+        .where(eq(gameSessions.id, session.id));
+
+      emitSessionUpdate(pin);
+
+      return {
+        success: true,
+        bonusTimeSeconds: 20,
+        tokensRemaining: player.tokens - 1,
       };
     }),
 
@@ -3016,6 +3111,7 @@ export const gameRouter = createTRPCRouter({
           },
           usedSongIds: newUsedSongIds,
           turnStartedAt: new Date(),
+          bonusTimeSeconds: 0,
           stealPhase: null,
           stealDecidePhaseEndAt: null,
           stealPlacePhaseEndAt: null,

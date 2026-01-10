@@ -13,12 +13,15 @@ interface MyTurnCardProps {
   onTimeUp: () => void;
   onSkip: () => void;
   onGetFreeSong: () => void;
+  onBuyTime: () => void;
   isSubmitting: boolean;
   isSkipping: boolean;
   isGettingFreeSong: boolean;
+  isBuyingTime: boolean;
   turnDuration: number;
   turnStartedAt: string | null;
   playbackStartedAt: number | null;
+  bonusTimeSeconds: number;
   tokens: number;
   timerPaused: boolean;
 }
@@ -30,12 +33,15 @@ export function MyTurnCard({
   onTimeUp,
   onSkip,
   onGetFreeSong,
+  onBuyTime,
   isSubmitting,
   isSkipping,
   isGettingFreeSong,
+  isBuyingTime,
   turnDuration,
   turnStartedAt,
   playbackStartedAt,
+  bonusTimeSeconds,
   tokens,
   timerPaused,
 }: MyTurnCardProps) {
@@ -48,12 +54,15 @@ export function MyTurnCard({
         onTimeUp={onTimeUp}
         onSkip={onSkip}
         onGetFreeSong={onGetFreeSong}
+        onBuyTime={onBuyTime}
         isSubmitting={isSubmitting}
         isSkipping={isSkipping}
         isGettingFreeSong={isGettingFreeSong}
+        isBuyingTime={isBuyingTime}
         turnDuration={turnDuration}
         turnStartedAt={turnStartedAt}
         playbackStartedAt={playbackStartedAt}
+        bonusTimeSeconds={bonusTimeSeconds}
         tokens={tokens}
         timerPaused={timerPaused}
       />

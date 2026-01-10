@@ -203,6 +203,7 @@ export const gameSessions = pgTable(
     usedSongIds: jsonb("used_song_ids").$type<string[]>().default([]),
     currentSong: jsonb("current_song").$type<CurrentTurnSong | null>(),
     turnStartedAt: timestamp("turn_started_at"),
+    bonusTimeSeconds: integer("bonus_time_seconds").default(0),
     roundNumber: integer("round_number").default(1),
     // Two-phase steal tracking
     stealPhase: stealPhaseEnum("steal_phase"), // null = not in steal, 'decide' or 'place'

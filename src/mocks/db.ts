@@ -78,6 +78,7 @@ export function seedGameSession(
     usedSongIds: sessionData.usedSongIds ?? [],
     currentSong: sessionData.currentSong ?? null,
     turnStartedAt: sessionData.turnStartedAt ?? null,
+    bonusTimeSeconds: sessionData.bonusTimeSeconds ?? 0,
     roundNumber: sessionData.roundNumber ?? 1,
     stealPhase: sessionData.stealPhase ?? null,
     stealDecidePhaseEndAt: sessionData.stealDecidePhaseEndAt ?? null,
